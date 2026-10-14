@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>بازی سریع</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh;
+           background: linear-gradient(to bottom, #0f172a, #1e293b);
+           color: #e2e8f0; display: flex; align-items: center;
+           justify-content: center; padding: 20px; }
+    .container { max-width: 500px; width: 100%; text-align: center; }
+    h1 { font-size: 32px; color: #facc15; margin-bottom: 30px; }
+    .option { display: flex; align-items: center; gap: 18px;
+      background: #1e293b; border-radius: 18px;
+      padding: 24px 28px; margin: 16px 0; cursor: pointer;
+      text-decoration: none; color: #e2e8f0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      transition: transform 0.15s; }
+    .option:hover { transform: translateY(-4px) scale(1.02); }
+    .option-bot { border-right: 6px solid #3b82f6; }
+    .option-player { border-right: 6px solid #22c55e; cursor: not-allowed; }
+    .icon { font-size: 52px; }
+    .text { text-align: right; flex: 1; }
+    .text h3 { font-size: 20px; margin-bottom: 4px; }
+    .text p { font-size: 13px; color: #94a3b8; }
+    a.back { display: inline-block; margin-top: 28px; color: #60a5fa;
+             text-decoration: none; font-size: 14px; }
+    .soon { background: #7f1d1d; color: #fecaca; padding: 4px 10px;
+            border-radius: 8px; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ بازی سریع</h1>
+    <a class="option option-bot" href="/game/quick/bot/">
+      <div class="icon">🤖</div>
+      <div class="text">
+        <h3>بازی با بات</h3>
+        <p>مقابل یه ربات هوشمند بازی کن</p>
+      </div>
+    </a>
+    <div class="option option-player" onclick="alert('بازی سریع با پلیر به‌زودی فعال می‌شه!')">
+      <div class="icon">🌐</div>
+      <div class="text">
+        <h3>بازی با پلیر <span class="soon">به‌زودی</span></h3>
+        <p>با یه حریف تصادفی از سراسر دنیا</p>
+      </div>
+    </div>
+    <a class="back" href="/game/">← بازگشت به خانه</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>پروفایل</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           display: flex; justify-content: center; padding: 40px; margin: 0; }
+    .box { background: #1e293b; padding: 30px; border-radius: 12px; width: 420px; }
+    h1 { margin-top: 0; color: #facc15; }
+    .avatar-big { font-size: 80px; text-align: center; margin: 10px 0; }
+    .row { margin: 12px 0; }
+    .label { color: #94a3b8; font-size: 13px; }
+    .value { font-size: 18px; }
+    input[type=text] { padding: 10px; border-radius: 6px; border: none;
+                       background: #334155; color: white; font-size: 16px; width: 100%;
+                       box-sizing: border-box; }
+    button { background: #22c55e; color: white; padding: 10px 20px;
+             border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+             margin-top: 10px; }
+    button:hover { background: #16a34a; }
+    a.btn { display: inline-block; color: #60a5fa; margin-top: 16px; text-decoration: none; }
+    .code-badge { background: #334155; padding: 6px 12px; border-radius: 6px;
+                  font-size: 16px; letter-spacing: 2px; display: inline-block; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>👤 پروفایل</h1>
+
+    <div class="avatar-big">{{ avatar_emoji }}</div>
+
+    <div class="row">
+      <div class="label">شناسه عمومی</div>
+      <div class="value"><span class="code-badge">{{ profile_user.public_id }}</span></div>
+    </div>
+
+    <div class="row">
+      <div class="label">ایمیل</div>
+      <div class="value">{{ profile_user.email }}</div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="row">
+        <div class="label">نام نمایشی (alias)</div>
+        <input type="text" name="alias" value="{{ profile_user.alias }}" maxlength="32">
+      </div>
+      <button type="submit">💾 ذخیره</button>
+    </form>
+
+    <a class="btn" href="{% url 'accounts:avatar_select' %}">🎨 تغییر آواتار</a><br>
+    <a class="btn" href="{% url 'game:home' %}">← بازگشت به بازی</a>
+  </div>
+</body>
+</html>

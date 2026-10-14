@@ -8,6 +8,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -19,6 +20,8 @@ INSTALLED_APPS = [
     "corsheaders",
 
     "accounts",
+    "game",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -50,8 +53,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Step 1 uses SQLite so you can run instantly.
-# Swap to PostgreSQL when you move to real deployment.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -92,3 +93,18 @@ SIMPLE_JWT = {
 
 # --- CORS (dev only) ---
 CORS_ALLOW_ALL_ORIGINS = True
+
+# --- Email (dev: چاپ لینک در کنسول ترمینال runserver) ---
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "noreply@esmfamil.local"
+BACKEND_URL = "http://127.0.0.1:8000"
+
+# --- Login redirect for @login_required ---
+LOGIN_URL = "/admin/login/"
+ASGI_APPLICATION = "config.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}

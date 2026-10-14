@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اتاق‌ها</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           padding: 30px 20px; margin: 0; }
+    .container { max-width: 560px; margin: 0 auto; }
+    h1 { color: #facc15; }
+    h2 { color: #94a3b8; font-size: 17px; margin-top: 28px; }
+    label { display: block; margin: 6px 0; }
+    input[type=text] { padding: 12px; border-radius: 8px; border: none;
+                       background: #334155; color: white; font-size: 16px;
+                       width: 100%; box-sizing: border-box; }
+    button { background: #22c55e; color: white; padding: 12px 24px;
+             border: none; border-radius: 10px; font-size: 16px;
+             cursor: pointer; width: 100%; margin-top: 12px; }
+    button:hover { background: #16a34a; }
+    .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 0; }
+    .row { display: flex; gap: 10px; margin-top: 8px; }
+    .row input { flex: 1; }
+    .row button { width: auto; margin-top: 0; }
+    .box { background: #1e293b; padding: 22px; border-radius: 14px;
+           margin-top: 16px; }
+    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+    a.room-link { color: #60a5fa; text-decoration: none; }
+    ul { padding-right: 20px; }
+    li { padding: 6px 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="{% url 'game:home' %}">← بازگشت به خانه</a>
+  <h1>🚪 اتاق‌ها</h1>
+
+  <div class="box">
+    <h2 style="margin-top:0">➕ ساخت اتاق جدید</h2>
+    <form method="post" action="{% url 'game:create' %}">
+      {% csrf_token %}
+      <input type="text" name="password" placeholder="رمز اتاق (اختیاری)" maxlength="32">
+      <div class="cats">
+        {% for c in categories %}
+          <label><input type="checkbox" name="categories" value="{{ c }}" checked> {{ c }}</label>
+        {% endfor %}
+      </div>
+      <button type="submit">🚀 ساخت اتاق</button>
+    </form>
+  </div>
+
+  <div class="box">
+    <h2 style="margin-top:0">🔑 ورود به اتاق</h2>
+    <form method="post" action="{% url 'game:join' %}">
+      {% csrf_token %}
+      <div class="row">
+        <input type="text" name="code" placeholder="کد ۴ رقمی" maxlength="4" required>
+        <input type="text" name="password" placeholder="رمز" maxlength="32">
+        <button type="submit">ورود</button>
+      </div>
+    </form>
+  </div>
+
+  {% if my_rooms %}
+    <div class="box">
+      <h2 style="margin-top:0">🕹️ اتاق‌های اخیر من</h2>
+      <ul>
+        {% for r in my_rooms %}
+          <li><a class="room-link" href="{% url 'game:room' r.code %}">اتاق {{ r.code }}</a>
+              — {{ r.get_status_display }} — {{ r.created_at|date:"H:i" }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

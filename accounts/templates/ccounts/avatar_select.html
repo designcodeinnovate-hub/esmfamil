@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>انتخاب آواتار</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           padding: 30px; margin: 0; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #facc15; text-align: center; }
+    p.sub { text-align: center; color: #94a3b8; }
+    .cat { background: #1e293b; padding: 16px; border-radius: 12px; margin: 16px 0; }
+    .cat h3 { margin-top: 0; color: #60a5fa; }
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+    .avatar-item { position: relative; }
+    .avatar-item input { position: absolute; opacity: 0; pointer-events: none; }
+    .avatar-item label {
+      display: block;
+      font-size: 34px;
+      text-align: center;
+      padding: 8px 0;
+      border-radius: 8px;
+      background: #334155;
+      cursor: pointer;
+      transition: 0.15s;
+      user-select: none;
+    }
+    .avatar-item label:hover { background: #475569; transform: scale(1.08); }
+    .avatar-item input:checked + label {
+      background: #22c55e;
+      box-shadow: 0 0 0 3px #facc15 inset;
+      transform: scale(1.12);
+    }
+    .submit-row { text-align: center; margin: 24px 0; }
+    button {
+      background: #22c55e; color: white; border: none;
+      padding: 16px 48px; font-size: 20px; border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover { background: #16a34a; }
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: repeat(5, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🎨 آواتار خودت رو انتخاب کن</h1>
+  <p class="sub">این آواتار کنار نامت در بازی نمایش داده می‌شه.</p>
+
+  <form method="post" id="avatar-form">
+    {% csrf_token %}
+    <input type="hidden" name="avatar_id" id="avatar_id" value="{{ current_avatar|default:0 }}">
+
+    {% for cat in categories %}
+      <div class="cat">
+        <h3>{{ cat.name }}</h3>
+        <div class="grid">
+          {% for emoji in cat.items %}
+            <div class="avatar-item">
+              <input type="radio" name="avatar_pick" id="av-{{ cat.key }}-{{ forloop.counter }}" value="{{ cat.key }}-{{ forloop.counter }}" data-emoji="{{ emoji }}">
+              <label for="av-{{ cat.key }}-{{ forloop.counter }}">{{ emoji }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="submit-row">
+      <button type="submit">✅ تأیید و ورود به بازی</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const catOrder = [
+  {% for cat in categories %}"{{ cat.key }}"{% if not forloop.last %},{% endif %}{% endfor %}
+];
+
+document.querySelectorAll('input[name="avatar_pick"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const [catKey, idxStr] = r.value.split('-');
+    const catIdx = catOrder.indexOf(catKey);
+    const itemIdx = parseInt(idxStr, 10) - 1;
+    const realId = catIdx * 10 + itemIdx;
+    document.getElementById('avatar_id').value = realId;
+  });
+});
+</script>
+</body>
+</html>

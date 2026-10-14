@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           display: flex; justify-content: center; align-items: center;
+           min-height: 100vh; margin: 0; padding: 20px; }
+    .box { text-align: center; max-width: 420px; }
+    .icon { font-size: 96px; margin-bottom: 20px;
+            animation: bounce 2s ease-in-out infinite; }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-14px); }
+    }
+    h1 { color: #facc15; margin: 10px 0; }
+    p { color: #94a3b8; line-height: 1.7; }
+    a { display: inline-block; margin-top: 24px; color: #60a5fa;
+        text-decoration: none; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon">{{ icon }}</div>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <a href="{% url 'game:home' %}">← بازگشت به خانه</a>
+  </div>
+</body>
+</html>

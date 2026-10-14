@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>اتاق {{ room.code }}</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           padding: 30px; margin: 0; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #facc15; }
+    .code { background: #334155; padding: 8px 16px; border-radius: 8px;
+            display: inline-block; font-size: 22px; letter-spacing: 4px; }
+    .players { background: #1e293b; padding: 16px; border-radius: 10px; margin: 16px 0; }
+    .player { padding: 6px 0; border-bottom: 1px solid #334155; }
+    .player:last-child { border: none; }
+    .ready { color: #22c55e; }
+    .notready { color: #94a3b8; }
+    .letter { font-size: 80px; color: #facc15; text-align: center;
+              margin: 20px 0; font-weight: bold; }
+    .timer { font-size: 28px; color: #ef4444; text-align: center; margin-bottom: 20px; }
+    .row { display: grid; grid-template-columns: 130px 1fr; gap: 10px;
+           margin-bottom: 8px; align-items: center; }
+    input[type=text] { padding: 10px; border-radius: 6px; border: none;
+                       background: #334155; color: white; font-size: 16px; }
+    button { background: #22c55e; color: white; padding: 12px 24px;
+             border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+             margin: 6px 4px; }
+    button:hover { background: #16a34a; }
+    button:disabled { background: #475569; cursor: not-allowed; }
+    .big { display: block; width: 100%; font-size: 20px; padding: 16px; margin-top: 16px; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 8px; text-align: right; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; }
+    .total { font-size: 22px; color: #facc15; text-align: center; margin: 16px 0; }
+    .back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="{% url 'game:home' %}">← بازگشت به خانه</a>
+  <h1>اتاق <span class="code">{{ room.code }}</span></h1>
+  <p>سلام <b>{{ user.alias }}</b>!</p>
+
+  <div class="players">
+    <h3 style="margin-top:0">بازیکنان</h3>
+    <div id="players-list">در حال بارگذاری…</div>
+  </div>
+
+  <div id="waiting-panel">
+    <button id="btn-ready">✅ آماده‌ام</button>
+    <button id="btn-unready" class="hidden">❌ لغو آمادگی</button>
+    <button id="btn-start" class="hidden big">🚀 شروع بازی</button>
+    <p class="small" style="font-size:12px;color:#94a3b8">برای شروع، همه باید آماده باشند. فقط میزبان می‌تواند شروع کند.</p>
+  </div>
+
+  <div id="playing-panel" class="hidden">
+    <div>حرف این راند:</div>
+    <div class="letter" id="letter">—</div>
+    <div class="timer" id="timer">—</div>
+
+    <form id="answers-form">
+      {% for c in categories %}
+        <div class="row">
+          <div>{{ c }}</div>
+          <input type="text" name="{{ c }}" autocomplete="off" maxlength="64">
+        </div>
+      {% endfor %}
+      <button type="submit" class="big">✋ استپ!</button>
+    </form>
+  </div>
+
+  <div id="result-panel" class="hidden">
+    <h2>✅ نتیجه راند <span id="result-round">1</span></h2>
+    <p>حرف این راند: <b id="result-letter" style="color:#facc15;font-size:22px">—</b></p>
+    <table>
+      <thead><tr><th>#</th><th>بازیکن</th><th>امتیاز کل</th></tr></thead>
+      <tbody id="result-players"></tbody>
+    </table>
+    <button id="btn-next" class="big hidden">🔄 راند بعد</button>
+    <p id="wait-host" class="small hidden">منتظر میزبان…</p>
+  </div>
+</div>
+
+<script>
+const roomCode = "{{ room.code }}";
+const myId = {{ user.id }};
+const hostId = {{ room.host_id }};
+let myReady = false;
+
+const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+const ws = new WebSocket(`${proto}//${window.location.host}/ws/game/${roomCode}/`);
+
+const $ = id => document.getElementById(id);
+
+ws.onmessage = (e) => {
+  const msg = JSON.parse(e.data);
+  if (msg.type === "state") onState(msg.state);
+  else if (msg.type === "round_start") onRoundStart(msg);
+  else if (msg.type === "stopping") onStopping(msg);
+  else if (msg.type === "round_result") onRoundResult(msg);
+};
+
+ws.onopen = () => {};
+ws.onclose = () => { console.log("اتصال قطع شد."); };
+
+function send(obj) { ws.send(JSON.stringify(obj)); }
+
+function onState(s) {
+  const list = s.players.map(p => {
+    const cls = p.is_ready ? "ready" : "notready";
+    const mark = p.is_ready ? "✅" : "⏳";
+    const me = p.user_id === myId ? " (شما)" : "";
+    const host = p.user_id === hostId ? " 👑" : "";
+    return `<div class="player ${cls}">${mark} ${p.user__alias}${me}${host} — امتیاز: ${p.score}</div>`;
+  }).join("");
+  $("players-list").innerHTML = list;
+
+  const me = s.players.find(p => p.user_id === myId);
+  myReady = me ? me.is_ready : false;
+  $("btn-ready").classList.toggle("hidden", myReady);
+  $("btn-unready").classList.toggle("hidden", !myReady);
+
+  const allReady = s.players.length >= 2 && s.players.every(p => p.is_ready);
+  const isHost = myId === hostId;
+  $("btn-start").classList.toggle("hidden", !(isHost && allReady));
+
+  if (s.status === "waiting") show("waiting-panel");
+  else if (s.status === "in_round") show("playing-panel");
+  else if (s.status === "round_result") show("result-panel");
+}
+
+function show(id) {
+  ["waiting-panel", "playing-panel", "result-panel"].forEach(p => {
+    $(p).classList.toggle("hidden", p !== id);
+  });
+}
+
+function onRoundStart(info) {
+  $("letter").textContent = info.letter;
+  $("answers-form").querySelectorAll("input").forEach(i => i.value = "");
+  show("playing-panel");
+  startTimer(info.duration);
+}
+
+let timerInterval = null;
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  let left = seconds;
+  const el = $("timer");
+  el.textContent = left + " ثانیه";
+  timerInterval = setInterval(() => {
+    left--;
+    el.textContent = left + " ثانیه";
+    if (left <= 0) {
+      clearInterval(timerInterval);
+      submitAnswers();
+    }
+  }, 1000);
+}
+
+function onStopping(msg) {
+  clearInterval(timerInterval);
+  $("timer").textContent = `⛔ ${msg.stopper} استپ زد! ${msg.seconds} ثانیه فرصت…`;
+}
+
+function onRoundResult(res) {
+  if (!res) return;
+  $("result-round").textContent = res.number;
+  $("result-letter").textContent = res.letter;
+  const rows = res.players
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .map((p, i) => {
+      const me = p.user_id === myId ? " (شما)" : "";
+      return `<tr><td>${i+1}</td><td>${p.user__alias}${me}</td><td>${p.score}</td></tr>`;
+    }).join("");
+  $("result-players").innerHTML = rows;
+  show("result-panel");
+  const isHost = myId === hostId;
+  $("btn-next").classList.toggle("hidden", !isHost);
+  $("wait-host").classList.toggle("hidden", isHost);
+}
+
+$("btn-ready").onclick = () => send({ action: "ready" });
+$("btn-unready").onclick = () => send({ action: "unready" });
+$("btn-start").onclick = () => send({ action: "start" });
+$("btn-next").onclick = () => send({ action: "start" });
+
+$("answers-form").onsubmit = (e) => {
+  e.preventDefault();
+  submitAnswers();
+};
+
+function submitAnswers() {
+  const form = $("answers-form");
+  const data = {};
+  form.querySelectorAll("input").forEach(i => data[i.name] = i.value);
+  send({ action: "submit", answers: data });
+  clearInterval(timerInterval);
+  $("timer").textContent = "⏳ در حال محاسبه…";
+}
+</script>
+</body>
+</html>

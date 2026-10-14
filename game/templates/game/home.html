@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>اسم فامیل آنلاین</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           display: flex; justify-content: center; padding: 40px; margin: 0; }
+    .box { background: #1e293b; padding: 30px; border-radius: 12px; width: 520px; }
+    h1 { margin-top: 0; }
+    h2 { color: #94a3b8; font-size: 18px; margin-top: 28px; }
+    label { display: block; margin: 6px 0; }
+    input[type=text] { padding: 10px; border-radius: 6px; border: none;
+                       background: #334155; color: white; font-size: 16px; width: 100%;
+                       box-sizing: border-box; }
+    button { background: #22c55e; color: white; padding: 12px 24px;
+             border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+             width: 100%; margin-top: 12px; }
+    button:hover { background: #16a34a; }
+    .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 0; }
+    .row { display: flex; gap: 10px; margin-top: 8px; }
+    .row input { flex: 1; }
+    .row button { width: auto; margin-top: 0; }
+    .small { font-size: 12px; color: #94a3b8; }
+    a { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🎮 اسم فامیل آنلاین</h1>
+    <p>سلام <b>{{ user.alias }}</b>! خوش آمدی.</p>
+
+    <h2>➕ ساخت اتاق جدید</h2>
+    <form method="post" action="{% url 'game:create' %}">
+      {% csrf_token %}
+      <input type="text" name="password" placeholder="رمز اتاق (اختیاری)" maxlength="32">
+      <div class="cats">
+        {% for c in categories %}
+          <label><input type="checkbox" name="categories" value="{{ c }}" checked> {{ c }}</label>
+        {% endfor %}
+      </div>
+      <button type="submit">🚀 ساخت اتاق</button>
+    </form>
+
+    <h2>🔑 ورود به اتاق</h2>
+    <form method="post" action="{% url 'game:join' %}">
+      {% csrf_token %}
+      <div class="row">
+        <input type="text" name="code" placeholder="کد ۴ رقمی" maxlength="4" required>
+        <input type="text" name="password" placeholder="رمز (اگر دارد)" maxlength="32">
+        <button type="submit">ورود</button>
+      </div>
+    </form>
+
+    {% if my_rooms %}
+      <h2>🕹️ اتاق‌های اخیر من</h2>
+      <ul>
+        {% for r in my_rooms %}
+          <li><a href="{% url 'game:room' r.code %}">اتاق {{ r.code }}</a>
+              — {{ r.get_status_display }} — {{ r.created_at|date:"H:i" }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</body>
+</html>

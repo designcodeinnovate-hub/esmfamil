@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>نتیجه راند</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
+           display: flex; justify-content: center; padding: 30px; }
+    .box { background: #1e293b; padding: 30px; border-radius: 12px; width: 700px; }
+    h1 { color: #22c55e; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 10px; text-align: right; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; }
+    .total { font-size: 24px; color: #facc15; text-align: center; margin: 20px 0; }
+    a.btn { display: block; text-align: center; background: #3b82f6; color: white;
+            padding: 14px; border-radius: 8px; text-decoration: none; font-size: 18px; }
+    a.btn:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>✅ نتیجه راند</h1>
+    <p>حرف این راند: <b style="font-size:24px; color:#facc15;">{{ round.letter }}</b></p>
+
+    <table>
+      <tr><th>دسته</th><th>پاسخ تو</th><th>امتیاز</th></tr>
+      {% for r in results %}
+      <tr>
+        <td>{{ r.category }}</td>
+        <td>{{ r.value }}</td>
+        <td>{% if r.score %}✔ {{ r.score }}{% else %}✘ ۰{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div class="total">امتیاز این راند: {{ total }}</div>
+    <div class="total">مجموع امتیاز تو: {{ player.score }}</div>
+
+    <a class="btn" href="{% url 'game:home' %}">🔄 یک بازی دیگر</a>
+  </div>
+</body>
+</html>
