@@ -30,6 +30,7 @@ def home(request):
         return redirect("accounts:avatar_select")
     return render(request, "game/menu.html", {
         "avatar_emoji": _avatar(request.user),
+        "active": "home",
     })
 
 
@@ -41,6 +42,7 @@ def rooms_list(request):
     return render(request, "game/rooms.html", {
         "categories": DEFAULT_CATEGORIES,
         "my_rooms": my_rooms,
+        "active": "games",
     })
 
 

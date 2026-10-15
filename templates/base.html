@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0a0a15">
+  <title>{% block title %}اسم فامیل آنلاین{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #0a0a15;
+      --bg-2: #12121f;
+      --card: #1a1a2e;
+      --card-2: #22223a;
+      --border: rgba(148,163,184,0.1);
+      --gold: #f4c542;
+      --gold-2: #eab308;
+      --purple: #8b5cf6;
+      --teal: #06b6d4;
+      --green: #22c55e;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 92px;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+    .bg-glow {
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      filter: blur(130px);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-glow-1 { top: -200px; right: -150px; background: #8b5cf6; opacity: 0.22; }
+    .bg-glow-2 { bottom: -200px; left: -150px; background: #f4c542; opacity: 0.12; }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px 16px 20px;
+    }
+    a { color: inherit; }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 72px;
+      background: rgba(10, 10, 21, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-nav a {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--dim);
+      font-size: 10.5px;
+      padding: 8px 4px;
+      height: 72px;
+      transition: color 0.15s;
+      position: relative;
+    }
+    .bottom-nav a .nav-icon {
+      font-size: 22px;
+      filter: grayscale(1);
+      opacity: 0.55;
+      transition: all 0.2s;
+    }
+    .bottom-nav a.active { color: var(--gold); }
+    .bottom-nav a.active .nav-icon {
+      filter: none;
+      opacity: 1;
+      transform: scale(1.12) translateY(-1px);
+    }
+    .bottom-nav a.active::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 30%; right: 30%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border-radius: 0 0 4px 4px;
+    }
+    .bottom-nav a:active { transform: scale(0.95); }
+    .bottom-nav a:hover { color: var(--text); }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<div class="container">
+{% block content %}{% endblock %}
+</div>
+
+<nav class="bottom-nav">
+  <a href="/game/" class="{% if active == "home" %}active{% endif %}">
+    <span class="nav-icon">🏠</span>
+    <span>خانه</span>
+  </a>
+  <a href="/game/rooms/" class="{% if active == "games" %}active{% endif %}">
+    <span class="nav-icon">🎮</span>
+    <span>بازی‌ها</span>
+  </a>
+  <a href="/social/" class="{% if active == "friends" %}active{% endif %}">
+    <span class="nav-icon">👥</span>
+    <span>دوستان</span>
+  </a>
+  <a href="/accounts/profile/" class="{% if active == "profile" %}active{% endif %}">
+    <span class="nav-icon">👤</span>
+    <span>پروفایل</span>
+  </a>
+</nav>
+</body>
+</html>

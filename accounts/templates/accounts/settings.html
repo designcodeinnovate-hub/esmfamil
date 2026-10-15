@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تنظیمات</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Tahoma, sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
+      color: #e2e8f0;
+      padding: 24px 20px 60px;
+    }
+    .container { max-width: 640px; margin: 0 auto; }
+    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+    h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, #eab308, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 14px 0 8px;
+    }
+    p.sub { color: #94a3b8; font-size: 14px; margin-bottom: 22px; }
+
+    .msg-ok {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .box {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 20px;
+      border-radius: 18px;
+      margin-bottom: 14px;
+    }
+    .box h3 {
+      font-size: 15px;
+      color: #fdba74;
+      margin-bottom: 16px;
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-info { flex: 1; }
+    .setting-title { font-size: 15px; margin-bottom: 2px; }
+    .setting-desc { font-size: 12px; color: #64748b; }
+
+    /* Toggle switch */
+    .toggle { position: relative; width: 52px; height: 28px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle .slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(71, 85, 105, 0.6);
+      border-radius: 28px;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+    .toggle .slider::before {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 4px;
+      top: 4px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.25s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .toggle input:checked + .slider {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+    .toggle input:checked + .slider::before {
+      transform: translateX(24px);
+    }
+
+    .theme-row { display: flex; gap: 10px; }
+    .theme-opt {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid rgba(148, 163, 184, 0.2);
+      background: rgba(51, 65, 85, 0.4);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 14px;
+    }
+    .theme-opt:hover { border-color: #f97316; }
+    .theme-opt input { display: none; }
+    .theme-opt:has(input:checked) {
+      border-color: #f97316;
+      background: linear-gradient(135deg, rgba(249,115,22,0.25), rgba(234,179,8,0.15));
+      box-shadow: 0 0 20px rgba(249,115,22,0.35);
+      color: #fff;
+      font-weight: bold;
+    }
+    .theme-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+    button.save {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, #f97316, #eab308);
+      box-shadow: 0 10px 30px rgba(249,115,22,0.4);
+      transition: transform 0.15s;
+    }
+    button.save:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="/accounts/profile/">← بازگشت به پروفایل</a>
+  <h1>⚙️ تنظیمات</h1>
+  <p class="sub">مطابق میل خودت بازی رو تنظیم کن.</p>
+
+  {% if message %}<div class="msg-ok">{{ message }}</div>{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="box">
+      <h3>🔊 صدا و موسیقی</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">صداهای بازی</div>
+          <div class="setting-desc">صدای استپ، تایمر و پایان راند</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" name="sound" {% if settings.sound %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">موسیقی پس‌زمینه</div>
+          <div class="setting-desc">پخش موسیقی ملایم در بازی</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" name="music" {% if settings.music %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>🔔 اعلان‌ها</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">دعوت به بازی</div>
+          <div class="setting-desc">وقتی دوستی تو را به بازی دعوت می‌کند</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" name="notif_invite" {% if settings.notif_invite %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">پیام دوستان</div>
+          <div class="setting-desc">پیام جدید در چت دوستانه</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" name="notif_friend" {% if settings.notif_friend %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">پایان راند</div>
+          <div class="setting-desc">وقتی راند تمام می‌شود</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" name="notif_round" {% if settings.notif_round %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>🌗 ظاهر</h3>
+      <div class="theme-row">
+        <label class="theme-opt">
+          <input type="radio" name="theme" value="dark" {% if settings.theme == "dark" %}checked{% endif %}>
+          <span class="theme-icon">🌙</span>
+          تیره
+        </label>
+        <label class="theme-opt">
+          <input type="radio" name="theme" value="light" {% if settings.theme == "light" %}checked{% endif %}>
+          <span class="theme-icon">☀️</span>
+          روشن
+        </label>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>📳 موارد دیگر</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">لرزش</div>
+          <div class="setting-desc">لرزش گوشی هنگام استپ یا پایان</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" name="vibration" {% if settings.vibration %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="save">💾 ذخیره تنظیمات</button>
+  </form>
+</div>
+</body>
+</html>

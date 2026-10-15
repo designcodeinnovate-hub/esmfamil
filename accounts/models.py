@@ -43,9 +43,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     email_verified_at = models.DateTimeField(null=True, blank=True)
 
-    # آواتار: 0..99 . null یعنی هنوز انتخاب نکرده.
     avatar_id = models.PositiveSmallIntegerField(null=True, blank=True)
     has_chosen_avatar = models.BooleanField(default=False)
+
+    # تنظیمات کاربر (JSON)
+    settings_json = models.JSONField(default=dict, blank=True)
 
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -54,6 +56,22 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["alias"]
+
+    DEFAULT_SETTINGS = {
+        "sound": True,
+        "music": True,
+        "notif_invite": True,
+        "notif_friend": True,
+        "notif_round": True,
+        "theme": "dark",
+        "vibration": True,
+    }
+
+    def get_settings(self):
+        """تنظیمات کاربر با مقادیر پیش‌فرض."""
+        s = dict(self.DEFAULT_SETTINGS)
+        s.update(self.settings_json or {})
+        return s
 
     def save(self, *args, **kwargs):
         if not self.public_id:

@@ -10,4 +10,6 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("accounts/", include(accounts_web)),
     path("game/", include("game.urls")),
+    path("social/", include("social.urls")),
+    path("alliance/", include("alliance.urls")),
 ]

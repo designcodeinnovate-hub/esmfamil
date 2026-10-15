@@ -1,77 +1,207 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>اتاق‌ها</title>
-  <style>
-    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
-           padding: 30px 20px; margin: 0; }
-    .container { max-width: 560px; margin: 0 auto; }
-    h1 { color: #facc15; }
-    h2 { color: #94a3b8; font-size: 17px; margin-top: 28px; }
-    label { display: block; margin: 6px 0; }
-    input[type=text] { padding: 12px; border-radius: 8px; border: none;
-                       background: #334155; color: white; font-size: 16px;
-                       width: 100%; box-sizing: border-box; }
-    button { background: #22c55e; color: white; padding: 12px 24px;
-             border: none; border-radius: 10px; font-size: 16px;
-             cursor: pointer; width: 100%; margin-top: 12px; }
-    button:hover { background: #16a34a; }
-    .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 0; }
-    .row { display: flex; gap: 10px; margin-top: 8px; }
-    .row input { flex: 1; }
-    .row button { width: auto; margin-top: 0; }
-    .box { background: #1e293b; padding: 22px; border-radius: 14px;
-           margin-top: 16px; }
-    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
-    a.room-link { color: #60a5fa; text-decoration: none; }
-    ul { padding-right: 20px; }
-    li { padding: 6px 0; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <a class="back" href="{% url 'game:home' %}">← بازگشت به خانه</a>
-  <h1>🚪 اتاق‌ها</h1>
+{% extends "base.html" %}
+{% block title %}بازی‌ها — اسم فامیل{% endblock %}
 
-  <div class="box">
-    <h2 style="margin-top:0">➕ ساخت اتاق جدید</h2>
-    <form method="post" action="{% url 'game:create' %}">
-      {% csrf_token %}
-      <input type="text" name="password" placeholder="رمز اتاق (اختیاری)" maxlength="32">
-      <div class="cats">
-        {% for c in categories %}
-          <label><input type="checkbox" name="categories" value="{{ c }}" checked> {{ c }}</label>
-        {% endfor %}
-      </div>
-      <button type="submit">🚀 ساخت اتاق</button>
-    </form>
+{% block extra_css %}
+<style>
+  .page-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+
+  .big-card {
+    border-radius: 20px;
+    padding: 22px 20px;
+    margin-bottom: 14px;
+    text-decoration: none;
+    color: #fff;
+    display: flex; align-items: center; gap: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+  .big-card:hover { transform: translateY(-3px); }
+  .big-card.quick {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(244,197,66,0.25), transparent 60%),
+      linear-gradient(135deg, #2a1a0e, #1a0f1a);
+    border-color: rgba(244,197,66,0.25);
+  }
+  .big-card.private {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(139,92,246,0.3), transparent 60%),
+      linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border-color: rgba(139,92,246,0.3);
+  }
+  .big-card.alliance {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(34,197,94,0.22), transparent 60%),
+      linear-gradient(135deg, #0f2a1a, #0f1a1e);
+    border-color: rgba(34,197,94,0.25);
+  }
+  .big-card .bc-icon {
+    font-size: 40px;
+    width: 62px; height: 62px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .big-card .bc-body { flex: 1; }
+  .big-card .bc-title { font-size: 17px; font-weight: bold; margin-bottom: 4px; }
+  .big-card .bc-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .big-card .bc-arrow { font-size: 20px; color: #94a3b8; }
+
+  .section-title {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 22px 0 12px;
+  }
+  .section-title h3 { font-size: 15px; color: #fff; font-weight: bold; }
+
+  /* Join row */
+  .join-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .join-row h4 { font-size: 14px; margin-bottom: 12px; color: var(--gold); }
+  .join-form { display: flex; gap: 8px; }
+  .join-form input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(10,10,21,0.6);
+    color: #fff;
+    font-size: 16px;
+    font-family: monospace;
+    text-align: center;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .join-form input:focus { outline: none; border-color: var(--gold); }
+  .join-form button {
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* My rooms list */
+  .rooms-list { display: flex; flex-direction: column; gap: 8px; }
+  .room-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: var(--text);
+    transition: 0.15s;
+  }
+  .room-item:hover { border-color: var(--gold); transform: translateX(-3px); }
+  .room-item .ri-code {
+    background: rgba(244,197,66,0.15);
+    color: var(--gold);
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+  .room-item .ri-info { flex: 1; }
+  .room-item .ri-title { font-size: 14px; font-weight: bold; }
+  .room-item .ri-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .empty {
+    text-align: center;
+    padding: 30px 20px;
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .empty .icon { font-size: 40px; display: block; margin-bottom: 8px; opacity: 0.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <div class="page-head">
+    <h1>🎮 <span>بازی‌ها</span></h1>
   </div>
 
-  <div class="box">
-    <h2 style="margin-top:0">🔑 ورود به اتاق</h2>
-    <form method="post" action="{% url 'game:join' %}">
+  <a href="/game/quick/" class="big-card quick">
+    <div class="bc-icon">⚡</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی سریع با بات</div>
+      <div class="bc-desc">رقیب هوشمند، سه سطح سختی</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <a href="/game/create/" class="big-card private"
+     onclick="event.preventDefault(); this.href='/game/create-page/';">
+    <div class="bc-icon">👥</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی با دوستان</div>
+      <div class="bc-desc">اتاق خصوصی بساز، کد بده به دوستات</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <a href="/alliance/" class="big-card alliance">
+    <div class="bc-icon">🛡️</div>
+    <div class="bc-body">
+      <div class="bc-title">اتحاد</div>
+      <div class="bc-desc">تیم بساز، اعضا دعوت کن، چت تیمی</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <div class="section-title"><h3>🔑 ورود به اتاق دوست</h3></div>
+  <div class="join-row">
+    <form method="post" action="/game/join/" class="join-form">
       {% csrf_token %}
-      <div class="row">
-        <input type="text" name="code" placeholder="کد ۴ رقمی" maxlength="4" required>
-        <input type="text" name="password" placeholder="رمز" maxlength="32">
-        <button type="submit">ورود</button>
-      </div>
+      <input type="text" name="code" maxlength="4" placeholder="1234" required>
+      <input type="text" name="password" maxlength="32" placeholder="رمز (اختیاری)"
+             style="letter-spacing:0;text-transform:none;font-family:inherit;">
+      <button type="submit">ورود</button>
     </form>
   </div>
 
   {% if my_rooms %}
-    <div class="box">
-      <h2 style="margin-top:0">🕹️ اتاق‌های اخیر من</h2>
-      <ul>
-        {% for r in my_rooms %}
-          <li><a class="room-link" href="{% url 'game:room' r.code %}">اتاق {{ r.code }}</a>
-              — {{ r.get_status_display }} — {{ r.created_at|date:"H:i" }}</li>
-        {% endfor %}
-      </ul>
+    <div class="section-title"><h3>🕹️ اتاق‌های اخیر من</h3></div>
+    <div class="rooms-list">
+      {% for r in my_rooms %}
+        <a href="/game/room/{{ r.code }}/" class="room-item">
+          <span class="ri-code">{{ r.code }}</span>
+          <div class="ri-info">
+            <div class="ri-title">اتاق من</div>
+            <div class="ri-meta">{{ r.get_status_display }} — {{ r.created_at|date:"H:i" }}</div>
+          </div>
+          <span style="color:#94a3b8">←</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="section-title"><h3>🕹️ اتاق‌های من</h3></div>
+    <div class="empty">
+      <span class="icon">🚪</span>
+      هنوز اتاقی نساختی.<br>
+      با «بازی با دوستان» اولین اتاقت رو بساز.
     </div>
   {% endif %}
-</div>
-</body>
-</html>
+
+{% endblock %}

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>جستجوی دوست</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Tahoma, sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
+      color: #e2e8f0;
+      padding: 24px 20px 60px;
+    }
+    .container { max-width: 640px; margin: 0 auto; }
+    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+    h1 {
+      font-size: 26px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 14px 0 18px;
+    }
+    .search-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .search-row input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.7);
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    .search-row input:focus { outline: none; border-color: #06b6d4; }
+    .search-row button {
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .user-av {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; }
+    .user-name { font-weight: bold; margin-bottom: 2px; }
+    .user-id { font-size: 11px; color: #64748b; font-family: monospace; }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-blue { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; }
+    .btn-ghost { background: rgba(51, 65, 85, 0.6); color: #cbd5e1;
+                 border: 1px solid rgba(148, 163, 184, 0.15); }
+    .status-tag {
+      font-size: 12px;
+      color: #94a3b8;
+      padding: 6px 10px;
+      background: rgba(51, 65, 85, 0.4);
+      border-radius: 8px;
+    }
+    .empty { text-align: center; color: #64748b; padding: 30px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="/social/">← بازگشت به دوستان</a>
+  <h1>🔍 جستجوی کاربر</h1>
+
+  <form method="get" class="search-row">
+    <input type="text" name="q" placeholder="شناسه ۹ رقمی یا نام..." value="{{ query }}" autofocus>
+    <button type="submit">جستجو</button>
+  </form>
+
+  {% if error %}
+    <div class="empty">{{ error }}</div>
+  {% endif %}
+
+  {% for r in results %}
+    <div class="user-row">
+      <div class="user-av">{{ r.avatar }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ r.user.alias }}</div>
+        <div class="user-id">#{{ r.user.public_id }}</div>
+      </div>
+      {% if r.state == "friend" %}
+        <span class="status-tag">✓ دوست</span>
+        <a href="/social/chat/{{ r.user.id }}/" class="btn btn-blue">💬 چت</a>
+      {% elif r.state == "pending_out" %}
+        <span class="status-tag">در انتظار...</span>
+      {% elif r.state == "pending_in" %}
+        <span class="status-tag">به تو درخواست داد</span>
+        <a href="/social/" class="btn btn-blue">مشاهده</a>
+      {% else %}
+        <form method="post" action="/social/add/{{ r.user.id }}/" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-blue">+ افزودن</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+</body>
+</html>

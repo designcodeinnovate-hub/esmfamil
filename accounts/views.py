@@ -323,3 +323,31 @@ def profile_view(request):
             "avg_score": avg_score,
         },
     })
+
+@login_required
+def settings_view(request):
+    """صفحه تنظیمات کاربر."""
+    user = request.user
+    message = None
+
+    if request.method == "POST":
+        new_settings = {
+            "sound": "sound" in request.POST,
+            "music": "music" in request.POST,
+            "notif_invite": "notif_invite" in request.POST,
+            "notif_friend": "notif_friend" in request.POST,
+            "notif_round": "notif_round" in request.POST,
+            "theme": request.POST.get("theme", "dark"),
+            "vibration": "vibration" in request.POST,
+        }
+        if new_settings["theme"] not in ("dark", "light"):
+            new_settings["theme"] = "dark"
+
+        user.settings_json = new_settings
+        user.save(update_fields=["settings_json"])
+        message = "تنظیمات ذخیره شد."
+
+    return render(request, "accounts/settings.html", {
+        "settings": user.get_settings(),
+        "message": message,
+    })

@@ -1,161 +1,249 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>خانه</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
-      color: #e2e8f0;
-      overflow-x: hidden;
-    }
-    .glow {
-      position: fixed;
-      width: 500px; height: 500px;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: 0.35;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .glow-1 { top: -180px; left: -180px; background: #f97316; }
-    .glow-2 { bottom: -180px; right: -180px; background: #06b6d4; }
-    .glow-3 { top: 40%; left: 40%; background: #eab308; opacity: 0.15; }
-    .container {
-      position: relative;
-      z-index: 10;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 24px 20px 60px;
-    }
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      padding: 12px 18px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-    .user-info { display: flex; align-items: center; gap: 10px; font-size: 17px; }
-    .user-avatar {
-      font-size: 34px;
-      background: linear-gradient(135deg, #f97316, #eab308);
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
-    }
-    .user-name { font-weight: bold; color: #fff; }
-    .actions { display: flex; gap: 8px; }
-    .actions a {
-      color: #cbd5e1; text-decoration: none; font-size: 13px;
-      padding: 8px 14px; border-radius: 10px;
-      background: rgba(51, 65, 85, 0.6);
-      border: 1px solid rgba(148, 163, 184, 0.1);
-    }
-    .welcome { text-align: center; margin: 44px 0 36px; }
-    .welcome h1 {
-      font-size: 30px;
-      background: linear-gradient(135deg, #f97316, #eab308, #06b6d4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 10px;
-    }
-    .welcome p { color: #94a3b8; font-size: 15px; }
-    .menu-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      max-width: 560px;
-      margin: 0 auto;
-    }
-    .row-card {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      padding: 20px 24px;
-      border-radius: 18px;
-      text-decoration: none;
-      color: #fff;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      box-shadow: 0 8px 26px rgba(0,0,0,0.35);
-      position: relative;
-      overflow: hidden;
-    }
-    .row-card::before {
-      content: "";
-      position: absolute;
-      right: 0; top: 0; bottom: 0;
-      width: 6px;
-    }
-    .row-quick::before   { background: linear-gradient(#f97316, #eab308); }
-    .row-friends::before { background: linear-gradient(#06b6d4, #3b82f6); }
-    .row-rooms::before   { background: linear-gradient(#eab308, #f97316); }
-    .row-icon { font-size: 42px; flex-shrink: 0; }
-    .row-text { flex: 1; }
-    .row-title { font-size: 19px; font-weight: bold; margin-bottom: 4px; }
-    .row-desc { font-size: 13px; color: #94a3b8; }
-    .row-arrow { font-size: 22px; color: #64748b; }
-  </style>
-</head>
-<body>
-  <div class="glow glow-1"></div>
-  <div class="glow glow-2"></div>
-  <div class="glow glow-3"></div>
+{% extends "base.html" %}
+{% block title %}خانه — اسم فامیل{% endblock %}
 
-  <div class="container">
-    <div class="topbar">
-      <div class="user-info">
-        <div class="user-avatar">{{ avatar_emoji }}</div>
-        <span class="user-name">{{ user.alias }}</span>
+{% block extra_css %}
+<style>
+  .top-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .user-greet { display: flex; align-items: center; gap: 12px; }
+  .user-av {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+    border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 0 20px rgba(244, 197, 66, 0.25);
+  }
+  .greet-text .hi { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+  .greet-text .name { font-size: 16px; font-weight: bold; color: #fff; }
+  .icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text); text-decoration: none; font-size: 18px;
+    transition: 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--gold); }
+
+  .brand-logo { text-align: center; margin: 4px 0 22px; }
+  .brand-logo .crown {
+    font-size: 22px;
+    display: inline-block;
+    transform: translateY(-6px);
+    filter: drop-shadow(0 4px 12px rgba(244,197,66,0.5));
+  }
+  .brand-logo .name {
+    font-size: 30px; font-weight: 900;
+    background: linear-gradient(180deg, #fde68a, #f4c542, #ca8a04);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 6px 24px rgba(244,197,66,0.35));
+    line-height: 1.1;
+    display: inline-block;
+    margin: 0 6px;
+  }
+  .brand-logo .sub {
+    display: block;
+    color: var(--dim);
+    font-size: 11px;
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+
+  /* Feature banner */
+  .feature-banner {
+    position: relative;
+    border-radius: 20px;
+    padding: 22px 20px;
+    margin-bottom: 18px;
+    background:
+      radial-gradient(circle at 90% 20%, rgba(244,197,66,0.15), transparent 60%),
+      radial-gradient(circle at 10% 90%, rgba(139,92,246,0.35), transparent 60%),
+      linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .feature-banner::before {
+    content: "";
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(244,197,66,0.3), transparent 70%);
+    border-radius: 50%;
+  }
+  .feature-banner .title {
+    font-size: 20px; font-weight: bold;
+    color: #fff; margin-bottom: 6px;
+    position: relative; z-index: 1;
+  }
+  .feature-banner .desc {
+    font-size: 12.5px; color: #cbd5e1;
+    margin-bottom: 16px;
+    position: relative; z-index: 1;
+    line-height: 1.6;
+  }
+  .feature-banner .btn-quick {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, #f4c542, #eab308);
+    color: #1a1a1a;
+    padding: 11px 22px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(244,197,66,0.4);
+    position: relative; z-index: 1;
+    transition: transform 0.15s;
+  }
+  .feature-banner .btn-quick:hover { transform: translateY(-2px); }
+
+  /* Quick access tiles */
+  .quick-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .qtile {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .qtile:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+  }
+  .qtile .qt-icon {
+    font-size: 26px;
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(244,197,66,0.15));
+  }
+  .qtile .qt-name {
+    font-size: 12.5px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .qtile .qt-badge {
+    position: absolute; top: 6px; left: 6px;
+    font-size: 9px;
+    background: rgba(234,179,8,0.25);
+    color: var(--gold);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  /* Sections */
+  .section-title {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 22px 0 12px;
+  }
+  .section-title h3 { font-size: 15px; color: #fff; font-weight: bold; }
+  .section-title a { font-size: 12px; color: var(--gold); text-decoration: none; }
+
+  .mode-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mode-card {
+    padding: 16px 14px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    text-decoration: none; color: var(--text);
+    transition: 0.2s;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .mode-card:hover { transform: translateY(-2px); border-color: var(--gold); }
+  .mode-card .mc-icon { font-size: 30px; }
+  .mode-card .mc-title { font-size: 14px; font-weight: bold; }
+  .mode-card .mc-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <div class="top-header">
+    <div class="user-greet">
+      <div class="user-av">{{ avatar_emoji }}</div>
+      <div class="greet-text">
+        <div class="hi">سلام 👋</div>
+        <div class="name">{{ user.alias }}</div>
       </div>
-      <div class="actions">
-        <a href="/accounts/profile/">👤 پروفایل</a>
-        <a href="/accounts/logout/">🚪 خروج</a>
-      </div>
     </div>
-
-    <div class="welcome">
-      <h1>🎮 چیکار کنیم {{ user.alias }}؟</h1>
-      <p>یکی رو انتخاب کن و بریم!</p>
-    </div>
-
-    <div class="menu-rows">
-      <a class="row-card row-quick" href="/game/quick/">
-        <div class="row-icon">⚡</div>
-        <div class="row-text">
-          <div class="row-title">بازی سریع با بات</div>
-          <div class="row-desc">یه رقیب هوشمند، سه سطح سختی</div>
-        </div>
-        <div class="row-arrow">←</div>
-      </a>
-      <a class="row-card row-friends" href="/game/friends/">
-        <div class="row-icon">👥</div>
-        <div class="row-text">
-          <div class="row-title">دوستان</div>
-          <div class="row-desc">لیست دوستان و چت</div>
-        </div>
-        <div class="row-arrow">←</div>
-      </a>
-      <a class="row-card row-rooms" href="/game/rooms/">
-        <div class="row-icon">🚪</div>
-        <div class="row-text">
-          <div class="row-title">اتاق‌ها</div>
-          <div class="row-desc">ساخت اتاق یا ورود با کد</div>
-        </div>
-        <div class="row-arrow">←</div>
-      </a>
-    </div>
+    <a href="/accounts/settings/" class="icon-btn">⚙️</a>
   </div>
-</body>
-</html>
+
+  <div class="brand-logo">
+    <span class="crown">👑</span>
+    <span class="name">اسم فامیل</span>
+    <span class="sub">بازی کلاسیک، حال و آنلاین</span>
+  </div>
+
+  <div class="feature-banner">
+    <div class="title">🎮 بازی آنلاین</div>
+    <div class="desc">با رقیب هوشمند بازی کن یا دوستانت رو به اتاق خصوصی دعوت کن.</div>
+    <a href="/game/quick/" class="btn-quick">شروع سریع ←</a>
+  </div>
+
+  <div class="quick-tiles">
+    <a href="/alliance/" class="qtile">
+      <div class="qt-icon">🛡️</div>
+      <div class="qt-name">اتحاد</div>
+    </a>
+    <a href="/game/quick/" class="qtile">
+      <div class="qt-icon">🎲</div>
+      <div class="qt-name">بازی تصادفی</div>
+    </a>
+    <a href="/social/" class="qtile">
+      <div class="qt-icon">🏆</div>
+      <div class="qt-name">رتبه‌بندی</div>
+      <div class="qt-badge">جدید</div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h3>🎯 حالت‌های بازی</h3>
+    <a href="/game/rooms/">مشاهده همه</a>
+  </div>
+
+  <div class="mode-grid">
+    <a href="/game/quick/" class="mode-card">
+      <div class="mc-icon">⚡</div>
+      <div class="mc-title">بازی سریع</div>
+      <div class="mc-desc">با بات هوشمند در سه سطح سختی</div>
+    </a>
+    <a href="/game/rooms/" class="mode-card">
+      <div class="mc-icon">👥</div>
+      <div class="mc-title">بازی با دوستان</div>
+      <div class="mc-desc">اتاق خصوصی با کد دعوت</div>
+    </a>
+    <a href="/alliance/" class="mode-card">
+      <div class="mc-icon">🛡️</div>
+      <div class="mc-title">اتحاد</div>
+      <div class="mc-desc">تیم بساز و با هم رقابت کن</div>
+    </a>
+    <a href="/game/rooms/" class="mode-card">
+      <div class="mc-icon">🎲</div>
+      <div class="mc-title">حالت کلاسیک</div>
+      <div class="mc-desc">همون بازی قدیمی، فقط دیجیتال</div>
+    </a>
+  </div>
+
+{% endblock %}

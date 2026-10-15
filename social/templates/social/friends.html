@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>دوستان</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Tahoma, sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
+      color: #e2e8f0;
+      padding: 24px 20px 60px;
+    }
+    .glow {
+      position: fixed; width: 500px; height: 500px;
+      border-radius: 50%; filter: blur(120px);
+      opacity: 0.28; z-index: 0; pointer-events: none;
+    }
+    .glow-1 { top: -180px; left: -180px; background: #06b6d4; }
+    .glow-2 { bottom: -180px; right: -180px; background: #f97316; }
+
+    .container { position: relative; z-index: 10; max-width: 720px; margin: 0 auto; }
+    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+    h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 14px 0 18px;
+    }
+
+    .search-box {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 18px;
+    }
+    .search-box h3 { font-size: 15px; color: #fdba74; margin-bottom: 10px; }
+    .search-row { display: flex; gap: 8px; }
+    .search-row input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.7);
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    .search-row input:focus { outline: none; border-color: #06b6d4; }
+    .search-row button {
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .msg {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .msg-ok { background: rgba(34, 197, 94, 0.15); color: #4ade80;
+              border: 1px solid rgba(34, 197, 94, 0.3); }
+    .msg-info { background: rgba(59, 130, 246, 0.15); color: #93c5fd;
+                border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    .box {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 18px;
+      border-radius: 16px;
+      margin-bottom: 14px;
+    }
+    .box h3 {
+      font-size: 15px;
+      color: #fdba74;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge {
+      background: rgba(249, 115, 22, 0.25);
+      color: #fdba74;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 10px;
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+    .user-row:last-child { border-bottom: none; }
+    .user-av {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; }
+    .user-name { font-weight: bold; margin-bottom: 2px; }
+    .user-id { font-size: 11px; color: #64748b; font-family: monospace; }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: transform 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+    .btn-red { background: rgba(239, 68, 68, 0.2); color: #f87171;
+               border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-blue { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; }
+    .btn-ghost { background: rgba(51, 65, 85, 0.6); color: #cbd5e1;
+                 border: 1px solid rgba(148, 163, 184, 0.15); }
+
+    .empty {
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      padding: 20px 0;
+    }
+    .empty-icon { font-size: 42px; margin-bottom: 8px; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <div class="container">
+    <a class="back" href="/game/">← بازگشت به خانه</a>
+    <h1>👥 دوستان</h1>
+
+    {% if messages %}
+      {% for m in messages %}
+        <div class="msg {% if m.tags == 'success' %}msg-ok{% else %}msg-info{% endif %}">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="search-box">
+      <h3>🔍 پیدا کردن دوست</h3>
+      <form method="get" action="/social/search/" class="search-row">
+        <input type="text" name="q" placeholder="شناسه ۹ رقمی یا نام..." value="">
+        <button type="submit">جستجو</button>
+      </form>
+    </div>
+
+    {% if incoming %}
+      <div class="box">
+        <h3>📬 درخواست‌های دریافتی <span class="badge">{{ incoming|length }}</span></h3>
+        {% for item in incoming %}
+          <div class="user-row">
+            <div class="user-av">{{ item.avatar }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ item.from.alias }}</div>
+              <div class="user-id">#{{ item.from.public_id }}</div>
+            </div>
+            <form method="post" action="/social/accept/{{ item.req.id }}/" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-green">✓ قبول</button>
+            </form>
+            <form method="post" action="/social/reject/{{ item.req.id }}/" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-red">✕ رد</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="box">
+      <h3>👫 دوستان من <span class="badge">{{ friends|length }}</span></h3>
+      {% if friends %}
+        {% for f in friends %}
+          <div class="user-row">
+            <div class="user-av">{{ f.avatar }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ f.user.alias }}</div>
+              <div class="user-id">#{{ f.user.public_id }}</div>
+            </div>
+            <a href="/social/chat/{{ f.user.id }}/" class="btn btn-blue">💬 چت</a>
+            <form method="post" action="/social/remove/{{ f.user.id }}/" style="display:inline"
+                  onsubmit="return confirm('از لیست دوستان حذف شود؟');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost">حذف</button>
+            </form>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">
+          <div class="empty-icon">👤</div>
+          هنوز دوستی نداری. یک نفر رو جستجو کن!
+        </div>
+      {% endif %}
+    </div>
+
+    {% if outgoing %}
+      <div class="box">
+        <h3>📤 درخواست‌های ارسالی <span class="badge">{{ outgoing|length }}</span></h3>
+        {% for item in outgoing %}
+          <div class="user-row">
+            <div class="user-av">{{ item.avatar }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ item.to.alias }}</div>
+              <div class="user-id">#{{ item.to.public_id }}</div>
+            </div>
+            <span style="color:#94a3b8;font-size:13px">در انتظار...</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
