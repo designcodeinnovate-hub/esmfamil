@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}رتبه‌بندی{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+
+  /* کارت رتبه شخصی */
+  .my-card {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(244,197,66,0.25), transparent 60%),
+      linear-gradient(135deg, #1a1a2e, #0f0f1e);
+    border: 1.5px solid rgba(244,197,66,0.4);
+    border-radius: 20px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 12px 36px rgba(244,197,66,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .my-card::before {
+    content: "";
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(244,197,66,0.3), transparent 70%);
+    border-radius: 50%;
+  }
+  .my-card .my-av {
+    font-size: 40px;
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(234,179,8,0.15));
+    border: 2px solid rgba(244,197,66,0.6);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(244,197,66,0.4);
+  }
+  .my-card .my-info { flex: 1; position: relative; z-index: 1; }
+  .my-card .my-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .my-card .my-name { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+  .my-card .my-stats { display: flex; gap: 14px; font-size: 12px; }
+  .my-card .my-stats span { color: var(--muted); }
+  .my-card .my-stats b { color: var(--gold); font-size: 14px; }
+
+  /* تب‌های دوره */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 5px;
+    border-radius: 14px;
+  }
+  .tab {
+    flex: 1;
+    padding: 11px 12px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, #f4c542, #eab308);
+    color: #1a1a1a;
+    box-shadow: 0 6px 20px rgba(244,197,66,0.35);
+  }
+  .tab:not(.active):hover {
+    background: rgba(148,163,184,0.1);
+    color: var(--text);
+  }
+
+  /* جداول */
+  .board {
+    display: none;
+  }
+  .board.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    transition: transform 0.15s;
+  }
+  .rank-row:hover {
+    transform: translateX(-3px);
+    border-color: rgba(244,197,66,0.3);
+  }
+  .rank-row.me {
+    background: linear-gradient(135deg, rgba(244,197,66,0.15), rgba(234,179,8,0.08));
+    border-color: rgba(244,197,66,0.4);
+    box-shadow: 0 0 20px rgba(244,197,66,0.15);
+  }
+
+  .rank-num {
+    font-size: 18px;
+    font-weight: bold;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.7);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+  .rank-num.r1 { background: linear-gradient(135deg, #f4c542, #ca8a04); color: #1a1a1a; box-shadow: 0 0 20px rgba(244,197,66,0.5); }
+  .rank-num.r2 { background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: #1a1a1a; }
+  .rank-num.r3 { background: linear-gradient(135deg, #d97706, #92400e); color: #fff; }
+
+  .rank-av {
+    font-size: 24px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(148,163,184,0.15);
+  }
+
+  .rank-info { flex: 1; }
+  .rank-name { font-size: 14px; font-weight: bold; margin-bottom: 2px; }
+  .rank-sub { font-size: 11px; color: var(--muted); }
+
+  .rank-score {
+    text-align: left;
+    font-family: monospace;
+  }
+  .rank-score .big {
+    font-size: 18px; font-weight: bold;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+  }
+  .rank-score .small {
+    font-size: 10px; color: var(--muted);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .empty .icon { font-size: 52px; display: block; margin-bottom: 10px; opacity: 0.5; }
+
+  .crown-icon { font-size: 18px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <div class="page-head">
+    <h1>🏆 <span>رتبه‌بندی</span></h1>
+  </div>
+
+  <!-- کارت رتبه شخصی -->
+  <div class="my-card">
+    <div class="my-av">{{ my_avatar }}</div>
+    <div class="my-info">
+      <div class="my-label">رتبه شما امروز</div>
+      <div class="my-name">{{ my_alias }}</div>
+      <div class="my-stats">
+        <span>رتبه: <b>{{ my_daily.rank }}</b></span>
+        <span>امتیاز امروز: <b>{{ my_daily.total }}</b></span>
+        <span>بازی: <b>{{ my_daily.games }}</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- تب‌های دوره -->
+  <div class="tabs">
+    <button class="tab active" onclick="showBoard('daily', this)">📅 امروز</button>
+    <button class="tab" onclick="showBoard('weekly', this)">🗓️ هفته</button>
+    <button class="tab" onclick="showBoard('monthly', this)">📆 ماه</button>
+  </div>
+
+  <!-- رتبه‌بندی روزانه -->
+  <div class="board active" id="board-daily">
+    {% if daily %}
+      {% for r in daily %}
+        <div class="rank-row {% if r.user.id == user.id %}me{% endif %}">
+          <div class="rank-num {% if r.rank == 1 %}r1{% elif r.rank == 2 %}r2{% elif r.rank == 3 %}r3{% endif %}">
+            {% if r.rank == 1 %}👑{% else %}{{ r.rank }}{% endif %}
+          </div>
+          <div class="rank-av">{{ r.avatar }}</div>
+          <div class="rank-info">
+            <div class="rank-name">{{ r.alias }}{% if r.user.id == user.id %} (شما){% endif %}</div>
+            <div class="rank-sub">{{ r.games }} بازی امروز</div>
+          </div>
+          <div class="rank-score">
+            <span class="big">{{ r.total }}</span>
+            <span class="small">امتیاز</span>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">
+        <span class="icon">🌅</span>
+        امروز هنوز کسی بازی نکرده.<br>
+        اولین نفر باش!
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- رتبه‌بندی هفته -->
+  <div class="board" id="board-weekly">
+    {% if weekly %}
+      {% for r in weekly %}
+        <div class="rank-row {% if r.user.id == user.id %}me{% endif %}">
+          <div class="rank-num {% if r.rank == 1 %}r1{% elif r.rank == 2 %}r2{% elif r.rank == 3 %}r3{% endif %}">
+            {% if r.rank == 1 %}👑{% else %}{{ r.rank }}{% endif %}
+          </div>
+          <div class="rank-av">{{ r.avatar }}</div>
+          <div class="rank-info">
+            <div class="rank-name">{{ r.alias }}{% if r.user.id == user.id %} (شما){% endif %}</div>
+            <div class="rank-sub">{{ r.games }} بازی این هفته</div>
+          </div>
+          <div class="rank-score">
+            <span class="big">{{ r.total }}</span>
+            <span class="small">امتیاز</span>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">
+        <span class="icon">🗓️</span>
+        این هفته هنوز کسی بازی نکرده.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- رتبه‌بندی ماه -->
+  <div class="board" id="board-monthly">
+    {% if monthly %}
+      {% for r in monthly %}
+        <div class="rank-row {% if r.user.id == user.id %}me{% endif %}">
+          <div class="rank-num {% if r.rank == 1 %}r1{% elif r.rank == 2 %}r2{% elif r.rank == 3 %}r3{% endif %}">
+            {% if r.rank == 1 %}👑{% else %}{{ r.rank }}{% endif %}
+          </div>
+          <div class="rank-av">{{ r.avatar }}</div>
+          <div class="rank-info">
+            <div class="rank-name">{{ r.alias }}{% if r.user.id == user.id %} (شما){% endif %}</div>
+            <div class="rank-sub">{{ r.games }} بازی این ماه</div>
+          </div>
+          <div class="rank-score">
+            <span class="big">{{ r.total }}</span>
+            <span class="small">امتیاز</span>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">
+        <span class="icon">📆</span>
+        این ماه هنوز کسی بازی نکرده.
+      </div>
+    {% endif %}
+  </div>
+
+<script>
+  function showBoard(name, btn) {
+    document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('board-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+
+{% endblock %}

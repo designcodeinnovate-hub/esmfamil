@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}ورود به اتاق{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+  .box { background: var(--card); border: 1px solid var(--border); padding: 28px 22px; border-radius: 18px; text-align: center; }
+  label.lbl { display: block; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  input[type=text] {
+    width: 100%; padding: 18px; border-radius: 14px;
+    border: 2px solid var(--border); background: var(--bg); color: var(--text);
+    font-size: 32px; font-family: monospace; text-align: center;
+    letter-spacing: 10px; margin-bottom: 14px;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--teal); }
+  button.submit {
+    width: 100%; padding: 16px; border: none; border-radius: 14px;
+    font-size: 17px; font-weight: bold; font-family: inherit; cursor: pointer;
+    color: #fff; background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <a href="/game/rooms/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>🔑 <span>ورود به اتاق</span></h1>
+  </div>
+  <div class="box">
+    <form method="post" action="/game/join/">
+      {% csrf_token %}
+      <label class="lbl">کد ۴ رقمی اتاق</label>
+      <input type="text" name="code" maxlength="4" required autofocus placeholder="0000" autocomplete="off">
+      <input type="text" name="password" maxlength="32" placeholder="رمز (اگه داره)"
+             style="font-size:16px; letter-spacing:2px; font-family:inherit">
+      <button type="submit" class="submit">🚀 ورود</button>
+    </form>
+  </div>
+{% endblock %}

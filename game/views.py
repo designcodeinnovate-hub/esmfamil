@@ -1,3 +1,5 @@
+from django.db import models
+from django.db.models import Q
 import random
 
 from django.contrib.auth.decorators import login_required
@@ -8,13 +10,24 @@ from accounts.avatars import get_emoji
 
 from . import bot as bot_logic
 from .bot_data import LETTER_DIFFICULTY
+def _require_complete(user):
+    """بررسی می‌کند که کاربر ثبت‌نامش را کامل کرده یا نه."""
+    if not user.is_authenticated:
+        return redirect("landing")
+    if not user.has_completed_registration or not user.has_chosen_avatar:
+        return redirect("accounts:complete_registration")
+    return None
+
+
 from .models import (
     DEFAULT_CATEGORIES, Answer, BotAnswer, Game, Player, Round,
 )
 
 
 def _avatar(user):
-    return get_emoji(user.avatar_id)
+    from accounts.avatars import get_avatar_display
+    _, val = get_avatar_display(user)
+    return val
 
 
 def _normalize(text):
@@ -28,9 +41,11 @@ def _normalize(text):
 def home(request):
     if not request.user.has_chosen_avatar:
         return redirect("accounts:avatar_select")
+    from social.notifications import unread_count
     return render(request, "game/menu.html", {
         "avatar_emoji": _avatar(request.user),
         "active": "home",
+        "unread_notifications": unread_count(request.user),
     })
 
 
@@ -110,8 +125,26 @@ def bot_setup(request):
         )
         return redirect("game:bot_play", game_id=game.id)
 
+    # دسته‌های غیرمعمول که پیش‌فرض غیرفعالن
+    unusual_cats = ["فیلم", "برند", "ورزش", "ابزار", "لباس", "کتاب", "مکان", "گیاه", "بیماری"]
+    
+    # خوندن تنظیمات کاربر
+    user_settings = request.user.settings_json or {}
+    # اگه کاربر تنظیمات ذخیره نکرده باشه، اینا پیش‌فرض غیرفعال میشن
+    if "excluded_categories" not in user_settings:
+        excluded = unusual_cats
+    else:
+        excluded = user_settings.get("excluded_categories", [])
+
+    main_cats = ["اسم", "فامیل", "میوه", "رنگ", "شهر", "کشور", "ماشین", "حیوان", "اشیا", "غذا", "شغل", "اعضای بدن"]
+    
+    active_main = [c for c in main_cats if c not in excluded]
+    active_extra = [c for c in unusual_cats if c not in excluded]
+
     return render(request, "game/bot_setup.html", {
-        "categories": DEFAULT_CATEGORIES,
+        "active_main": active_main,
+        "active_extra": active_extra,
+        "excluded_categories": excluded,
     })
 
 
@@ -144,11 +177,29 @@ def bot_submit(request, game_id):
     round_obj.stopper = request.user
     round_obj.save(update_fields=["stopped_at", "stopper"])
 
+    from .bot_data import is_valid_word
+
     player_answers = []
     for cat in game.categories:
         raw = (request.POST.get(f"cat_{cat}") or "").strip()[:64]
         norm = _normalize(raw)
-        score = 10 if (norm and norm[0] == round_obj.letter) else 0
+        score = 0
+        reason = ""
+        
+        if not raw:
+            reason = "خالی"
+        elif not norm or norm[0] != round_obj.letter:
+            reason = "پاسخ اشتباه"
+        elif cat in ("اسم", "فامیل"):
+            # برای اسم و فامیل فقط حرف اول کافیه
+            score = 10
+            reason = "صحیح"
+        elif not is_valid_word(norm, cat, round_obj.letter):
+            reason = "پاسخ اشتباه"
+        else:
+            score = 10
+            reason = "صحیح"
+        
         Answer.objects.update_or_create(
             round=round_obj, user=request.user, category=cat,
             defaults={"value": raw, "normalized": norm, "score": score},
@@ -158,6 +209,7 @@ def bot_submit(request, game_id):
             "value": raw or "—",
             "normalized": norm,
             "score": score,
+            "reason": reason,
         })
 
     bot_raw, _ = bot_logic.bot_answers_for_round(
@@ -212,42 +264,349 @@ def bot_submit(request, game_id):
     })
 
 
+
+
+
 @login_required
-def create_room(request):
-    if request.method != "POST":
-        return redirect("game:rooms")
-    selected = [c for c in request.POST.getlist("categories") if c in DEFAULT_CATEGORIES]
-    if not selected:
-        selected = DEFAULT_CATEGORIES
-    password = (request.POST.get("password") or "").strip()[:32]
-    room = Game.objects.create(
-        host=request.user, status="waiting",
-        categories=selected, mode="group", password=password,
+def leaderboard_view(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=7)
+    month_start = today_start.replace(day=1)
+
+    def _top(period_start, limit=10):
+        rows = (
+            Player.objects
+            .filter(game__created_at__gte=period_start)
+            .values("user_id")
+            .annotate(total=Sum("score"), games=Count("id"))
+            .order_by("-total")[:limit]
+        )
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user_ids = [r["user_id"] for r in rows]
+        users_map = {u.id: u for u in User.objects.filter(id__in=user_ids)}
+
+        result = []
+        for idx, r in enumerate(rows, start=1):
+            u = users_map.get(r["user_id"])
+            if not u:
+                continue
+            result.append({
+                "rank": idx,
+                "user": u,
+                "avatar": get_emoji(u.avatar_id),
+                "alias": u.alias,
+                "total": r["total"] or 0,
+                "games": r["games"],
+            })
+        return result
+
+    daily = _top(today_start)
+    weekly = _top(week_start)
+    monthly = _top(month_start)
+
+    # رتبه شخصی
+    def _my_rank(period_start):
+        my_total = (
+            Player.objects
+            .filter(user=request.user, game__created_at__gte=period_start)
+            .aggregate(t=Sum("score"))["t"] or 0
+        )
+        if my_total == 0:
+            return {"total": 0, "rank": "—", "games": 0}
+
+        my_games = Player.objects.filter(
+            user=request.user, game__created_at__gte=period_start
+        ).count()
+
+        # چند نفر امتیاز بیشتری دارن؟
+        better = (
+            Player.objects
+            .filter(game__created_at__gte=period_start)
+            .values("user_id")
+            .annotate(t=Sum("score"))
+            .filter(t__gt=my_total)
+            .count()
+        )
+        return {"total": my_total, "rank": better + 1, "games": my_games}
+
+    my_daily = _my_rank(today_start)
+    my_weekly = _my_rank(week_start)
+    my_monthly = _my_rank(month_start)
+
+    return render(request, "game/leaderboard.html", {
+        "daily": daily,
+        "weekly": weekly,
+        "monthly": monthly,
+        "my_daily": my_daily,
+        "my_weekly": my_weekly,
+        "my_monthly": my_monthly,
+        "my_avatar": _avatar(request.user),
+        "my_alias": request.user.alias,
+        "active": "leaderboard",
+    })
+
+@login_required
+def top_players_view(request):
+    """بازیکنان برتر همه دوران."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Count, Sum
+
+    User = get_user_model()
+    top = (
+        Player.objects
+        .values("user_id")
+        .annotate(total=Sum("score"), games=Count("id"))
+        .order_by("-total")[:30]
     )
-    Player.objects.create(game=room, user=request.user)
-    return redirect("game:room", room_code=room.code)
+
+    ids = [t["user_id"] for t in top]
+    users = {u.id: u for u in User.objects.filter(id__in=ids)}
+
+    result = []
+    for i, t in enumerate(top, 1):
+        u = users.get(t["user_id"])
+        if not u:
+            continue
+        result.append({
+            "rank": i,
+            "user": u,
+            "avatar": get_emoji(u.avatar_id),
+            "avatar_type": getattr(u, "avatar_type", "emoji"),
+            "avatar_id": u.avatar_id,
+            "alias": u.alias,
+            "total": t["total"] or 0,
+            "games": t["games"],
+            "level": 1 + (t["total"] or 0) // 100,
+        })
+
+    return render(request, "game/top_players.html", {
+        "players": result,
+        "active": "leaderboard",
+    })
+
+# ============================================================
+# Matchmaking — بازی با پلیر رندم
+# ============================================================
+
+@login_required
+def match_start(request):
+    """ورود به صف انتظار."""
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from .models import MatchQueue
+
+    # حذف از صف قبلی
+    MatchQueue.objects.filter(user=request.user).delete()
+
+    # اضافه به صف جدید
+    MatchQueue.objects.create(user=request.user)
+
+    # چک کن اگه حریف داره
+    return redirect("game:match_wait")
 
 
 @login_required
-def join_room(request):
-    if request.method != "POST":
+def match_wait(request):
+    """صفحه انتظار."""
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from .models import MatchQueue, Game, Player, Round
+    from game.bot_data import LETTER_DIFFICULTY
+    import random
+
+    # چک کن توی صف هست
+    my_queue = MatchQueue.objects.filter(user=request.user).first()
+    if not my_queue:
         return redirect("game:rooms")
-    code = (request.POST.get("code") or "").strip()
-    password = (request.POST.get("password") or "").strip()
-    room = Game.objects.filter(code=code).first()
-    if room is None:
-        return redirect("game:rooms")
-    if room.password and room.password != password:
-        return redirect("game:rooms")
+
+    # کسی هست که از من زودتر اومده؟
+    opponent_queue = MatchQueue.objects.filter(
+        joined_at__lt=my_queue.joined_at
+    ).exclude(user=request.user).first()
+
+    if opponent_queue:
+        # پیدا شد! حالا بازی بساز
+        opponent = opponent_queue.user
+
+        # پاک کردن هر دو از صف
+        MatchQueue.objects.filter(user__in=[request.user, opponent]).delete()
+
+        # ساخت بازی
+        categories = ["اسم", "فامیل", "میوه", "رنگ", "شهر", "کشور",
+                     "ماشین", "حیوان", "اشیاء", "غذا"]
+        letter = random.choice(list("ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی"))
+
+        game = Game.objects.create(
+            host=request.user,
+            status="waiting",
+            categories=categories,
+            mode="match",
+            difficulty="medium",
+            letter_mode="random",
+        )
+        Player.objects.create(game=game, user=request.user)
+        Player.objects.create(game=game, user=opponent)
+
+        return redirect("game:rooms_manage")
+
+    return render(request, "game/match_wait.html", {
+        "active": "games",
+    })
+
+
+@login_required
+def match_cancel(request):
+    """لغو انتظار."""
+    from .models import MatchQueue
+    MatchQueue.objects.filter(user=request.user).delete()
+    return redirect("game:rooms")
+
+
+@login_required
+def match_status(request):
+    """چک وضعیت صف (AJAX)."""
+    from .models import MatchQueue, Game
+    from django.http import JsonResponse
+
+    my_queue = MatchQueue.objects.filter(user=request.user).first()
+    if not my_queue:
+        return JsonResponse({"status": "cancelled"})
+
+    # اگه توی بازی هستم
+    my_game = Game.objects.filter(players__user=request.user, mode="match").order_by("-created_at").first()
+    if my_game and my_game.status != "finished":
+        return JsonResponse({
+            "status": "matched",
+            "url": f"/game/room/{my_game.code}/",
+        })
+
+    # چند نفر توی صف هستن
+    count = MatchQueue.objects.count()
+    return JsonResponse({"status": "waiting", "count": count})
+
+# ============================================================
+# سیستم اتاق‌های بازی (Lobby)
+# ============================================================
+
+# ============================================================
+# سیستم اتاق‌های بازی (Lobby)
+# ============================================================
+
+# ============================================================
+# سیستم اتاق‌های بازی
+# ============================================================
+
+def _require_complete(user):
+    if not user.is_authenticated:
+        return redirect("landing")
+    if not user.has_completed_registration or not user.has_chosen_avatar:
+        return redirect("accounts:complete_registration")
+    return None
+
+@login_required
+def rooms_manage(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    query = (request.GET.get("q") or "").strip()
+    active_rooms = Game.objects.filter(status="waiting", mode="group").order_by("-created_at")
+
+    if query:
+        active_rooms = active_rooms.filter(
+            Q(room_name__icontains=query) | Q(host__alias__icontains=query)
+        )
+
+    rooms_data = []
+    for r in active_rooms:
+        count = r.players.count()
+        rooms_data.append({
+            "obj": r,
+            "count": count,
+            "is_full": count >= r.max_players,
+            "has_password": bool(r.password),
+        })
+
+    if request.method == "POST":
+        room_name = (request.POST.get("room_name") or "").strip()[:50] or "اتاق بازی"
+        password = (request.POST.get("password") or "").strip()[:32]
+        max_players = int(request.POST.get("max_players") or 8)
+        selected = [c for c in request.POST.getlist("categories") if c in DEFAULT_CATEGORIES]
+        if not selected:
+            selected = DEFAULT_CATEGORIES
+
+        game = Game.objects.create(
+            host=request.user, status="waiting",
+            categories=selected, mode="group", password=password,
+            room_name=room_name, max_players=max_players
+        )
+        Player.objects.create(game=game, user=request.user)
+        return redirect("game:rooms_manage")
+
+    return render(request, "game/rooms_manage.html", {
+        "categories": DEFAULT_CATEGORIES,
+        "rooms": rooms_data,
+        "query": query,
+        "active": "games",
+    })
+
+@login_required
+def join_room(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    room = Game.objects.filter(code=room_code).first()
+    if not room:
+        return redirect("game:rooms_manage")
+
+    if room.players.count() >= room.max_players:
+        return render(request, "game/rooms_manage.html", {
+            "categories": DEFAULT_CATEGORIES,
+            "rooms": [],
+            "error": "ظرفیت این اتاق پر شده است.",
+            "active": "games",
+        })
+
+    if request.method == "POST":
+        password = (request.POST.get("password") or "").strip()
+        if room.password and room.password != password:
+            return render(request, "game/room_password.html", {
+                "room": room,
+                "error": "رمز عبور اشتباه است."
+            })
+        
+        Player.objects.get_or_create(game=room, user=request.user)
+        return redirect("game:room", room_code=room.code)
+
+    if room.password:
+        return render(request, "game/room_password.html", {"room": room})
+
     Player.objects.get_or_create(game=room, user=request.user)
     return redirect("game:room", room_code=room.code)
 
-
 @login_required
 def room(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
     room = Game.objects.filter(code=room_code).first()
-    if room is None:
-        return redirect("game:home")
+    if not room:
+        return redirect("game:rooms_manage")
+
+    Player.objects.get_or_create(game=room, user=request.user)
+
     players = []
     for p in room.players.select_related("user"):
         players.append({
@@ -257,8 +616,10 @@ def room(request, room_code):
             "is_ready": p.is_ready,
             "score": p.score,
         })
+
     return render(request, "game/room.html", {
         "room": room,
         "categories": room.categories,
         "players": players,
     })
+

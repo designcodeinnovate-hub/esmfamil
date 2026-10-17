@@ -1,237 +1,306 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>تنظیمات</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
-      color: #e2e8f0;
-      padding: 24px 20px 60px;
-    }
-    .container { max-width: 640px; margin: 0 auto; }
-    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
-    h1 {
-      font-size: 28px;
-      background: linear-gradient(135deg, #eab308, #f97316);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin: 14px 0 8px;
-    }
-    p.sub { color: #94a3b8; font-size: 14px; margin-bottom: 22px; }
+{% extends "base.html" %}
+{% block title %}تنظیمات{% endblock %}
 
-    .msg-ok {
-      background: rgba(34, 197, 94, 0.15);
-      color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      padding: 10px 14px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      font-size: 14px;
-    }
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
 
-    .box {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 20px;
-      border-radius: 18px;
-      margin-bottom: 14px;
-    }
-    .box h3 {
-      font-size: 15px;
-      color: #fdba74;
-      margin-bottom: 16px;
-    }
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-    }
-    .setting-row:last-child { border-bottom: none; }
-    .setting-info { flex: 1; }
-    .setting-title { font-size: 15px; margin-bottom: 2px; }
-    .setting-desc { font-size: 12px; color: #64748b; }
+  .setting-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .setting-card h3 {
+    font-size: 15px; color: var(--gold); margin-bottom: 16px; font-weight: bold;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .setting-row:first-of-type { padding-top: 0; }
+  .setting-title { font-size: 14px; color: #fff; }
+  .setting-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  
+  /* Toggle Switch */
+  .toggle { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider {
+    position: absolute; inset: 0; background: rgba(71,85,105,0.6);
+    border-radius: 26px; cursor: pointer; transition: 0.3s;
+  }
+  .toggle .slider::before {
+    content: ""; position: absolute; width: 18px; height: 18px;
+    left: 4px; top: 4px; background: #fff; border-radius: 50%; transition: 0.3s;
+  }
+  .toggle input:checked + .slider { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .toggle input:checked + .slider::before { transform: translateX(20px); }
 
-    /* Toggle switch */
-    .toggle { position: relative; width: 52px; height: 28px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle .slider {
-      position: absolute;
-      inset: 0;
-      background: rgba(71, 85, 105, 0.6);
-      border-radius: 28px;
-      cursor: pointer;
-      transition: 0.25s;
-    }
-    .toggle .slider::before {
-      content: "";
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      left: 4px;
-      top: 4px;
-      background: #fff;
-      border-radius: 50%;
-      transition: 0.25s;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-    .toggle input:checked + .slider {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-    }
-    .toggle input:checked + .slider::before {
-      transform: translateX(24px);
-    }
+  /* Range Slider */
+  .range-wrap { display: flex; align-items: center; gap: 10px; width: 160px; }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; background: transparent;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 18px; width: 18px;
+    border-radius: 50%; background: var(--gold); cursor: pointer; margin-top: -7px;
+    box-shadow: 0 0 10px rgba(244,197,66,0.5);
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 2px;
+  }
+  .range-val { font-size: 12px; color: var(--muted); width: 35px; text-align: left; font-family: monospace; }
 
-    .theme-row { display: flex; gap: 10px; }
-    .theme-opt {
-      flex: 1;
-      padding: 14px;
-      border-radius: 12px;
-      border: 2px solid rgba(148, 163, 184, 0.2);
-      background: rgba(51, 65, 85, 0.4);
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-size: 14px;
-    }
-    .theme-opt:hover { border-color: #f97316; }
-    .theme-opt input { display: none; }
-    .theme-opt:has(input:checked) {
-      border-color: #f97316;
-      background: linear-gradient(135deg, rgba(249,115,22,0.25), rgba(234,179,8,0.15));
-      box-shadow: 0 0 20px rgba(249,115,22,0.35);
-      color: #fff;
-      font-weight: bold;
-    }
-    .theme-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  /* Buttons */
+  .btn-opt {
+    background: rgba(51,65,85,0.5); border: 1px solid var(--border);
+    color: var(--muted); padding: 6px 12px; border-radius: 8px; font-size: 12px;
+    cursor: pointer; font-family: inherit; transition: 0.2s;
+  }
+  .btn-opt.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
 
-    button.save {
-      width: 100%;
-      margin-top: 16px;
-      padding: 16px;
-      border: none;
-      border-radius: 14px;
-      font-size: 17px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(135deg, #f97316, #eab308);
-      box-shadow: 0 10px 30px rgba(249,115,22,0.4);
-      transition: transform 0.15s;
-    }
-    button.save:hover { transform: translateY(-2px); }
-  </style>
-</head>
-<body>
-<div class="container">
-  <a class="back" href="/accounts/profile/">← بازگشت به پروفایل</a>
-  <h1>⚙️ تنظیمات</h1>
-  <p class="sub">مطابق میل خودت بازی رو تنظیم کن.</p>
+  .status-msg {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: rgba(34,197,94,0.95); color: #fff; padding: 10px 20px;
+    border-radius: 20px; font-size: 13px; opacity: 0; transition: 0.3s; pointer-events: none;
+    z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .status-msg.show { opacity: 1; bottom: 100px; }
+</style>
+{% endblock %}
 
-  {% if message %}<div class="msg-ok">{{ message }}</div>{% endif %}
+{% block content %}
+  <div class="page-head">
+    <a href="/game/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>⚙️ <span>تنظیمات</span></h1>
+  </div>
 
-  <form method="post">
-    {% csrf_token %}
-
-    <div class="box">
-      <h3>🔊 صدا و موسیقی</h3>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">صداهای بازی</div>
-          <div class="setting-desc">صدای استپ، تایمر و پایان راند</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" name="sound" {% if settings.sound %}checked{% endif %}>
-          <span class="slider"></span>
-        </label>
+  <div class="setting-card">
+    <h3>🔊 صدا و موسیقی</h3>
+    
+    <div class="setting-row">
+      <div>
+        <div class="setting-title">افکت‌های صوتی</div>
+        <div class="setting-desc">صدای کلیک دکمه‌ها و تایمر</div>
       </div>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">موسیقی پس‌زمینه</div>
-          <div class="setting-desc">پخش موسیقی ملایم در بازی</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" name="music" {% if settings.music %}checked{% endif %}>
-          <span class="slider"></span>
-        </label>
+      <label class="toggle">
+        <input type="checkbox" id="tglSound" onchange="saveSetting('sound', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row" style="padding-top: 8px;">
+      <div class="setting-title" style="font-size: 13px; color: var(--muted);">میزان صدای افکت</div>
+      <div class="range-wrap">
+        <input type="range" id="volSound" min="1" max="100" oninput="updateVol('soundVol', this.value)">
+        <span class="range-val" id="valSound">80%</span>
       </div>
     </div>
 
-    <div class="box">
-      <h3>🔔 اعلان‌ها</h3>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">دعوت به بازی</div>
-          <div class="setting-desc">وقتی دوستی تو را به بازی دعوت می‌کند</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" name="notif_invite" {% if settings.notif_invite %}checked{% endif %}>
-          <span class="slider"></span>
-        </label>
+    <div class="setting-row" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 12px;">
+      <div>
+        <div class="setting-title">موسیقی پس‌زمینه</div>
+        <div class="setting-desc">پخش موسیقی ملایم در منوها</div>
       </div>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">پیام دوستان</div>
-          <div class="setting-desc">پیام جدید در چت دوستانه</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" name="notif_friend" {% if settings.notif_friend %}checked{% endif %}>
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">پایان راند</div>
-          <div class="setting-desc">وقتی راند تمام می‌شود</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" name="notif_round" {% if settings.notif_round %}checked{% endif %}>
-          <span class="slider"></span>
-        </label>
+      <label class="toggle">
+        <input type="checkbox" id="tglMusic" onchange="saveSetting('music', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row" style="padding-top: 8px;">
+      <div class="setting-title" style="font-size: 13px; color: var(--muted);">میزان صدای موسیقی</div>
+      <div class="range-wrap">
+        <input type="range" id="volMusic" min="1" max="100" oninput="updateVol('musicVol', this.value)">
+        <span class="range-val" id="valMusic">50%</span>
       </div>
     </div>
+  </div>
 
-    <div class="box">
-      <h3>🌗 ظاهر</h3>
-      <div class="theme-row">
-        <label class="theme-opt">
-          <input type="radio" name="theme" value="dark" {% if settings.theme == "dark" %}checked{% endif %}>
-          <span class="theme-icon">🌙</span>
-          تیره
-        </label>
-        <label class="theme-opt">
-          <input type="radio" name="theme" value="light" {% if settings.theme == "light" %}checked{% endif %}>
-          <span class="theme-icon">☀️</span>
-          روشن
-        </label>
+  <div class="setting-card">
+    <h3>🎨 ظاهر و نمایش</h3>
+    <div class="setting-row">
+      <div>
+        <div class="setting-title">حالت تاریک</div>
+        <div class="setting-desc">تغییر رنگ‌بندی کل برنامه</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="tglTheme" onchange="changeTheme(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-title">انیمیشن‌ها</div>
+        <div class="setting-desc">غیرفعال کردن برای افزایش سرعت</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="tglAnim" onchange="saveSetting('animations', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-title">اندازه فونت</div>
+        <div class="setting-desc">تغییر سایز متون برنامه</div>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn-opt" id="btnFontSmall" onclick="changeFont('small', this)">کوچک</button>
+        <button class="btn-opt" id="btnFontMed" onclick="changeFont('medium', this)">معمولی</button>
+        <button class="btn-opt" id="btnFontLrg" onclick="changeFont('large', this)">بزرگ</button>
       </div>
     </div>
+  </div>
 
-    <div class="box">
-      <h3>📳 موارد دیگر</h3>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">لرزش</div>
-          <div class="setting-desc">لرزش گوشی هنگام استپ یا پایان</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" name="vibration" {% if settings.vibration %}checked{% endif %}>
-          <span class="slider"></span>
-        </label>
-      </div>
+  <div class="setting-card">
+    <h3>🔔 اعلان‌ها و لرزش</h3>
+    <div class="setting-row">
+      <div class="setting-title">لرزش گوشی</div>
+      <label class="toggle">
+        <input type="checkbox" id="tglVib" onchange="saveSetting('vibration', this.checked)">
+        <span class="slider"></span>
+      </label>
     </div>
+    <div class="setting-row">
+      <div class="setting-title">اعلان دعوت به بازی</div>
+      <label class="toggle">
+        <input type="checkbox" id="tglNotifInvite" onchange="saveSetting('notif_invite', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div class="setting-title">اعلان پیام دوستان</div>
+      <label class="toggle">
+        <input type="checkbox" id="tglNotifFriend" onchange="saveSetting('notif_friend', this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
 
-    <button type="submit" class="save">💾 ذخیره تنظیمات</button>
-  </form>
-</div>
-</body>
-</html>
+  <div class="status-msg" id="statusMsg">✓ ذخیره شد</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================
+// بارگذاری تنظیمات فعلی و اعمال روی فرم
+// ============================================
+const prefs = {
+  sound: localStorage.getItem('sound') !== 'false',
+  music: localStorage.getItem('music') !== 'false',
+  soundVol: parseInt(localStorage.getItem('soundVol')) || 80,
+  musicVol: parseInt(localStorage.getItem('musicVol')) || 50,
+  vibration: localStorage.getItem('vibration') !== 'false',
+  theme: localStorage.getItem('theme') || 'dark',
+  animations: localStorage.getItem('animations') !== 'false',
+  notifInvite: localStorage.getItem('notif_invite') !== 'false',
+  notifFriend: localStorage.getItem('notif_friend') !== 'false',
+  fontSize: localStorage.getItem('fontSize') || 'medium'
+};
+
+document.getElementById('tglSound').checked = prefs.sound;
+document.getElementById('volSound').value = prefs.soundVol;
+document.getElementById('valSound').innerText = prefs.soundVol + '%';
+
+document.getElementById('tglMusic').checked = prefs.music;
+document.getElementById('volMusic').value = prefs.musicVol;
+document.getElementById('valMusic').innerText = prefs.musicVol + '%';
+
+document.getElementById('tglVib').checked = prefs.vibration;
+document.getElementById('tglTheme').checked = (prefs.theme === 'dark');
+document.getElementById('tglAnim').checked = prefs.animations;
+document.getElementById('tglNotifInvite').checked = prefs.notifInvite;
+document.getElementById('tglNotifFriend').checked = prefs.notifFriend;
+
+// اعمال دکمه فعال برای فونت
+if (prefs.fontSize === 'small') document.getElementById('btnFontSmall').classList.add('active');
+else if (prefs.fontSize === 'large') document.getElementById('btnFontLrg').classList.add('active');
+else document.getElementById('btnFontMed').classList.add('active');
+
+// ============================================
+// توابع ذخیره آنی
+// ============================================
+function showToast() {
+  const el = document.getElementById('statusMsg');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+function saveSetting(key, val) {
+  localStorage.setItem(key, val);
+  showToast();
+  
+  if (key === 'sound' && val === true) {
+    playBeep();
+  }
+  if (key === 'music') {
+    const bg = document.getElementById('globalMusic');
+    if (val && bg) bg.play().catch(e=>e); 
+    else if (bg) bg.pause();
+  }
+  if (key === 'animations') {
+    if (!val) {
+      document.body.classList.add('no-animations');
+      const style = document.createElement('style');
+      style.innerHTML = '* { animation: none !important; transition: none !important; }';
+      style.id = 'no-anim-style';
+      document.head.appendChild(style);
+    } else {
+      const style = document.getElementById('no-anim-style');
+      if (style) style.remove();
+    }
+  }
+}
+
+function updateVol(key, val) {
+  localStorage.setItem(key, val);
+  document.getElementById(key === 'soundVol' ? 'valSound' : 'valMusic').innerText = val + '%';
+  
+  if (key === 'soundVol') {
+    playBeep();
+  } else {
+    const bg = document.getElementById('globalMusic');
+    if (bg) bg.volume = val / 100;
+  }
+  showToast();
+}
+
+function playBeep() {
+  if (!document.getElementById('tglSound').checked) return;
+  const vol = document.getElementById('volSound').value / 100;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 1000;
+    gain.gain.setValueAtTime(vol * 0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.1);
+  } catch(e) {}
+}
+
+function changeTheme(isDark) {
+  const theme = isDark ? 'dark' : 'light';
+  localStorage.setItem('theme', theme);
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  showToast();
+}
+
+function changeFont(size, btn) {
+  localStorage.setItem('fontSize', size);
+  document.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  if (size === 'small') document.documentElement.style.fontSize = '13px';
+  else if (size === 'large') document.documentElement.style.fontSize = '17px';
+  else document.documentElement.style.fontSize = '15px';
+  
+  showToast();
+}
+</script>
+{% endblock %}

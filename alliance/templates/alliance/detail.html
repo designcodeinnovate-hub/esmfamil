@@ -1,200 +1,169 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ alliance.name }}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f0f1e 55%, #060608 100%);
-      color: #e2e8f0;
-      padding: 24px 20px 60px;
-    }
-    .container { max-width: 720px; margin: 0 auto; }
-    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+{% extends "base.html" %}
+{% block title %}{{ alliance.name }}{% endblock %}
 
-    .head-card {
-      text-align: center;
-      padding: 30px 20px 24px;
-      margin-top: 12px;
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 22px;
-    }
-    .emblem-big {
-      font-size: 80px;
-      margin-bottom: 12px;
-      filter: drop-shadow(0 0 30px rgba(249,115,22,0.5));
-    }
-    .alliance-title {
-      font-size: 28px;
-      font-weight: bold;
-      background: linear-gradient(135deg, #f97316, #eab308);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 6px;
-    }
-    .alliance-tag { color: #94a3b8; font-size: 15px; margin-bottom: 10px; }
-    .alliance-desc { color: #cbd5e1; font-size: 14px; margin: 10px 0; }
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 
-    .info-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
-    .badge {
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      color: #94a3b8;
-    }
-    .badge b { color: #facc15; font-family: monospace; letter-spacing: 2px; }
+  .hero-card {
+    text-align: center; padding: 30px 20px;
+    background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9));
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 24px; margin-bottom: 20px; position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(244,197,66,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  
+  .emblem-big {
+    font-size: 76px; margin-bottom: 12px;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  }
+  .alliance-title {
+    font-size: 26px; font-weight: 900;
+    background: linear-gradient(135deg, #fde68a, #f4c542, #ca8a04);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 6px;
+  }
+  
+  .invite-box {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(15,23,42,0.8); border: 1px solid var(--border);
+    padding: 8px 16px; border-radius: 12px; margin-top: 16px;
+    cursor: pointer; transition: 0.2s;
+  }
+  .invite-box:hover { border-color: var(--gold); }
+  .invite-code { font-family: monospace; font-size: 18px; letter-spacing: 3px; color: var(--gold); font-weight: bold; }
+  .copy-icon { font-size: 16px; color: var(--muted); }
 
-    .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-    .actions form { display: inline; }
-    .btn {
-      flex: 1;
-      min-width: 140px;
-      padding: 13px 16px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      border: none;
-      transition: transform 0.15s;
-    }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-blue { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; }
-    .btn-red { background: rgba(239, 68, 68, 0.2); color: #f87171;
-               border: 1px solid rgba(239, 68, 68, 0.3); }
-    .btn-ghost { background: rgba(51, 65, 85, 0.6); color: #cbd5e1;
-                 border: 1px solid rgba(148, 163, 184, 0.2); }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .stat-box {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px; text-align: center;
+  }
+  .stat-val { font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+  .stat-lbl { font-size: 11px; color: var(--muted); }
 
-    .box {
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 18px;
-      border-radius: 16px;
-      margin-top: 16px;
-    }
-    .box h3 {
-      font-size: 15px;
-      color: #fdba74;
-      margin-bottom: 14px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .count-badge {
-      background: rgba(249, 115, 22, 0.25);
-      color: #fdba74;
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: 10px;
-    }
+  .member-list { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+  .member-list h3 { font-size: 15px; color: var(--gold); margin-bottom: 16px; display: flex; justify-content: space-between; }
+  
+  .member-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .member-row:last-child { border-bottom: none; padding-bottom: 0; }
+  
+  .member-av {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(15,23,42,0.6); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    background-size: cover; background-position: center;
+  }
+  .member-info { flex: 1; }
+  .member-name { font-size: 14px; font-weight: bold; color: #fff; }
+  .member-join { font-size: 11px; color: var(--dim); }
+  
+  .role-badge {
+    font-size: 11px; padding: 4px 10px; border-radius: 8px; font-weight: bold;
+  }
+  .role-leader { background: rgba(244,197,66,0.2); color: #facc15; border: 1px solid rgba(244,197,66,0.3); }
+  .role-officer { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+  .role-member { background: rgba(100,116,139,0.2); color: #cbd5e1; border: 1px solid rgba(100,116,139,0.3); }
+  
+  .btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
+    border: none; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: bold;
+    width: 100%; font-family: inherit; cursor: pointer; transition: 0.2s;
+    box-shadow: 0 8px 20px rgba(239,68,68,0.3);
+  }
+  .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(239,68,68,0.5); }
+</style>
+{% endblock %}
 
-    .member-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-    }
-    .member-row:last-child { border-bottom: none; }
-    .member-av {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, rgba(234,179,8,0.3), rgba(249,115,22,0.2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    .member-info { flex: 1; }
-    .member-name { font-weight: bold; margin-bottom: 2px; }
-    .member-role { font-size: 12px; color: #64748b; }
-    .role-badge {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 10px;
-    }
-    .role-leader { background: rgba(234,179,8,0.25); color: #facc15; }
-    .role-officer { background: rgba(59,130,246,0.25); color: #93c5fd; }
-    .role-member { background: rgba(100,116,139,0.25); color: #94a3b8; }
+{% block content %}
+  <div class="page-head">
+    <a href="/alliance/" class="back-btn"><span class="arrow-icon">→</span></a>
+  </div>
 
-    .msg-preview {
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(15, 23, 42, 0.5);
-      margin-bottom: 8px;
-      font-size: 13px;
-    }
-    .msg-preview .sender { color: #fdba74; font-weight: bold; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <a class="back" href="/game/">← بازگشت به خانه</a>
-
-  <div class="head-card">
+  <div class="hero-card">
     <div class="emblem-big">{{ alliance.emblem }}</div>
     <div class="alliance-title">{{ alliance.name }}</div>
-    {% if alliance.tag %}<div class="alliance-tag">{{ alliance.tag }}</div>{% endif %}
-    {% if alliance.description %}<div class="alliance-desc">{{ alliance.description }}</div>{% endif %}
-
-    <div class="info-badges">
-      <div class="badge">👥 {{ member_count }} عضو</div>
-      <div class="badge">کد دعوت: <b>{{ alliance.invite_code }}</b></div>
+    {% if alliance.tag %}<div style="color:var(--muted); font-size:14px; letter-spacing:2px;">{{ alliance.tag }}</div>{% endif %}
+    
+    <div class="invite-box" onclick="copyCode()">
+      <span class="invite-code" id="codeText">{{ alliance.invite_code }}</span>
+      <span class="copy-icon">📋</span>
     </div>
+    <div style="font-size:10px; color:var(--dim); margin-top:6px;">برای کپی کلیک کنید</div>
+  </div>
 
-    <div class="actions">
-      <a href="/alliance/{{ alliance.id }}/chat/" class="btn btn-blue">💬 چت اتحاد</a>
-      <form method="post" action="/alliance/{{ alliance.id }}/leave/"
-            onsubmit="return confirm('{% if my_role == "leader" %}اتحاد حذف شود؟{% else %}از اتحاد خارج شوی؟{% endif %}');">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-red">
-          {% if my_role == "leader" %}🗑️ حذف اتحاد{% else %}🚪 خروج{% endif %}
-        </button>
-      </form>
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-val">{{ member_count }}</div>
+      <div class="stat-lbl">اعضا</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">{{ alliance.created_at|date:"Y/m/d" }}</div>
+      <div class="stat-lbl">تأسیس</div>
     </div>
   </div>
 
-  {% if recent_messages %}
-    <div class="box">
-      <h3>💬 آخرین پیام‌ها</h3>
-      {% for m in recent_messages %}
-        <div class="msg-preview">
-          <span class="sender">{{ m.sender.alias }}:</span> {{ m.body }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
+  <div style="display:flex; gap:10px; margin-bottom:20px;">
+    <a href="/alliance/{{ alliance.id }}/chat/" style="flex:1; text-align:center; background:linear-gradient(135deg, #06b6d4, #3b82f6); color:#fff; padding:14px; border-radius:14px; text-decoration:none; font-weight:bold; font-size:15px; box-shadow:0 8px 20px rgba(6,182,212,0.3);">💬 چت گروهی</a>
+    <form method="post" action="/alliance/{{ alliance.id }}/leave/" style="flex:1;" onsubmit="return confirm('{% if my_role == 'leader' %}اتحاد منحل شود؟{% else %}از اتحاد خارج شوی؟{% endif %}');">
+      {% csrf_token %}
+      <button type="submit" class="btn-danger" style="height:100%;">{% if my_role == 'leader' %}🗑️ حذف{% else %}🚪 خروج{% endif %}</button>
+    </form>
+  </div>
 
-  <div class="box">
-    <h3>👥 اعضا <span class="count-badge">{{ member_count }}</span></h3>
-    {% for mem in members %}
+  <div class="member-list">
+    <h3>👥 اعضای اتحاد <span class="badge-count" style="background:var(--border); color:#fff; font-size:10px;">{{ member_count }}</span></h3>
+        {% for mem in members %}
       <div class="member-row">
-        <div class="member-av">{{ mem.avatar }}</div>
+        <div class="member-av-wrapper" style="position:relative;">
+          {% if mem.user.avatar_type == 'image' and mem.user.avatar_id %}
+            <div class="member-av" style="background-image: url('/static/avatars/images/{{ mem.user.avatar_id|stringformat:"03d" }}.jpg');"></div>
+          {% else %}
+            <div class="member-av">{{ mem.avatar }}</div>
+          {% endif %}
+          {% if mem.is_online %}
+            <div style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:#22c55e; border-radius:50%; border:2px solid var(--card); box-shadow:0 0 8px #22c55e;"></div>
+          {% endif %}
+        </div>
         <div class="member-info">
           <div class="member-name">
-            {{ mem.user.alias }}
-            {% if mem.user.id == request.user.id %}<span style="color:#60a5fa;font-size:12px">(شما)</span>{% endif %}
+            {{ mem.user.alias }} 
+            {% if mem.user.id == request.user.id %}<span style="color:var(--teal);font-size:10px;">(شما)</span>{% endif %}
+            <span style="background:linear-gradient(135deg, #8b5cf6, #6b4eff); color:#fff; font-size:10px; padding:2px 6px; border-radius:6px; font-family:monospace; margin-right:6px;">Lv {{ mem.level }}</span>
           </div>
-          <div class="member-role">{{ mem.joined_at|date:"Y/m/d" }} عضو شد</div>
+          <div class="member-join">عضو از {{ mem.joined_at|date:"Y/m/d" }}</div>
         </div>
-        <span class="role-badge role-{{ mem.role }}">{{ mem.role_display }}</span>
-        {% if is_leader and mem.role != "leader" %}
-          <form method="post" action="/alliance/{{ alliance.id }}/kick/{{ mem.user.id }}/"
-                onsubmit="return confirm('حذف شود؟');" style="margin-right:8px">
+        <span class="role-badge role-{{ mem.role }}">
+          {% if mem.role == 'leader' %}👑 رهبر{% elif mem.role == 'officer' %}🛡️ افسر{% else %}👤 عضو{% endif %}
+        </span>
+        {% if is_leader and mem.role != 'leader' %}
+          <form method="post" action="/alliance/{{ alliance.id }}/kick/{{ mem.user.id }}/" onsubmit="return confirm('حذف شود؟');">
             {% csrf_token %}
-            <button type="submit" class="btn btn-red" style="padding:6px 12px;font-size:12px">حذف</button>
+            <button type="submit" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:12px;">حذف</button>
           </form>
         {% endif %}
       </div>
     {% endfor %}
   </div>
-</div>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyCode() {
+  const code = document.getElementById('codeText').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    if (typeof window.soundSuccess === 'function') window.soundSuccess();
+    alert('کد دعوت کپی شد: ' + code);
+  }).catch(() => {
+    alert('کد دعوت: ' + code);
+  });
+}
+</script>
+{% endblock %}

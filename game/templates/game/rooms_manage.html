@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}اتاق‌های بازی{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+
+  .box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 20px; }
+  .box h3 { font-size: 15px; color: var(--gold); margin-bottom: 16px; }
+
+  label.lbl { display: block; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  input[type=text], input[type=number] { width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; font-family: inherit; margin-bottom: 12px; box-sizing: border-box; }
+  input[type=text]:focus, input[type=number]:focus { outline: none; border-color: var(--teal); }
+
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+
+  .cats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .cats-grid label { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px; background: var(--bg); border-radius: 8px; cursor: pointer; }
+
+  button.submit { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; font-family: inherit; cursor: pointer; color: #fff; transition: 0.2s; background: linear-gradient(135deg, #8b5cf6, #6b4eff); box-shadow: 0 8px 20px rgba(139,92,246,0.3); }
+  button.submit:hover { transform: translateY(-2px); }
+
+  .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .search-bar input { flex: 1; padding: 14px 18px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--card); color: #fff; font-size: 15px; font-family: inherit; }
+  .search-bar button { padding: 0 22px; border-radius: 14px; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; border: none; font-weight: bold; cursor: pointer; }
+
+  .room-item {
+    display: flex; align-items: center; gap: 14px; padding: 16px; margin-bottom: 10px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+    text-decoration: none; color: #fff; transition: 0.2s;
+  }
+  .room-item:hover { border-color: var(--gold); transform: translateX(-3px); }
+  .room-icon { font-size: 30px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(244,197,66,0.1); border-radius: 12px; }
+  .room-info { flex: 1; }
+  .room-title { font-size: 16px; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .room-meta { font-size: 12px; color: var(--muted); }
+  .room-badge { font-size: 11px; background: rgba(51,65,85,0.5); padding: 6px 12px; border-radius: 8px; color: #fff; }
+  .room-lock { font-size: 16px; }
+  .room-full { opacity: 0.5; pointer-events: none; }
+
+  .error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); padding: 14px; border-radius: 12px; margin-bottom: 20px; text-align: center; font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <a href="/game/rooms/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>🚪 <span>اتاق‌های بازی</span></h1>
+  </div>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <div class="box">
+    <h3>➕ ساخت اتاق جدید</h3>
+    <form method="post">
+      {% csrf_token %}
+      <div class="row">
+        <div>
+          <label class="lbl">اسم اتاق</label>
+          <input type="text" name="room_name" placeholder="مثلاً: بازی دوستانه" maxlength="50" required>
+        </div>
+        <div>
+          <label class="lbl">ظرفیت (۲ تا ۱۵)</label>
+          <input type="number" name="max_players" value="8" min="2" max="15">
+        </div>
+      </div>
+      
+      <label class="lbl">رمز اتاق (اختیاری)</label>
+      <input type="text" name="password" placeholder="خالی = بدون رمز" maxlength="32">
+
+      <label class="lbl">دسته‌ها</label>
+      <div class="cats-grid">
+        {% for c in categories %}
+          <label><input type="checkbox" name="categories" value="{{ c }}" checked> {{ c }}</label>
+        {% endfor %}
+      </div>
+      
+      <button type="submit" class="submit">🚀 ساخت و ورود به اتاق</button>
+    </form>
+  </div>
+
+  <form method="get" class="search-bar">
+    <input type="text" name="q" placeholder="جستجوی نام اتاق یا میزبان..." value="{{ query }}">
+    <button type="submit">🔍</button>
+  </form>
+
+  {% if rooms %}
+    {% for r in rooms %}
+      <a href="/game/rooms/join/{{ r.obj.code }}/" class="room-item {% if r.is_full %}room-full{% endif %}">
+        <div class="room-icon">🚪</div>
+        <div class="room-info">
+          <div class="room-title">
+            {{ r.obj.room_name }}
+            {% if r.has_password %}<span class="room-lock">🔒</span>{% endif %}
+          </div>
+          <div class="room-meta">میزبان: {{ r.obj.host.alias }} — {{ r.count }} از {{ r.obj.max_players }} نفر</div>
+        </div>
+        <span class="room-badge">ورود →</span>
+      </a>
+    {% endfor %}
+  {% elif query %}
+    <div style="text-align:center; padding:20px; color:var(--muted);">اتاقی با این مشخصات پیدا نشد.</div>
+  {% else %}
+    <div style="text-align:center; padding:20px; color:var(--muted);">هیچ اتاق فعالی وجود ندارد. اولین نفر باش!</div>
+  {% endif %}
+{% endblock %}

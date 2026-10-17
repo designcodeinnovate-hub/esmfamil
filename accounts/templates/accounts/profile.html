@@ -1,289 +1,379 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>پروفایل</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
-      color: #e2e8f0;
-      padding: 24px 20px 60px;
-    }
-    .glow {
-      position: fixed; width: 500px; height: 500px;
-      border-radius: 50%; filter: blur(120px);
-      opacity: 0.28; z-index: 0; pointer-events: none;
-    }
-    .glow-1 { top: -180px; left: -180px; background: #f97316; }
-    .glow-2 { bottom: -180px; right: -180px; background: #06b6d4; }
+{% extends "base.html" %}
+{% block title %}پروفایل{% endblock %}
 
-    .container { position: relative; z-index: 10; max-width: 720px; margin: 0 auto; }
-    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+{% block extra_css %}
+<style>
+  /* ===== کارت پروفایل ===== */
+  .profile-head {
+    text-align: center;
+    padding: 32px 20px 26px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    position: relative;
+    margin-bottom: 16px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+  }
+  .profile-head.expanded {
+    padding: 40px 20px 32px;
+    border-color: var(--gold);
+    box-shadow: 0 24px 60px rgba(244,197,66,0.28);
+    transform: translateY(-3px);
+  }
+  .guest-badge {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(234, 179, 8, 0.2); color: var(--gold);
+    font-size: 11px; padding: 5px 10px; border-radius: 8px; font-weight: bold;
+  }
+  .expand-hint {
+    color: var(--dim);
+    font-size: 11.5px;
+    margin-top: 14px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+  }
+  .profile-head.expanded .expand-hint {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+  }
 
-    .profile-head {
-      text-align: center;
-      padding: 32px 20px 24px;
-      margin-top: 12px;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 22px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-      position: relative;
-    }
-    .avatar-big {
-      font-size: 96px;
-      width: 140px; height: 140px;
-      margin: 0 auto 14px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, rgba(249,115,22,0.3), rgba(234,179,8,0.2));
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 40px rgba(249,115,22,0.4), inset 0 0 20px rgba(249,115,22,0.15);
-      border: 3px solid rgba(249,115,22,0.5);
-    }
-    .alias-big {
-      font-size: 26px;
-      font-weight: bold;
-      background: linear-gradient(135deg, #f97316, #eab308, #06b6d4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
-    .id-badge {
-      display: inline-block;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      letter-spacing: 2px;
-      color: #94a3b8;
-      font-family: monospace;
-    }
-    .id-badge b { color: #facc15; font-weight: bold; }
+  .avatar-big {
+    font-size: 82px;
+    width: 130px; height: 130px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(249,115,22,0.3), rgba(234,179,8,0.2));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px rgba(249,115,22,0.4);
+    border: 3px solid rgba(249,115,22,0.5);
+    background-size: cover; background-position: center;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .profile-head.expanded .avatar-big {
+    width: 155px; height: 155px;
+    font-size: 96px;
+    box-shadow: 0 0 70px rgba(249,115,22,0.75);
+    border-color: rgba(249,115,22,0.9);
+  }
+  .avatar-big.image-mode { color: transparent; background-size: cover; background-position: center; }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-top: 24px;
-    }
-    @media (max-width: 600px) {
-      .stats { grid-template-columns: repeat(2, 1fr); }
-    }
-    .stat-card {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 16px 10px;
-      border-radius: 14px;
-      text-align: center;
-      transition: transform 0.15s;
-    }
-    .stat-card:hover { transform: translateY(-3px); }
-    .stat-num {
-      font-size: 24px;
-      font-weight: bold;
-      color: #fdba74;
-      margin-bottom: 4px;
-    }
-    .stat-label { font-size: 12px; color: #94a3b8; }
+  .alias-big {
+    font-size: 24px; font-weight: bold;
+    background: linear-gradient(135deg, #f97316, #eab308, #06b6d4);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 8px;
+    transition: all 0.3s;
+  }
+  .profile-head.expanded .alias-big { font-size: 28px; }
 
-    .box {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 22px;
-      border-radius: 18px;
-      margin-top: 18px;
-    }
-    .box h3 {
-      font-size: 16px;
-      color: #fdba74;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  .username-badge {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 5px 14px; border-radius: 18px;
+    font-size: 13px; letter-spacing: 1px;
+    color: var(--muted); font-family: monospace; margin: 2px;
+  }
+  .username-badge b { color: var(--gold); }
 
-    label.lbl { display: block; color: #94a3b8; font-size: 13px; margin-bottom: 6px; }
-    input[type=text], input[type=email] {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.7);
-      color: #fff;
-      font-size: 16px;
-      font-family: inherit;
-      margin-bottom: 12px;
-    }
-    input:focus { outline: none; border-color: #f97316; }
-    input:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* ===== باکس لول ===== */
+  .level-box {
+    display: none;
+    margin-top: 22px;
+    padding: 20px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+  }
+  .profile-head.expanded .level-box {
+    display: block;
+    animation: slideDown 0.35s ease-out;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .level-title {
+    font-size: 11px; color: var(--muted);
+    margin-bottom: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .level-badge-big {
+    display: inline-block;
+    font-size: 44px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+    font-family: monospace;
+    line-height: 1;
+  }
+  .level-progress {
+    width: 100%;
+    height: 12px;
+    background: rgba(148,163,184,0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .level-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #eab308);
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(139,92,246,0.7);
+    transition: width 0.8s ease-out;
+  }
+  .level-points {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 10px;
+    font-family: monospace;
+  }
 
-    button.save {
-      background: linear-gradient(135deg, #f97316, #eab308);
-      color: #fff;
-      border: none;
-      padding: 12px 26px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      box-shadow: 0 8px 22px rgba(249,115,22,0.35);
-    }
-    button.save:hover { transform: translateY(-2px); }
+  /* ===== آمار ===== */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 16px;
+  }
+  @media (max-width: 520px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 14px 10px; border-radius: 14px; text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: bold; color: #fdba74; margin-bottom: 4px; }
+  .stat-label { font-size: 11px; color: var(--muted); }
 
-    .msg {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
-    .msg-ok { background: rgba(34, 197, 94, 0.15); color: #4ade80;
-              border: 1px solid rgba(34, 197, 94, 0.3); }
-    .msg-err { background: rgba(239, 68, 68, 0.15); color: #f87171;
-               border: 1px solid rgba(239, 68, 68, 0.3); }
+  .box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 22px; border-radius: 18px; margin-bottom: 14px;
+  }
+  .box h3 { font-size: 15px; color: var(--gold); margin-bottom: 14px; }
+  label.lbl { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text);
+    font-size: 16px; font-family: inherit; margin-bottom: 12px;
+  }
+  input:focus { outline: none; border-color: #f97316; }
+  input:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.save {
+    background: linear-gradient(135deg, #f97316, #eab308);
+    color: #fff; border: none; padding: 12px 26px;
+    border-radius: 12px; font-size: 15px; font-weight: bold;
+    font-family: inherit; cursor: pointer;
+    box-shadow: 0 8px 22px rgba(249,115,22,0.35);
+  }
 
-    .menu-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    @media (max-width: 520px) {
-      .menu-grid { grid-template-columns: 1fr; }
-    }
-    .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      text-decoration: none;
-      color: #e2e8f0;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(148, 163, 184, 0.1);
-      transition: all 0.15s;
-      font-size: 14px;
-    }
-    .menu-item:hover {
-      border-color: rgba(249, 115, 22, 0.5);
-      transform: translateX(-3px);
-    }
-    .menu-icon { font-size: 24px; }
-    .menu-text { flex: 1; }
-    .menu-title { font-weight: bold; margin-bottom: 2px; }
-    .menu-sub { font-size: 11px; color: #94a3b8; }
-    .menu-item.soon { opacity: 0.55; cursor: not-allowed; }
-    .soon-tag {
-      font-size: 10px; background: rgba(234, 179, 8, 0.2);
-      color: #facc15; padding: 2px 8px; border-radius: 6px;
-    }
-  </style>
-</head>
-<body>
-  <div class="glow glow-1"></div>
-  <div class="glow glow-2"></div>
+  .msg { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 12px; text-align: right; line-height: 1.6; }
+  .msg-ok { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .msg-err { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
+  .msg-lock { background: rgba(234, 179, 8, 0.15); color: #fde68a; border: 1px solid rgba(234, 179, 8, 0.35); }
 
-  <div class="container">
-    <a class="back" href="/game/">← بازگشت به خانه</a>
+  .register-cta {
+    display: block; text-align: center;
+    padding: 16px; border-radius: 14px;
+    background: linear-gradient(135deg, #f4c542, #eab308);
+    color: #1a1a1a; font-weight: bold;
+    text-decoration: none; margin-top: 12px;
+  }
 
-    {% if message %}<div class="msg msg-ok" style="margin-top:12px">{{ message }}</div>{% endif %}
-    {% if error %}<div class="msg msg-err" style="margin-top:12px">{{ error }}</div>{% endif %}
+  .action-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px; border-radius: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    text-decoration: none; color: var(--text);
+    font-weight: bold; font-size: 15px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+  }
+  .action-btn:hover {
+    border-color: var(--gold);
+    transform: translateX(-3px);
+  }
+  .action-btn .ab-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(249,115,22,0.1));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .action-btn .ab-text { flex: 1; }
+  .action-btn .ab-title { font-size: 15px; margin-bottom: 2px; }
+  .action-btn .ab-sub { font-size: 11px; color: var(--muted); font-weight: normal; }
+  .action-btn .ab-arrow { color: var(--dim); font-size: 18px; }
 
-    <div class="profile-head">
+  /* ===== فروشگاه ===== */
+  .shop-box {
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(244,197,66,0.06));
+    border: 1px solid rgba(139,92,246,0.3);
+    position: relative;
+  }
+  .shop-box h3 { color: #c4b5fd; }
+  .shop-soon-badge {
+    position: absolute;
+    top: 20px; left: 22px;
+    background: rgba(234,179,8,0.9);
+    color: #1a1a1a;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 9px;
+    border-radius: 8px;
+  }
+  .shop-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    opacity: 0.8;
+  }
+  .shop-item:hover {
+    border-color: var(--purple);
+    transform: translateX(-3px);
+    opacity: 1;
+  }
+  .shop-item .si-icon {
+    font-size: 32px;
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(244,197,66,0.15));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .shop-item .si-body { flex: 1; }
+  .shop-item .si-title { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
+  .shop-item .si-desc { font-size: 11px; color: var(--muted); }
+  .shop-item .si-price {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  {% if message %}<div class="msg msg-ok">{{ message }}</div>{% endif %}
+  {% if error %}<div class="msg msg-err">{{ error }}</div>{% endif %}
+
+  <!-- کارت پروفایل با انیمیشن -->
+  <div class="profile-head" id="profileHead" onclick="toggleProfileExpand(event)">
+    {% if is_guest %}<div class="guest-badge">🎲 حساب مهمان</div>{% endif %}
+
+    {% if avatar_type == "image" and profile_user.avatar_id %}
+      <div class="avatar-big image-mode" style="background-image: url('{{ avatar_value }}');"></div>
+    {% else %}
       <div class="avatar-big">{{ avatar_emoji }}</div>
-      <div class="alias-big">{{ profile_user.alias }}</div>
-      <div class="id-badge">شناسه: <b>{{ profile_user.public_id }}</b></div>
+    {% endif %}
+
+    <div class="alias-big">{{ profile_user.alias }}</div>
+    <div class="username-badge">@{{ profile_user.username }}</div>
+    <div class="username-badge">@{{ profile_user.username }}</div>
+
+    <div class="level-box">
+      <div class="level-title">سطح فعلی</div>
+      <div class="level-badge-big">Lv {{ level|default:1 }}</div>
+      <div class="level-progress">
+        <div class="level-progress-fill" style="width: {{ level_progress|default:0 }}%;"></div>
+      </div>
+      <div class="level-points">{{ level_progress_text|default:"0 / 100 امتیاز تا لول بعد" }}</div>
     </div>
 
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-num">{{ stats.total_games }}</div>
-        <div class="stat-label">بازی‌ها</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">{{ stats.total_score }}</div>
-        <div class="stat-label">مجموع امتیاز</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">{{ stats.avg_score }}</div>
-        <div class="stat-label">میانگین</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">{{ stats.best_score }}</div>
-        <div class="stat-label">بهترین</div>
-      </div>
-    </div>
+    <div class="expand-hint">👆 برای دیدن سطح، ضربه بزن</div>
+  </div>
 
+  <!-- آمار -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.total_games }}</div>
+      <div class="stat-label">بازی‌ها</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.total_score }}</div>
+      <div class="stat-label">مجموع امتیاز</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.avg_score }}</div>
+      <div class="stat-label">میانگین</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.best_score }}</div>
+      <div class="stat-label">بهترین</div>
+    </div>
+  </div>
+
+  {% if is_guest %}
     <div class="box">
-      <h3>✏️ ویرایش نام نمایشی</h3>
-      <form method="post">
+      <h3>🔒 حساب مهمان</h3>
+      <div class="msg msg-lock">
+        برای دسترسی به همه امکانات، یک حساب کاربری بساز.
+      </div>
+      <a href="/accounts/register/" class="register-cta">✨ ساخت حساب کاربری</a>
+    </div>
+  {% else %}
+    <div class="box">
+      <h3>✏️ ویرایش پروفایل</h3>
+      <form method="post" onclick="event.stopPropagation();">
         {% csrf_token %}
         <label class="lbl">نام نمایشی</label>
         <input type="text" name="alias" value="{{ profile_user.alias }}" maxlength="32" required>
-        <label class="lbl">ایمیل</label>
-        <input type="email" value="{{ profile_user.email }}" disabled>
+        <label class="lbl">نام کاربری</label>
+        <input type="text" value="{{ profile_user.username }}" disabled>
         <button type="submit" class="save">💾 ذخیره</button>
       </form>
     </div>
 
     <div class="box">
-      <h3>⚙️ تنظیمات و بخش‌ها</h3>
-      <div class="menu-grid">
-        <a class="menu-item" href="/accounts/avatar/">
-          <span class="menu-icon">🎨</span>
-          <span class="menu-text">
-            <span class="menu-title">تغییر آواتار</span>
-            <div class="menu-sub">۱۰۰ آواتار در ۱۰ دسته</div>
-          </span>
-        </a>
-        <a class="menu-item" href="/game/rooms/">
-          <span class="menu-icon">🚪</span>
-          <span class="menu-text">
-            <span class="menu-title">اتاق‌ها</span>
-            <div class="menu-sub">ساخت یا ورود به اتاق</div>
-          </span>
-        </a>
-        <div class="menu-item soon">
-          <span class="menu-icon">🛡️</span>
-          <span class="menu-text">
-            <span class="menu-title">تیم / اتحاد</span>
-            <div class="menu-sub">ساخت تیم و اعضا</div>
-          </span>
-          <span class="soon-tag">به‌زودی</span>
+      <h3>🎨 آواتار</h3>
+      <a href="/accounts/avatar/" class="action-btn">
+        <div class="ab-icon">🎨</div>
+        <div class="ab-text">
+          <div class="ab-title">تغییر آواتار</div>
+          <div class="ab-sub">ایموجی یا کاراکتر</div>
         </div>
-        <div class="menu-item soon">
-          <span class="menu-icon">🏆</span>
-          <span class="menu-text">
-            <span class="menu-title">رتبه‌بندی</span>
-            <div class="menu-sub">روزانه و ماهانه</div>
-          </span>
-          <span class="soon-tag">به‌زودی</span>
+        <div class="ab-arrow">←</div>
+      </a>
+      <a href="/accounts/logout/" class="action-btn" style="border-color: rgba(239,68,68,0.3);">
+        <div class="ab-icon" style="background: rgba(239,68,68,0.2);">🚪</div>
+        <div class="ab-text">
+          <div class="ab-title" style="color:#f87171">خروج</div>
+          <div class="ab-sub">خروج از حساب کاربری</div>
         </div>
-        <div class="menu-item soon">
-          <span class="menu-icon">⚙️</span>
-          <span class="menu-text">
-            <span class="menu-title">تنظیمات</span>
-            <div class="menu-sub">صدا، نور، اعلان</div>
-          </span>
-          <span class="soon-tag">به‌زودی</span>
-        </div>
-        <a class="menu-item" href="/accounts/logout/">
-          <span class="menu-icon">🚪</span>
-          <span class="menu-text">
-            <span class="menu-title">خروج</span>
-            <div class="menu-sub">خروج از حساب</div>
-          </span>
-        </a>
-      </div>
+        <div class="ab-arrow">←</div>
+      </a>
     </div>
-  </div>
-</body>
-</html>
+  {% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleProfileExpand(e) {
+  if (e.target.closest('form, a, button')) return;
+  const el = document.getElementById('profileHead');
+  el.classList.toggle('expanded');
+  if (typeof tabSound === 'function') tabSound();
+}
+
+function shopSoonAlert() {
+  alert('🛒 فروشگاه به‌زودی فعال می‌شود!');
+}
+</script>
+{% endblock %}

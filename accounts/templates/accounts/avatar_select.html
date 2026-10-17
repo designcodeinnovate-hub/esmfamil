@@ -1,91 +1,86 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <title>انتخاب آواتار</title>
-  <style>
-    body { font-family: Tahoma, sans-serif; background: #0f172a; color: #e2e8f0;
-           padding: 30px; margin: 0; }
-    .container { max-width: 900px; margin: 0 auto; }
-    h1 { color: #facc15; text-align: center; }
-    p.sub { text-align: center; color: #94a3b8; }
-    .cat { background: #1e293b; padding: 16px; border-radius: 12px; margin: 16px 0; }
-    .cat h3 { margin-top: 0; color: #60a5fa; }
-    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
-    .avatar-item { position: relative; }
-    .avatar-item input { position: absolute; opacity: 0; pointer-events: none; }
-    .avatar-item label {
-      display: block;
-      font-size: 34px;
-      text-align: center;
-      padding: 8px 0;
-      border-radius: 8px;
-      background: #334155;
-      cursor: pointer;
-      transition: 0.15s;
-      user-select: none;
-    }
-    .avatar-item label:hover { background: #475569; transform: scale(1.08); }
-    .avatar-item input:checked + label {
-      background: #22c55e;
-      box-shadow: 0 0 0 3px #facc15 inset;
-      transform: scale(1.12);
-    }
-    .submit-row { text-align: center; margin: 24px 0; }
-    button {
-      background: #22c55e; color: white; border: none;
-      padding: 16px 48px; font-size: 20px; border-radius: 10px;
-      cursor: pointer;
-    }
-    button:hover { background: #16a34a; }
-    @media (max-width: 700px) {
-      .grid { grid-template-columns: repeat(5, 1fr); }
-    }
-  </style>
-</head>
-<body>
-<div class="container">
-  <h1>🎨 آواتار خودت رو انتخاب کن</h1>
-  <p class="sub">این آواتار کنار نامت در بازی نمایش داده می‌شه.</p>
-
-  <form method="post" id="avatar-form">
-    {% csrf_token %}
-    <input type="hidden" name="avatar_id" id="avatar_id" value="{{ current_avatar|default:0 }}">
-
-    {% for cat in categories %}
-      <div class="cat">
-        <h3>{{ cat.name }}</h3>
-        <div class="grid">
-          {% for emoji in cat.items %}
-            <div class="avatar-item">
-              <input type="radio" name="avatar_pick" id="av-{{ cat.key }}-{{ forloop.counter }}" value="{{ cat.key }}-{{ forloop.counter }}" data-emoji="{{ emoji }}">
-              <label for="av-{{ cat.key }}-{{ forloop.counter }}">{{ emoji }}</label>
-            </div>
-          {% endfor %}
+{% extends "base.html" %}
+{% block title %}تغییر آواتار{% endblock %}
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+  .box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+  .tabs { display: flex; gap: 8px; background: var(--bg); padding: 6px; border-radius: 14px; margin-bottom: 20px; }
+  .tab { flex: 1; padding: 12px; text-align: center; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; color: var(--muted); transition: 0.2s; border: none; background: transparent; font-family: inherit; }
+  .tab.active { background: var(--gold); color: #000; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 400px; overflow-y: auto; padding: 4px; }
+  .avatar-grid::-webkit-scrollbar { width: 4px; }
+  .avatar-grid::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 4px; }
+  .avatar-item { position: relative; }
+  .avatar-item input { position: absolute; opacity: 0; pointer-events: none; }
+  .avatar-item label { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; background-color: #e2e8f0; border: 2px solid transparent; border-radius: 14px; cursor: pointer; transition: 0.2s; font-size: 38px; background-size: cover; background-position: center; }
+  .avatar-item input:checked + label { border-color: var(--gold); transform: scale(1.05); box-shadow: 0 0 20px rgba(244,197,66,0.5); }
+  button.submit { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 17px; font-weight: bold; font-family: inherit; cursor: pointer; color: #000; background: linear-gradient(135deg, #f4c542, #eab308); }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <a href="/accounts/profile/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>🎨 <span>تغییر آواتار</span></h1>
+  </div>
+  {% if is_guest %}
+    <div class="box" style="text-align:center; color:var(--muted);">
+      <h3 style="color:#f87171;">🔒 قفل است</h3>
+      <p>{{ locked_message }}</p>
+    </div>
+  {% else %}
+    <form method="post" id="avatarForm">
+      {% csrf_token %}
+      <input type="hidden" name="avatar_type" id="avatarType" value="{{ current_type|default:'emoji' }}">
+      <input type="hidden" name="avatar_id" id="avatarId" value="{{ current_avatar|default:'' }}">
+      <div class="box">
+        <div class="tabs">
+          <button type="button" class="tab {% if current_type != 'image' %}active{% endif %}" onclick="switchTab('emoji')">😊 ایموجی</button>
+          <button type="button" class="tab {% if current_type == 'image' %}active{% endif %}" onclick="switchTab('image')">🖼️ شخصیت‌ها</button>
+        </div>
+        <div id="tab-emoji" class="tab-content {% if current_type != 'image' %}active{% endif %}">
+          <div class="avatar-grid">
+            {% for cat in categories %}
+              {% for emoji in cat.items %}
+                <div class="avatar-item">
+                  <input type="radio" name="pick_emoji" id="em-{{ cat.key }}-{{ forloop.counter }}" data-cat="{{ cat.key }}" data-idx="{{ forloop.counter0 }}" onchange="pickEmoji(this)">
+                  <label for="em-{{ cat.key }}-{{ forloop.counter }}">{{ emoji }}</label>
+                </div>
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+        <div id="tab-image" class="tab-content {% if current_type == 'image' %}active{% endif %}">
+          <div class="avatar-grid">
+            {% for img in image_avatars %}
+              <div class="avatar-item">
+                <input type="radio" name="pick_image" id="im-{{ img.id }}" data-id="{{ img.id }}" onchange="pickImage(this)">
+                <label for="im-{{ img.id }}" style="background-image: url('{{ img.url }}');"></label>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    {% endfor %}
-
-    <div class="submit-row">
-      <button type="submit">✅ تأیید و ورود به بازی</button>
-    </div>
-  </form>
-</div>
-
+      <button type="submit" class="submit" onclick="prepareSubmit()">✅ تأیید و ذخیره</button>
+    </form>
+  {% endif %}
+{% endblock %}
+{% block extra_js %}
 <script>
-const catOrder = [
-  {% for cat in categories %}"{{ cat.key }}"{% if not forloop.last %},{% endif %}{% endfor %}
-];
-
-document.querySelectorAll('input[name="avatar_pick"]').forEach(r => {
-  r.addEventListener('change', () => {
-    const [catKey, idxStr] = r.value.split('-');
-    const catIdx = catOrder.indexOf(catKey);
-    const itemIdx = parseInt(idxStr, 10) - 1;
-    const realId = catIdx * 10 + itemIdx;
-    document.getElementById('avatar_id').value = realId;
-  });
-});
+const catOrder = [{% for cat in categories %}"{{ cat.key }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+function switchTab(type) {
+  document.getElementById('avatarType').value = type;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  if (type === 'emoji') { document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('tab-emoji').classList.add('active'); }
+  else { document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('tab-image').classList.add('active'); }
+  document.getElementById('avatarId').value = '';
+}
+function pickEmoji(el) { document.getElementById('avatarId').value = catOrder.indexOf(el.dataset.cat) * 10 + parseInt(el.dataset.idx); document.getElementById('avatarType').value = 'emoji'; }
+function pickImage(el) { document.getElementById('avatarId').value = parseInt(el.dataset.id); document.getElementById('avatarType').value = 'image'; }
+function prepareSubmit() { if (!document.getElementById('avatarId').value) { alert('لطفاً یک آواتار انتخاب کنید!'); event.preventDefault(); } }
 </script>
-</body>
-</html>
+{% endblock %}

@@ -32,6 +32,7 @@ def alliance_home(request):
 
     return render(request, "alliance/home.html", {
         "alliances": alliances_data,
+        "active": "alliance",
     })
 
 
@@ -109,15 +110,30 @@ def alliance_detail(request, alliance_id):
         messages.info(request, "برای دیدن اتحاد باید عضو شوی.")
         return redirect("alliance:home")
 
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Sum, Count
+    from game.models import Player
+
+    now = timezone.now()
+    online_threshold = now - timedelta(minutes=5)
+
     members = AllianceMember.objects.filter(alliance=a).select_related("user").order_by("role", "-joined_at")
     members_data = []
     for m in members:
+        is_online = m.user.last_seen and m.user.last_seen >= online_threshold
+        stats = Player.objects.filter(user=m.user).aggregate(total_score=Sum("score"))
+        total_score = stats["total_score"] or 0
+        level = 1 + total_score // 100
+
         members_data.append({
             "user": m.user,
             "avatar": _avatar(m.user),
             "role": m.role,
             "role_display": m.get_role_display(),
             "joined_at": m.joined_at,
+            "is_online": is_online,
+            "level": level,
         })
 
     recent_messages = AllianceMessage.objects.filter(alliance=a).select_related("sender").order_by("-sent_at")[:5]

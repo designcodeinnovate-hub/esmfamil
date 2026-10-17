@@ -11,4 +11,10 @@ urlpatterns = [
     path("reject/<int:req_id>/", views.reject_request, name="reject_request"),
     path("remove/<int:user_id>/", views.remove_friend, name="remove_friend"),
     path("chat/<int:user_id>/", views.chat_view, name="chat"),
+    
+    # دعوت به بازی
+    path("invite/<int:user_id>/", views.send_game_invite, name="send_game_invite"),
+    path("invite/status/<int:invite_id>/", views.check_invite_status, name="check_invite_status"),
+    path("invite/accept/<int:invite_id>/", views.accept_invite, name="accept_invite"),
+    path("invite/reject/<int:invite_id>/", views.reject_invite, name="reject_invite"),
 ]

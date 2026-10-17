@@ -8,9 +8,10 @@ from django.db import models
 PERSIAN_LETTERS = list("آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی")
 
 DEFAULT_CATEGORIES = [
-    "اسم", "فامیل", "میوه", "رنگ", "شهر", "کشور",
-    "ماشین", "حیوان", "اشیا", "اعضای بدن",
-    "نام گل", "غذا", "شغل",
+    "اسم", "فامیل", "میوه", "رنگ", "شهر", "کشور", "ماشین", "حیوان", "اشیاء", "غذا",
+    "شغل", "اعضای بدن", "نام گل", "فیلم", "خواننده", "برند", "ورزش", "ابزار", "لباس", 
+    "شخصیت کارتونی", "کتاب", "مکان", "گیاه", "مزه", "صدا", "پارچه", "بیماری", 
+    "زبان", "عدد", "کلمه انگلیسی"
 ]
 
 
@@ -30,6 +31,8 @@ class Game(models.Model):
         related_name="hosted_games",
     )
     password = models.CharField(max_length=32, blank=True)
+    room_name = models.CharField(max_length=50, blank=True, default="اتاق بازی")
+    max_players = models.PositiveIntegerField(default=8)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="waiting")
     categories = models.JSONField(default=list)
     mode = models.CharField(max_length=16, default="group")
@@ -102,3 +105,20 @@ class BotAnswer(models.Model):
 
     class Meta:
         unique_together = ("round", "category")
+
+
+class MatchQueue(models.Model):
+    """صف انتظار برای بازی رندم."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="match_queue",
+    )
+    difficulty = models.CharField(max_length=8, default="medium")
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("joined_at",)
+
+    def __str__(self):
+        return f"{self.user.alias} in queue"

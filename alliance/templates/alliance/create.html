@@ -1,89 +1,73 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ساخت اتحاد</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 30% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
-      color: #e2e8f0;
-      padding: 24px 20px;
-    }
-    .container { max-width: 560px; margin: 0 auto; }
-    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
-    h1 { font-size: 26px; color: #facc15; margin: 14px 0 8px; }
-    p.sub { color: #94a3b8; font-size: 14px; margin-bottom: 22px; }
+{% extends "base.html" %}
+{% block title %}ساخت اتحاد{% endblock %}
 
-    .error { background: rgba(239, 68, 68, 0.15); color: #f87171;
-             border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 14px;
-             border-radius: 10px; margin-bottom: 14px; font-size: 14px; }
+{% block extra_css %}
+<style>
+  .page-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
 
-    .box {
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 22px;
-      border-radius: 18px;
-      margin-bottom: 14px;
-    }
-    label { display: block; color: #94a3b8; font-size: 13px; margin: 12px 0 6px; }
-    input[type=text], textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.7);
-      color: #fff;
-      font-size: 15px;
-      font-family: inherit;
-    }
-    textarea { resize: vertical; min-height: 70px; }
-    input:focus, textarea:focus { outline: none; border-color: #f97316; }
+  .error {
+    background: rgba(239, 68, 68, 0.15); color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    padding: 12px 16px; border-radius: 12px;
+    margin-bottom: 14px; font-size: 13.5px; text-align: right;
+  }
 
-    .emojis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-    .emoji-opt {
-      padding: 12px 0;
-      text-align: center;
-      font-size: 26px;
-      background: rgba(51, 65, 85, 0.4);
-      border: 2px solid transparent;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .emoji-opt:hover { border-color: #f97316; }
-    .emoji-opt input { display: none; }
-    .emoji-opt:has(input:checked) {
-      border-color: #f97316;
-      background: linear-gradient(135deg, rgba(249,115,22,0.3), rgba(234,179,8,0.2));
-      box-shadow: 0 0 20px rgba(249,115,22,0.4);
-    }
+  .box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 22px; border-radius: 18px; margin-bottom: 14px;
+  }
+  label { display: block; color: var(--muted); font-size: 13px; margin: 12px 0 6px; }
+  input[type=text], textarea {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text);
+    font-size: 15px; font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--gold); }
 
-    button.save {
-      width: 100%;
-      margin-top: 20px;
-      padding: 16px;
-      border: none;
-      border-radius: 14px;
-      font-size: 17px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      box-shadow: 0 10px 30px rgba(34,197,94,0.4);
-    }
-    button.save:hover { transform: translateY(-2px); }
-  </style>
-</head>
-<body>
-<div class="container">
-  <a class="back" href="/alliance/">← بازگشت</a>
-  <h1>🏰 ساخت اتحاد</h1>
-  <p class="sub">یک اسم خوب انتخاب کن و تیمت رو بساز.</p>
+  .emojis {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  }
+  .emoji-opt {
+    padding: 12px 0; text-align: center; font-size: 26px;
+    background: var(--bg);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .emoji-opt:hover { border-color: var(--gold); }
+  .emoji-opt input { display: none; }
+  .emoji-opt:has(input:checked) {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(249,115,22,0.2));
+    box-shadow: 0 0 20px rgba(244,197,66,0.4);
+  }
+
+  button.save {
+    width: 100%; margin-top: 20px; padding: 16px;
+    border: none; border-radius: 14px;
+    font-size: 17px; font-weight: bold;
+    font-family: inherit; cursor: pointer;
+    color: #1a1a1a;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    box-shadow: 0 10px 30px rgba(34,197,94,0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <div class="page-head">
+    <a href="/alliance/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>🏰 <span>ساخت اتحاد</span></h1>
+  </div>
 
   {% if error %}<div class="error">{{ error }}</div>{% endif %}
 
@@ -115,6 +99,5 @@
 
     <button type="submit" class="save">🚀 ساخت اتحاد</button>
   </form>
-</div>
-</body>
-</html>
+
+{% endblock %}

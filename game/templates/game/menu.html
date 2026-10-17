@@ -1,249 +1,418 @@
 {% extends "base.html" %}
-{% block title %}خانه — اسم فامیل{% endblock %}
+{% block title %}خانه{% endblock %}
 
 {% block extra_css %}
 <style>
-  .top-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 20px;
+  .version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    font-weight: bold;
   }
-  .user-greet { display: flex; align-items: center; gap: 12px; }
-  .user-av {
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .settings-icon {
+    width: 42px; height: 42px;
+    border-radius: 14px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none;
+    font-size: 20px;
+    transition: all 0.2s;
+  }
+  .settings-icon:hover {
+    border-color: var(--gold);
+    transform: rotate(45deg);
+  }
+
+  /* ===== آواتار ===== */
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .user-av-box {
     width: 50px; height: 50px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
-    border: 2px solid var(--gold);
+    border: 2px solid #f4c542;
     display: flex; align-items: center; justify-content: center;
     font-size: 26px;
-    box-shadow: 0 0 20px rgba(244, 197, 66, 0.25);
+    box-shadow: 0 0 22px rgba(244, 197, 66, 0.3);
+    overflow: hidden;
+    flex-shrink: 0;
   }
-  .greet-text .hi { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
-  .greet-text .name { font-size: 16px; font-weight: bold; color: #fff; }
-  .icon-btn {
-    width: 42px; height: 42px;
-    border-radius: 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text); text-decoration: none; font-size: 18px;
-    transition: 0.15s;
+  .user-av-box.emoji-bg { background: linear-gradient(135deg, #2a2a4a, #1a1a2e); }
+  .user-av-box.image-bg { background-size: cover; background-position: center; }
+  .greet-text { flex: 1; min-width: 0; }
+  .greet-text .hi { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .greet-text .name {
+    font-size: 16px; font-weight: bold; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .icon-btn:hover { border-color: var(--gold); }
 
-  .brand-logo { text-align: center; margin: 4px 0 22px; }
-  .brand-logo .crown {
-    font-size: 22px;
-    display: inline-block;
-    transform: translateY(-6px);
-    filter: drop-shadow(0 4px 12px rgba(244,197,66,0.5));
+  /* ===== دو دکمه دایره‌ای کوچیک بالا ===== */
+  .round-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-bottom: 14px;
   }
-  .brand-logo .name {
-    font-size: 30px; font-weight: 900;
+  .round-btn {
+    position: relative;
+    width: 66px; height: 66px;
+    border-radius: 50%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-decoration: none;
+    border: 2px solid;
+    transition: all 0.22s;
+    flex-shrink: 0;
+    gap: 2px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    cursor: pointer;
+  }
+  .round-btn:hover {
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+  }
+  .round-btn:active { transform: scale(0.94); }
+  .round-btn .rb-icon { font-size: 24px; line-height: 1; }
+  .round-btn .rb-label {
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .round-top {
+    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(234,179,8,0.1));
+    border-color: rgba(244,197,66,0.55);
+  }
+  .round-top .rb-label { color: #fde68a; }
+  .round-shop {
+    background: linear-gradient(135deg, rgba(34,197,94,0.3), rgba(6,182,212,0.1));
+    border-color: rgba(34,197,94,0.55);
+  }
+  .round-shop .rb-label { color: #86efac; }
+
+  /* ===== دکمه بازی با بات ===== */
+  .bot-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px;
+    background: radial-gradient(circle at 100% 0%, rgba(6,182,212,0.35), transparent 60%),
+                linear-gradient(135deg, #0f1a2e, #0f0f1e);
+    border: 2px solid rgba(6,182,212,0.5);
+    border-radius: 22px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.22s;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 30px rgba(6,182,212,0.2);
+  }
+  .bot-btn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(6,182,212,0.9);
+    box-shadow: 0 15px 40px rgba(6,182,212,0.35);
+  }
+  .bot-btn:active { transform: scale(0.98); }
+  .bot-btn .bb-icon {
+    font-size: 46px;
+    width: 70px; height: 70px;
+    border-radius: 20px;
+    background: rgba(6,182,212,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .bot-btn .bb-body { flex: 1; }
+  .bot-btn .bb-title { font-size: 19px; font-weight: 900; margin-bottom: 5px; }
+  .bot-btn .bb-desc { font-size: 12.5px; color: #cbd5e1; }
+  .bot-btn .bb-arrow { font-size: 24px; color: #94a3b8; }
+
+  /* ===== اعلان‌ها ===== */
+  .notif-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 22px;
+    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.35), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 2px solid rgba(139,92,246,0.5);
+    border-radius: 22px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.22s;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 30px rgba(139,92,246,0.2);
+  }
+  .notif-btn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(139,92,246,0.9);
+    box-shadow: 0 15px 40px rgba(139,92,246,0.35);
+  }
+  .notif-btn:active { transform: scale(0.98); }
+  .notif-btn .nb-icon {
+    font-size: 46px;
+    width: 70px; height: 70px;
+    border-radius: 20px;
+    background: rgba(139,92,246,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .notif-btn .nb-body { flex: 1; }
+  .notif-btn .nb-title { font-size: 19px; font-weight: 900; margin-bottom: 5px; }
+  .notif-btn .nb-desc { font-size: 12.5px; color: #cbd5e1; }
+  .notif-btn .nb-arrow { font-size: 24px; color: #94a3b8; }
+
+  .bell-badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    min-width: 22px; height: 22px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    padding: 0 6px;
+    box-shadow: 0 0 0 3px var(--bg);
+    animation: pulseBadge 2s infinite;
+  }
+  @keyframes pulseBadge {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
+  }
+
+  /* ===== چالش ===== */
+  .challenge-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px;
+    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.4), transparent 60%),
+                radial-gradient(circle at 0% 100%, rgba(139,92,246,0.3), transparent 60%),
+                linear-gradient(135deg, #2a1a0e, #1a0f2e);
+    border: 2.5px solid rgba(244,197,66,0.55);
+    border-radius: 22px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.22s;
+    box-shadow: 0 8px 30px rgba(244,197,66,0.25);
+    cursor: pointer;
+    position: relative;
+  }
+  .challenge-btn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(244,197,66,0.9);
+    box-shadow: 0 15px 45px rgba(244,197,66,0.4);
+  }
+  .challenge-btn:active { transform: scale(0.98); }
+  .challenge-btn .ch-icon {
+    font-size: 52px;
+    width: 74px; height: 74px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(139,92,246,0.2));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .challenge-btn .ch-body { flex: 1; }
+  .challenge-btn .ch-title {
+    font-size: 21px; font-weight: 900; margin-bottom: 5px;
     background: linear-gradient(180deg, #fde68a, #f4c542, #ca8a04);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 6px 24px rgba(244,197,66,0.35));
-    line-height: 1.1;
-    display: inline-block;
-    margin: 0 6px;
   }
-  .brand-logo .sub {
-    display: block;
-    color: var(--dim);
-    font-size: 11px;
-    margin-top: 2px;
-    letter-spacing: 1px;
+  .challenge-btn .ch-desc { font-size: 12.5px; color: #cbd5e1; }
+  .challenge-btn .soon-badge {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: rgba(234,179,8,0.95);
+    color: #1a1a1a;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 9px;
+    border-radius: 8px;
   }
 
-  /* Feature banner */
-  .feature-banner {
-    position: relative;
-    border-radius: 20px;
-    padding: 22px 20px;
-    margin-bottom: 18px;
-    background:
-      radial-gradient(circle at 90% 20%, rgba(244,197,66,0.15), transparent 60%),
-      radial-gradient(circle at 10% 90%, rgba(139,92,246,0.35), transparent 60%),
-      linear-gradient(135deg, #1a0f2e, #0f0f1e);
-    border: 1px solid rgba(139, 92, 246, 0.25);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-    overflow: hidden;
+  .guest-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1.5px solid rgba(239, 68, 68, 0.4);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
   }
-  .feature-banner::before {
-    content: "";
-    position: absolute;
-    right: -40px; top: -40px;
-    width: 180px; height: 180px;
-    background: radial-gradient(circle, rgba(244,197,66,0.3), transparent 70%);
-    border-radius: 50%;
+  .guest-logout:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: #ef4444;
+    color: #fff;
+    transform: translateY(-2px);
   }
-  .feature-banner .title {
-    font-size: 20px; font-weight: bold;
-    color: #fff; margin-bottom: 6px;
-    position: relative; z-index: 1;
-  }
-  .feature-banner .desc {
-    font-size: 12.5px; color: #cbd5e1;
+  .guest-logout:active { transform: scale(0.95); }
+
+  /* جعبه هشدار مهمان */
+  .guest-warning {
+    background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(249,115,22,0.08));
+    border: 1.5px solid rgba(234,179,8,0.35);
+    border-radius: 16px;
+    padding: 16px 18px;
     margin-bottom: 16px;
-    position: relative; z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .guest-warning .gw-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+  .guest-warning .gw-body { flex: 1; }
+  .guest-warning .gw-title {
+    font-size: 13.5px;
+    font-weight: bold;
+    color: #fde68a;
+    margin-bottom: 3px;
+  }
+  .guest-warning .gw-desc {
+    font-size: 11.5px;
+    color: #fbbf24;
     line-height: 1.6;
   }
-  .feature-banner .btn-quick {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg, #f4c542, #eab308);
-    color: #1a1a1a;
-    padding: 11px 22px;
+  .guest-warning .gw-logout {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 10px 14px;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     text-decoration: none;
-    box-shadow: 0 8px 24px rgba(244,197,66,0.4);
-    position: relative; z-index: 1;
-    transition: transform 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all 0.2s;
+    flex-shrink: 0;
   }
-  .feature-banner .btn-quick:hover { transform: translateY(-2px); }
-
-  /* Quick access tiles */
-  .quick-tiles {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 22px;
+  .guest-warning .gw-logout:hover {
+    background: rgba(239, 68, 68, 0.4);
+    color: #fff;
   }
-  .qtile {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 8px;
-    padding: 16px 8px;
-    border-radius: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    text-decoration: none;
-    color: var(--text);
-    transition: 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-  .qtile:hover {
-    border-color: var(--gold);
-    transform: translateY(-3px);
-  }
-  .qtile .qt-icon {
-    font-size: 26px;
-    width: 46px; height: 46px;
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(244,197,66,0.15));
-  }
-  .qtile .qt-name {
-    font-size: 12.5px;
-    font-weight: bold;
-    text-align: center;
-  }
-  .qtile .qt-badge {
-    position: absolute; top: 6px; left: 6px;
-    font-size: 9px;
-    background: rgba(234,179,8,0.25);
-    color: var(--gold);
-    padding: 2px 6px;
-    border-radius: 6px;
-  }
-
-  /* Sections */
-  .section-title {
-    display: flex; justify-content: space-between; align-items: center;
-    margin: 22px 0 12px;
-  }
-  .section-title h3 { font-size: 15px; color: #fff; font-weight: bold; }
-  .section-title a { font-size: 12px; color: var(--gold); text-decoration: none; }
-
-  .mode-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .mode-card {
-    padding: 16px 14px;
-    border-radius: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    text-decoration: none; color: var(--text);
-    transition: 0.2s;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .mode-card:hover { transform: translateY(-2px); border-color: var(--gold); }
-  .mode-card .mc-icon { font-size: 30px; }
-  .mode-card .mc-title { font-size: 14px; font-weight: bold; }
-  .mode-card .mc-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
 </style>
 {% endblock %}
 
 {% block content %}
 
-  <div class="top-header">
-    <div class="user-greet">
-      <div class="user-av">{{ avatar_emoji }}</div>
-      <div class="greet-text">
-        <div class="hi">سلام 👋</div>
-        <div class="name">{{ user.alias }}</div>
+  <div class="top-bar">
+    <div class="version-badge">
+      <span>🧪</span>
+      <span>نسخه آزمایشی</span>
+    </div>
+    <a href="/accounts/settings/" class="settings-icon" title="تنظیمات">⚙️</a>
+  </div>
+
+  <div class="user-row">
+    {% if user.avatar_type == "image" and user.avatar_id %}
+      <div class="user-av-box image-bg" style="background-image: url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');"></div>
+    {% else %}
+      <div class="user-av-box emoji-bg">{{ avatar_emoji }}</div>
+    {% endif %}
+    <div class="greet-text">
+      <div class="hi">سلام 👋</div>
+      <div class="name">{{ user.alias }}</div>
+    </div>
+    {% if user.is_guest %}
+      <a href="/accounts/logout/" class="guest-logout" title="خروج از حساب مهمان"
+         onclick="return confirm('از حساب مهمان خارج می\u200cشوی؟');">
+        <span>🚪</span>
+        <span>خروج</span>
+      </a>
+    {% endif %}
+  </div>
+
+  {% if user.is_guest %}
+    <div class="guest-warning">
+      <span class="gw-icon">🎲</span>
+      <div class="gw-body">
+        <div class="gw-title">حساب مهمان</div>
+        <div class="gw-desc">
+          با خروج، تمام امتیازها از بین می‌رود.
+          برای ذخیره‌ی دائمی، حساب کاربری بساز.
+        </div>
+      </div>
+      <a href="/accounts/logout/" class="gw-logout"
+         onclick="return confirm('از حساب مهمان خارج می\u200cشوی؟');">
+        🚪 خروج
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- دو دکمه دایره‌ای کوچیک بالا -->
+  <div class="round-row">
+    <a href="/game/top-players/" class="round-btn round-top" title="بازیکنان برتر">
+      <span class="rb-icon">⭐</span>
+      <span class="rb-label">برتر</span>
+    </a>
+    <a href="/accounts/shop/" class="round-btn round-shop" title="فروشگاه">
+      <span class="rb-icon">🛒</span>
+      <span class="rb-label">فروشگاه</span>
+    </a>
+  </div>
+
+  <!-- بازی با بات -->
+  <a href="/game/quick/" class="bot-btn">
+    <div class="bb-icon">⚡</div>
+    <div class="bb-body">
+      <div class="bb-title">بازی با بات</div>
+      <div class="bb-desc">سه سطح سختی — همین الان بازی کن</div>
+    </div>
+    <div class="bb-arrow">←</div>
+  </a>
+
+  <!-- اعلان‌ها -->
+  <a href="/social/notifications/" class="notif-btn">
+    <div class="nb-icon">
+      🔔
+      {% if unread_notifications %}
+        <span class="bell-badge">{{ unread_notifications }}</span>
+      {% endif %}
+    </div>
+    <div class="nb-body">
+      <div class="nb-title">اعلان‌ها</div>
+      <div class="nb-desc">
+        {% if unread_notifications %}{{ unread_notifications }} پیام جدید داری{% else %}پیام‌ها و درخواست‌ها{% endif %}
       </div>
     </div>
-    <a href="/accounts/settings/" class="icon-btn">⚙️</a>
-  </div>
+    <div class="nb-arrow">←</div>
+  </a>
 
-  <div class="brand-logo">
-    <span class="crown">👑</span>
-    <span class="name">اسم فامیل</span>
-    <span class="sub">بازی کلاسیک، حال و آنلاین</span>
-  </div>
-
-  <div class="feature-banner">
-    <div class="title">🎮 بازی آنلاین</div>
-    <div class="desc">با رقیب هوشمند بازی کن یا دوستانت رو به اتاق خصوصی دعوت کن.</div>
-    <a href="/game/quick/" class="btn-quick">شروع سریع ←</a>
-  </div>
-
-  <div class="quick-tiles">
-    <a href="/alliance/" class="qtile">
-      <div class="qt-icon">🛡️</div>
-      <div class="qt-name">اتحاد</div>
-    </a>
-    <a href="/game/quick/" class="qtile">
-      <div class="qt-icon">🎲</div>
-      <div class="qt-name">بازی تصادفی</div>
-    </a>
-    <a href="/social/" class="qtile">
-      <div class="qt-icon">🏆</div>
-      <div class="qt-name">رتبه‌بندی</div>
-      <div class="qt-badge">جدید</div>
-    </a>
-  </div>
-
-  <div class="section-title">
-    <h3>🎯 حالت‌های بازی</h3>
-    <a href="/game/rooms/">مشاهده همه</a>
-  </div>
-
-  <div class="mode-grid">
-    <a href="/game/quick/" class="mode-card">
-      <div class="mc-icon">⚡</div>
-      <div class="mc-title">بازی سریع</div>
-      <div class="mc-desc">با بات هوشمند در سه سطح سختی</div>
-    </a>
-    <a href="/game/rooms/" class="mode-card">
-      <div class="mc-icon">👥</div>
-      <div class="mc-title">بازی با دوستان</div>
-      <div class="mc-desc">اتاق خصوصی با کد دعوت</div>
-    </a>
-    <a href="/alliance/" class="mode-card">
-      <div class="mc-icon">🛡️</div>
-      <div class="mc-title">اتحاد</div>
-      <div class="mc-desc">تیم بساز و با هم رقابت کن</div>
-    </a>
-    <a href="/game/rooms/" class="mode-card">
-      <div class="mc-icon">🎲</div>
-      <div class="mc-title">حالت کلاسیک</div>
-      <div class="mc-desc">همون بازی قدیمی، فقط دیجیتال</div>
-    </a>
+  <!-- چالش -->
+  <div class="challenge-btn" onclick="alert('⚔️ چالش هنوز آماده نیست!\\n\\nبه‌زودی می‌تونی با دوستات به چالش بپردازی.')">
+    <span class="soon-badge">به‌زودی</span>
+    <div class="ch-icon">⚔️</div>
+    <div class="ch-body">
+      <div class="ch-title">چالش</div>
+      <div class="ch-desc">با دوستات رقابت کن</div>
+    </div>
   </div>
 
 {% endblock %}

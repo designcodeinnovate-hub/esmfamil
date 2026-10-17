@@ -1,207 +1,63 @@
 {% extends "base.html" %}
-{% block title %}بازی‌ها — اسم فامیل{% endblock %}
+{% block title %}بازی‌ها{% endblock %}
 
 {% block extra_css %}
 <style>
-  .page-head {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 20px;
-  }
+  .page-head { margin-bottom: 20px; }
   .page-head h1 { font-size: 22px; font-weight: bold; }
   .page-head h1 span { color: var(--gold); }
 
   .big-card {
-    border-radius: 20px;
-    padding: 22px 20px;
-    margin-bottom: 14px;
-    text-decoration: none;
-    color: #fff;
+    border-radius: 20px; padding: 24px 22px; margin-bottom: 14px;
+    text-decoration: none; color: #fff;
     display: flex; align-items: center; gap: 16px;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    transition: transform 0.2s;
+    position: relative; overflow: hidden;
+    border: 1.5px solid; transition: all 0.22s; cursor: pointer;
   }
   .big-card:hover { transform: translateY(-3px); }
-  .big-card.quick {
-    background:
-      radial-gradient(circle at 100% 0%, rgba(244,197,66,0.25), transparent 60%),
-      linear-gradient(135deg, #2a1a0e, #1a0f1a);
-    border-color: rgba(244,197,66,0.25);
+  .big-card:active { transform: scale(0.98); }
+  .big-card.bot {
+    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.25), transparent 60%),
+                linear-gradient(135deg, #2a1a0e, #1a0f1a);
+    border-color: rgba(244,197,66,0.4);
   }
-  .big-card.private {
-    background:
-      radial-gradient(circle at 100% 0%, rgba(139,92,246,0.3), transparent 60%),
-      linear-gradient(135deg, #1a0f2e, #0f0f1e);
-    border-color: rgba(139,92,246,0.3);
-  }
-  .big-card.alliance {
-    background:
-      radial-gradient(circle at 100% 0%, rgba(34,197,94,0.22), transparent 60%),
-      linear-gradient(135deg, #0f2a1a, #0f1a1e);
-    border-color: rgba(34,197,94,0.25);
+  .big-card.room {
+    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.3), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border-color: rgba(139,92,246,0.4);
   }
   .big-card .bc-icon {
-    font-size: 40px;
-    width: 62px; height: 62px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.08);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    font-size: 42px; width: 68px; height: 68px;
+    border-radius: 18px; background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .big-card .bc-body { flex: 1; }
-  .big-card .bc-title { font-size: 17px; font-weight: bold; margin-bottom: 4px; }
-  .big-card .bc-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
-  .big-card .bc-arrow { font-size: 20px; color: #94a3b8; }
-
-  .section-title {
-    display: flex; justify-content: space-between; align-items: center;
-    margin: 22px 0 12px;
-  }
-  .section-title h3 { font-size: 15px; color: #fff; font-weight: bold; }
-
-  /* Join row */
-  .join-row {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 14px;
-  }
-  .join-row h4 { font-size: 14px; margin-bottom: 12px; color: var(--gold); }
-  .join-form { display: flex; gap: 8px; }
-  .join-form input {
-    flex: 1;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: rgba(10,10,21,0.6);
-    color: #fff;
-    font-size: 16px;
-    font-family: monospace;
-    text-align: center;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-  }
-  .join-form input:focus { outline: none; border-color: var(--gold); }
-  .join-form button {
-    padding: 12px 20px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
-    color: #fff;
-    font-weight: bold;
-    font-size: 14px;
-    font-family: inherit;
-    cursor: pointer;
-  }
-
-  /* My rooms list */
-  .rooms-list { display: flex; flex-direction: column; gap: 8px; }
-  .room-item {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px 16px;
-    text-decoration: none;
-    color: var(--text);
-    transition: 0.15s;
-  }
-  .room-item:hover { border-color: var(--gold); transform: translateX(-3px); }
-  .room-item .ri-code {
-    background: rgba(244,197,66,0.15);
-    color: var(--gold);
-    font-family: monospace;
-    font-weight: bold;
-    font-size: 16px;
-    letter-spacing: 2px;
-    padding: 6px 12px;
-    border-radius: 8px;
-  }
-  .room-item .ri-info { flex: 1; }
-  .room-item .ri-title { font-size: 14px; font-weight: bold; }
-  .room-item .ri-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  .empty {
-    text-align: center;
-    padding: 30px 20px;
-    background: var(--card);
-    border: 1px dashed var(--border);
-    border-radius: 14px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .empty .icon { font-size: 40px; display: block; margin-bottom: 8px; opacity: 0.5; }
+  .big-card .bc-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #fff; }
+  .big-card .bc-desc { font-size: 12.5px; color: #cbd5e1; line-height: 1.5; }
+  .big-card .bc-arrow { font-size: 22px; color: #94a3b8; }
 </style>
 {% endblock %}
 
 {% block content %}
-
   <div class="page-head">
     <h1>🎮 <span>بازی‌ها</span></h1>
   </div>
 
-  <a href="/game/quick/" class="big-card quick">
+  <a href="/game/quick/" class="big-card bot">
     <div class="bc-icon">⚡</div>
     <div class="bc-body">
-      <div class="bc-title">بازی سریع با بات</div>
+      <div class="bc-title">بازی با بات</div>
       <div class="bc-desc">رقیب هوشمند، سه سطح سختی</div>
     </div>
     <div class="bc-arrow">←</div>
   </a>
 
-  <a href="/game/create/" class="big-card private"
-     onclick="event.preventDefault(); this.href='/game/create-page/';">
-    <div class="bc-icon">👥</div>
+  <a href="/game/rooms/manage/" class="big-card room">
+    <div class="bc-icon">🚪</div>
     <div class="bc-body">
-      <div class="bc-title">بازی با دوستان</div>
-      <div class="bc-desc">اتاق خصوصی بساز، کد بده به دوستات</div>
+      <div class="bc-title">اتاق‌های بازی</div>
+      <div class="bc-desc">ساخت اتاق جدید یا پیوستن به دوستان</div>
     </div>
     <div class="bc-arrow">←</div>
   </a>
-
-  <a href="/alliance/" class="big-card alliance">
-    <div class="bc-icon">🛡️</div>
-    <div class="bc-body">
-      <div class="bc-title">اتحاد</div>
-      <div class="bc-desc">تیم بساز، اعضا دعوت کن، چت تیمی</div>
-    </div>
-    <div class="bc-arrow">←</div>
-  </a>
-
-  <div class="section-title"><h3>🔑 ورود به اتاق دوست</h3></div>
-  <div class="join-row">
-    <form method="post" action="/game/join/" class="join-form">
-      {% csrf_token %}
-      <input type="text" name="code" maxlength="4" placeholder="1234" required>
-      <input type="text" name="password" maxlength="32" placeholder="رمز (اختیاری)"
-             style="letter-spacing:0;text-transform:none;font-family:inherit;">
-      <button type="submit">ورود</button>
-    </form>
-  </div>
-
-  {% if my_rooms %}
-    <div class="section-title"><h3>🕹️ اتاق‌های اخیر من</h3></div>
-    <div class="rooms-list">
-      {% for r in my_rooms %}
-        <a href="/game/room/{{ r.code }}/" class="room-item">
-          <span class="ri-code">{{ r.code }}</span>
-          <div class="ri-info">
-            <div class="ri-title">اتاق من</div>
-            <div class="ri-meta">{{ r.get_status_display }} — {{ r.created_at|date:"H:i" }}</div>
-          </div>
-          <span style="color:#94a3b8">←</span>
-        </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="section-title"><h3>🕹️ اتاق‌های من</h3></div>
-    <div class="empty">
-      <span class="icon">🚪</span>
-      هنوز اتاقی نساختی.<br>
-      با «بازی با دوستان» اولین اتاقت رو بساز.
-    </div>
-  {% endif %}
-
 {% endblock %}

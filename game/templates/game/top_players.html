@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}بازیکنان برتر{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+
+  .player-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; margin-bottom: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    transition: all 0.15s;
+  }
+  .player-row:hover { transform: translateX(-3px); }
+  .player-row.r1 { border-color: rgba(244,197,66,0.5);
+    background: linear-gradient(135deg, rgba(244,197,66,0.15), rgba(234,179,8,0.05)); }
+  .player-row.r2 { border-color: rgba(203,213,225,0.4);
+    background: linear-gradient(135deg, rgba(203,213,225,0.1), rgba(148,163,184,0.05)); }
+  .player-row.r3 { border-color: rgba(217,119,6,0.4);
+    background: linear-gradient(135deg, rgba(217,119,6,0.1), rgba(146,64,14,0.05)); }
+
+  .rank-badge {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 15px;
+    background: var(--bg);
+    color: var(--muted);
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+  .r1 .rank-badge { background: linear-gradient(135deg, #f4c542, #ca8a04);
+    color: #1a1a1a; box-shadow: 0 0 20px rgba(244,197,66,0.5); font-size: 20px; }
+  .r2 .rank-badge { background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+    color: #1a1a1a; }
+  .r3 .rank-badge { background: linear-gradient(135deg, #d97706, #92400e);
+    color: #fff; }
+
+  .player-avatar {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(234,179,8,0.15));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+    border: 2px solid rgba(244,197,66,0.3);
+    background-size: cover; background-position: center;
+    overflow: hidden;
+  }
+
+  .player-info { flex: 1; min-width: 0; }
+  .player-name { font-size: 15px; font-weight: bold; margin-bottom: 3px; }
+  .player-level {
+    display: inline-block;
+    font-size: 10px;
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-weight: bold;
+  }
+
+  .player-score { text-align: left; }
+  .player-score .big {
+    font-size: 20px; font-weight: bold;
+    color: var(--gold);
+    font-family: monospace;
+    display: block;
+    line-height: 1;
+  }
+  .player-score .small { font-size: 10px; color: var(--dim); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty .icon { font-size: 60px; display: block; margin-bottom: 12px; opacity: 0.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <div class="page-head">
+    <h1>⭐ <span>بازیکنان برتر</span></h1>
+  </div>
+
+  {% if players %}
+    {% for p in players %}
+      <div class="player-row {% if p.rank == 1 %}r1{% elif p.rank == 2 %}r2{% elif p.rank == 3 %}r3{% endif %}">
+        <div class="rank-badge">{% if p.rank == 1 %}👑{% else %}{{ p.rank }}{% endif %}</div>
+        <div class="player-avatar"
+             {% if p.avatar_type == "image" and p.avatar_id %}
+             style="background-image: url('/static/avatars/images/{{ p.avatar_id|stringformat:"03d" }}.jpg');"
+             {% endif %}>
+          {% if p.avatar_type != "image" %}{{ p.avatar }}{% endif %}
+        </div>
+        <div class="player-info">
+          <div class="player-name">{{ p.alias }}</div>
+          <span class="player-level">Lv {{ p.level }}</span>
+        </div>
+        <div class="player-score">
+          <span class="big">{{ p.total }}</span>
+          <span class="small">{{ p.games }} بازی</span>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty">
+      <span class="icon">👤</span>
+      هنوز کسی بازی نکرده.
+    </div>
+  {% endif %}
+
+{% endblock %}

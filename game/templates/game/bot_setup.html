@@ -1,125 +1,181 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>بازی با بات</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 80% 0%, #1e1b4b 0%, #0f0f1e 50%, #060608 100%);
-      color: #e2e8f0;
-      padding: 30px 20px;
-    }
-    .container { max-width: 640px; margin: 0 auto; }
-    a.back { color: #60a5fa; text-decoration: none; font-size: 14px; }
-    h1 {
-      font-size: 28px;
-      background: linear-gradient(135deg, #f97316, #eab308);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin: 14px 0 6px;
-    }
-    p.sub { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
-    .box {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 22px;
-      border-radius: 16px;
-      margin-bottom: 16px;
-    }
-    .box h3 { font-size: 16px; margin-bottom: 14px; color: #fdba74; }
-    label.chk { display: block; margin: 6px 0; color: #cbd5e1; font-size: 14px; }
-    .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .pill-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .pill {
-      flex: 1; min-width: 100px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 2px solid rgba(148, 163, 184, 0.2);
-      background: rgba(51, 65, 85, 0.4);
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.18s;
-      font-size: 14px;
-      color: #cbd5e1;
-    }
-    .pill:hover { border-color: #f97316; }
-    .pill input { display: none; }
-    .pill:has(input:checked) {
-      border-color: #f97316;
-      background: linear-gradient(135deg, rgba(249,115,22,0.25), rgba(234,179,8,0.15));
-      box-shadow: 0 0 20px rgba(249,115,22,0.35);
-      color: #fff;
-      font-weight: bold;
-    }
-    input[type=text] {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: #1e293b;
-      color: #fff;
-      font-size: 18px;
-      text-align: center;
-      font-family: inherit;
-      margin-top: 10px;
-    }
-    input[type=text]:focus { outline: none; border-color: #f97316; }
-    button {
-      width: 100%;
-      margin-top: 8px;
-      padding: 16px;
-      border: none;
-      border-radius: 14px;
-      font-size: 18px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(135deg, #f97316, #eab308);
-      box-shadow: 0 10px 30px rgba(249,115,22,0.4);
-    }
-    button:hover { transform: translateY(-2px); }
-  </style>
-</head>
-<body>
-<div class="container">
-  <a class="back" href="/game/">← بازگشت</a>
-  <h1>⚡ بازی با بات</h1>
-  <p class="sub">سختی و حروف رو انتخاب کن.</p>
-  <form method="post">
+{% extends "base.html" %}
+{% block title %}بازی با بات{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+  
+  .section-title { font-size: 15px; color: var(--gold); margin: 20px 0 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+  
+  /* دکمه‌های انتخاب (پیل) */
+  .pill-row { display: flex; gap: 8px; }
+  .pill {
+    flex: 1; padding: 12px 8px; border-radius: 12px;
+    border: 2px solid var(--border); background: var(--card);
+    text-align: center; cursor: pointer; transition: all 0.2s;
+    font-size: 14px; color: var(--muted); font-weight: bold;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .pill:hover { border-color: rgba(244,197,66,0.5); }
+  
+  /* استایل وقتی انتخاب شده (کلاس active) */
+  .pill.active {
+    border-color: var(--gold); 
+    background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(249,115,22,0.1)); 
+    color: #fff; 
+    box-shadow: 0 0 15px rgba(244,197,66,0.3);
+  }
+  
+  /* دسته‌ها */
+  .cats-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+  .cat-tag {
+    padding: 10px 6px; border-radius: 10px; text-align: center;
+    background: rgba(34,197,94,0.1); border: 1.5px solid rgba(34,197,94,0.3);
+    color: #4ade80; font-size: 13px; font-weight: bold; cursor: pointer;
+    transition: all 0.2s; user-select: none;
+  }
+  .cat-tag:hover { background: rgba(34,197,94,0.25); transform: translateY(-2px); }
+  
+  .excluded-section { margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .excluded-title { font-size: 13px; color: #f87171; margin-bottom: 10px; font-weight: bold; }
+  .excluded-tag {
+    background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171;
+  }
+  .excluded-tag::after { content: " ✕"; font-size: 11px; margin-right: 3px; }
+
+  input[type=text] {
+    width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 16px; text-align: center;
+    font-family: inherit; margin-top: 10px;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--gold); }
+  
+  button.submit {
+    width: 100%; margin-top: 30px; margin-bottom: 60px; padding: 18px; 
+    border: none; border-radius: 16px; font-size: 18px; font-weight: bold; 
+    font-family: inherit; cursor: pointer; color: #1a1a1a; 
+    background: linear-gradient(135deg, #f4c542, #eab308);
+    box-shadow: 0 10px 30px rgba(244,197,66,0.4); transition: 0.2s;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <a href="/game/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>🤖 <span>بازی با بات</span></h1>
+  </div>
+
+  <form method="post" id="botForm">
     {% csrf_token %}
-    <div class="box">
-      <h3>🎯 سطح سختی بات</h3>
-      <div class="pill-row">
-        <label class="pill"><input type="radio" name="difficulty" value="easy"><span>😊 آسان</span></label>
-        <label class="pill"><input type="radio" name="difficulty" value="medium" checked><span>😐 متوسط</span></label>
-        <label class="pill"><input type="radio" name="difficulty" value="hard"><span>😈 سخت</span></label>
-      </div>
+    
+    <div class="section-title">🎯 سطح سختی</div>
+    <!-- مخفی کردن رادیو باتن‌ها و استفاده از دکمه‌های سفارشی -->
+    <input type="radio" name="difficulty" value="easy" id="diff-easy" style="display:none">
+    <input type="radio" name="difficulty" value="medium" id="diff-medium" checked style="display:none">
+    <input type="radio" name="difficulty" value="hard" id="diff-hard" style="display:none">
+    
+    <div class="pill-row">
+      <div class="pill" onclick="selectRadio('diff-easy', this, 'diff')"><span>😊</span>آسان</div>
+      <div class="pill active" id="btn-diff-medium" onclick="selectRadio('diff-medium', this, 'diff')"><span>😐</span>متوسط</div>
+      <div class="pill" onclick="selectRadio('diff-hard', this, 'diff')"><span>😈</span>سخت</div>
     </div>
-    <div class="box">
-      <h3>🔤 حالت انتخاب حرف</h3>
-      <div class="pill-row">
-        <label class="pill"><input type="radio" name="letter_mode" value="random" checked><span>🎲 تصادفی</span></label>
-        <label class="pill"><input type="radio" name="letter_mode" value="player"><span>✍️ خودم</span></label>
-      </div>
-      <input type="text" name="letter" maxlength="2" placeholder="حرف دلخواه (مثلاً: ب)">
+
+    <div class="section-title">🔤 حالت انتخاب حرف</div>
+    <input type="radio" name="letter_mode" value="random" id="mode-random" checked style="display:none">
+    <input type="radio" name="letter_mode" value="player" id="mode-player" style="display:none">
+    
+    <div class="pill-row">
+      <div class="pill active" id="btn-mode-random" onclick="selectRadio('mode-random', this, 'mode')"><span>🎲</span>تصادفی</div>
+      <div class="pill" onclick="selectRadio('mode-player', this, 'mode')"><span>✍️</span>دستی</div>
     </div>
-    <div class="box">
-      <h3>📋 دسته‌ها</h3>
-      <div class="cats">
-        {% for c in categories %}
-          <label class="chk"><input type="checkbox" name="categories" value="{{ c }}" checked> {{ c }}</label>
+    <input type="text" name="letter" maxlength="2" placeholder="حرف دلخواه (مثلاً: ب)">
+
+    <div class="section-title">📋 دسته‌ها (برای حذف کلیک کن)</div>
+    <div class="cats-container" id="activeCats">
+      {% for c in active_main %}
+        <div class="cat-tag" onclick="moveCat(this, 'excludedCats', false)" data-cat="{{ c }}">{{ c }}</div>
+      {% endfor %}
+      {% for c in active_extra %}
+        <div class="cat-tag" onclick="moveCat(this, 'excludedCats', false)" data-cat="{{ c }}">{{ c }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="excluded-section" id="excludedSection" style="{% if not excluded_categories %}display:none{% endif %}">
+      <div class="excluded-title">🚫 دسته‌های غیرفعال</div>
+      <div class="cats-container" id="excludedCats">
+        {% for c in excluded_categories %}
+          <div class="cat-tag excluded-tag" onclick="moveCat(this, 'activeCats', true)" data-cat="{{ c }}">{{ c }}</div>
         {% endfor %}
       </div>
     </div>
-    <button type="submit">🚀 شروع بازی</button>
+
+    <div id="hiddenInputs"></div>
+    <button type="submit" class="submit">🚀 شروع بازی</button>
   </form>
-</div>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تابع اختصاصی برای انتخاب فقط یک دکمه
+function selectRadio(radioId, btnElement, groupName) {
+  // تیک زدن رادیو باتن مخفی
+  document.getElementById(radioId).checked = true;
+  
+  // برداشتن کلاس active از بقیه دکمه‌های هم‌گروه
+  const parent = btnElement.parentElement;
+  parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  
+  // اضافه کردن کلاس به دکمه کلیک شده
+  btnElement.classList.add('active');
+}
+
+function moveCat(el, targetContainerId, isExcluded) {
+  const cat = el.dataset.cat;
+  const targetContainer = document.getElementById(targetContainerId);
+  
+  const newEl = document.createElement('div');
+  newEl.dataset.cat = cat;
+  
+  if (isExcluded) {
+    newEl.className = 'cat-tag';
+    newEl.onclick = function() { moveCat(this, 'excludedCats', false); };
+  } else {
+    newEl.className = 'cat-tag excluded-tag';
+    newEl.onclick = function() { moveCat(this, 'activeCats', true); };
+  }
+  newEl.innerText = cat;
+  
+  targetContainer.appendChild(newEl);
+  el.remove();
+  
+  const excludedSection = document.getElementById('excludedSection');
+  if (document.getElementById('excludedCats').children.length > 0) {
+    excludedSection.style.display = 'block';
+  } else {
+    excludedSection.style.display = 'none';
+  }
+}
+
+document.getElementById('botForm').onsubmit = function() {
+  const hiddenContainer = document.getElementById('hiddenInputs');
+  hiddenContainer.innerHTML = '';
+  
+  const activeElements = document.querySelectorAll('#activeCats .cat-tag');
+  if (activeElements.length === 0) {
+    alert('حداقل یک دسته باید فعال باشد!');
+    return false;
+  }
+  
+  activeElements.forEach(cat => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'categories';
+    input.value = cat.dataset.cat;
+    hiddenContainer.appendChild(input);
+  });
+};
+</script>
+{% endblock %}
