@@ -178,3 +178,22 @@ CSRF_COOKIE_HTTPONLY = False  # JS needs to read CSRF token
 # --- X-Frame-Options ---
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
+# ============================================================
+# FINAL PRODUCTION FIX (always applied)
+# ============================================================
+
+# 1. Trust Runflare domain for CSRF (critical!)
+CSRF_TRUSTED_ORIGINS = [
+    "https://esmfamil-c78-esmfamil-db.runflare.cloud",
+    "https://esmfamil.com",
+    "https://www.esmfamil.com",
+]
+
+# 2. Tell Django it is behind an HTTPS proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# 3. Ensure cookies work correctly in this environment
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+
