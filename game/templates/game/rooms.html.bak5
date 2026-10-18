@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}بازی‌ها{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+  .big-card {
+    border-radius: 20px; padding: 20px; margin-bottom: 12px;
+    text-decoration: none; color: #fff;
+    display: flex; align-items: center; gap: 14px;
+    position: relative; overflow: hidden;
+    border: 1.5px solid; transition: all 0.22s;
+  }
+  .big-card:hover { transform: translateY(-3px); }
+  .big-card:active { transform: scale(0.98); }
+  .big-card.soon { cursor: default; opacity: 0.75; }
+  .big-card.soon:hover { transform: none; }
+  .big-card.bot    { background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.25), transparent 60%), linear-gradient(135deg, #2a1a0e, #1a0f1a); border-color: rgba(244,197,66,0.4); }
+  .big-card.player { background: radial-gradient(circle at 100% 0%, rgba(59,130,246,0.25), transparent 60%), linear-gradient(135deg, #0a1a2a, #0f0f1e); border-color: rgba(59,130,246,0.4); }
+  .big-card.group  { background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.3), transparent 60%), linear-gradient(135deg, #1a0f2e, #0f0f1e); border-color: rgba(139,92,246,0.4); }
+  .big-card.tournament { background: radial-gradient(circle at 100% 0%, rgba(234,179,8,0.25), transparent 60%), linear-gradient(135deg, #2a1e0a, #1a0f1a); border-color: rgba(234,179,8,0.4); }
+  .big-card.puzzle { background: radial-gradient(circle at 100% 0%, rgba(34,197,94,0.25), transparent 60%), linear-gradient(135deg, #0a2a1a, #0f0f1e); border-color: rgba(34,197,94,0.4); }
+  .big-card.speed  { background: radial-gradient(circle at 100% 0%, rgba(6,182,212,0.25), transparent 60%), linear-gradient(135deg, #0a1e2a, #0f0f1e); border-color: rgba(6,182,212,0.4); }
+  .big-card.challenge { background: radial-gradient(circle at 100% 0%, rgba(239,68,68,0.3), transparent 60%), linear-gradient(135deg, #2a0a0a, #0f0f1e); border-color: rgba(239,68,68,0.5); }
+  .big-card .bc-icon { font-size: 34px; width: 58px; height: 58px; border-radius: 16px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .big-card .bc-body { flex: 1; }
+  .big-card .bc-title { font-size: 17px; font-weight: bold; margin-bottom: 4px; color: #fff; }
+  .big-card .bc-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .big-card .bc-arrow { font-size: 20px; color: #94a3b8; }
+  .soon-badge { position: absolute; top: 10px; left: 10px; background: rgba(234,179,8,0.95); color: #1a1a1a; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 6px; z-index: 2; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <h1>🎮 <span>بازی‌ها</span></h1>
+  </div>
+
+  <a href="/game/quick/" class="big-card bot">
+    <div class="bc-icon">⚡</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی با بات</div>
+      <div class="bc-desc">رقیب هوشمند، سه سطح سختی</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <a href="/game/match/" class="big-card player">
+    <div class="bc-icon">🌐</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی با پلیر</div>
+      <div class="bc-desc">رقابت آنی با یک حریف تصادفی</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <a href="/game/team/start/" class="big-card group">
+    <div class="bc-icon">👥</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی گروهی</div>
+      <div class="bc-desc">۴ نفره · دو تیم ۲ نفره · ۳ راند</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <a href="/game/quick/bot/?mode=speed" class="big-card speed">
+    <div class="bc-icon">⏱️</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی سرعتی</div>
+      <div class="bc-desc">مستقیم با حرف رندوم، فقط ۲۰ ثانیه!</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </a>
+
+  <div class="big-card puzzle soon" onclick="alert('🎯 بازی معما به زودی فعال می‌شود!')">
+    <span class="soon-badge">به زودی</span>
+    <div class="bc-icon">🎯</div>
+    <div class="bc-body">
+      <div class="bc-title">بازی معما</div>
+      <div class="bc-desc">حدس کلمه از روی سرنخ</div>
+    </div>
+    <div class="bc-arrow">←</div>
+  </div>
+{% endblock %}

@@ -1,9 +1,11 @@
 import secrets
 import random
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Max, Sum
+from django.db import models
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from rest_framework import generics, permissions
@@ -231,11 +233,90 @@ def avatar_select(request):
     })
 
 def logout_view(request):
+    """Logout + full guest account deletion."""
+    if request.user.is_authenticated and getattr(request.user, "is_guest", False):
+        try:
+            from .models import GuestDeletionLog
+            from game.models import Player, Answer, BotAnswer
+            from social.models import (
+                Friendship, Notification, GameInvite, NotificationRead
+            )
+            from alliance.models import AllianceMember, AllianceMessage
+
+            u = request.user
+            u_id = u.id
+
+            # Log BEFORE deletion
+            try:
+                from django.db.models import Sum
+                total_games = Player.objects.filter(user_id=u_id).count()
+                total_score = Player.objects.filter(user_id=u_id).aggregate(
+                    t=Sum("score")
+                )["t"] or 0
+
+                GuestDeletionLog.objects.create(
+                    username=u.username,
+                    alias=u.alias or u.username,
+                    public_id=u.public_id,
+                    avatar_id=u.avatar_id,
+                    total_games=total_games,
+                    total_score=total_score,
+                    joined_at=u.date_joined,
+                )
+            except Exception as e:
+                print(f"[guest log] {e}")
+
+            # Logout first
+            logout(request)
+
+            # Delete everything related to this guest
+            try:
+                # Social
+                Friendship.objects.filter(
+                    models.Q(from_user_id=u_id) | models.Q(to_user_id=u_id)
+                ).delete()
+                Notification.objects.filter(user_id=u_id).delete()
+                GameInvite.objects.filter(
+                    models.Q(from_user_id=u_id) | models.Q(to_user_id=u_id)
+                ).delete()
+                NotificationRead.objects.filter(user_id=u_id).delete()
+
+                # Alliance
+                AllianceMember.objects.filter(user_id=u_id).delete()
+                AllianceMessage.objects.filter(sender_id=u_id).delete()
+
+                # Game answers
+                Answer.objects.filter(user_id=u_id).delete()
+
+                # Player rows
+                Player.objects.filter(user_id=u_id).delete()
+
+                # Finally, user
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                User.objects.filter(id=u_id).delete()
+
+                print(f"[guest] Fully deleted user {u_id}")
+            except Exception as e:
+                print(f"[guest deletion] {e}")
+
+        except Exception as e:
+            print(f"[logout guest] {e}")
+            logout(request)
+
+        return redirect("landing")
+
     logout(request)
     return redirect("landing")
 
-@login_required
+@login_required(login_url="/accounts/login/")
 def profile_view(request):
+    if not request.user.is_authenticated:
+        return redirect("accounts:login_view")
+    try:
+        from game.models import Player
+    except Exception:
+        pass
     from game.models import Player
     user = request.user
     message = None
@@ -292,3 +373,116 @@ def settings_view(request):
 @login_required
 def shop_view(request):
     return render(request, "accounts/shop.html", {"active": "profile"})
+
+
+# ============================================================
+# SUPPORT / TICKETING
+# ============================================================
+BOT_REPLY_TEXT = "سلام! از پیام شما متشکریم. اگر انتقاد یا پیشنهادی دارید، لطفاً ذکر کنید — ممنون می‌شویم. تیم پشتیبانی در اسرع وقت پاسخ می‌دهد. 🙏"
+
+
+@login_required
+def support_home(request):
+    if not getattr(request.user, "has_chosen_avatar", False):
+        return redirect("accounts:avatar_select")
+
+    from .models import SupportTicket, SupportMessage
+
+    if request.method == "POST":
+        subject = (request.POST.get("subject") or "").strip()[:100]
+        body = (request.POST.get("body") or "").strip()[:2000]
+
+        if not subject:
+            messages.error(request, "موضوع را وارد کن.")
+            return redirect("accounts:support_home")
+
+        if not body:
+            messages.error(request, "متن پیام را وارد کن.")
+            return redirect("accounts:support_home")
+
+        ticket = SupportTicket.objects.create(
+            user=request.user,
+            subject=subject,
+            status="answered",
+        )
+        SupportMessage.objects.create(
+            ticket=ticket, sender=request.user, body=body, is_staff=False,
+        )
+        # Auto-bot reply
+        SupportMessage.objects.create(
+            ticket=ticket, sender=None, body=BOT_REPLY_TEXT, is_staff=True,
+        )
+
+        messages.success(request, "تیکت شما ثبت شد. پاسخ اولیه ارسال شد.")
+        return redirect("accounts:support_detail", ticket_id=ticket.id)
+
+    tickets = SupportTicket.objects.filter(user=request.user).order_by("-updated_at")
+    tickets_data = []
+    for t in tickets:
+        last_msg = t.messages.order_by("-created_at").first()
+        tickets_data.append({
+            "id": t.id,
+            "subject": t.subject,
+            "status": t.status,
+            "status_display": t.get_status_display(),
+            "created_at": t.created_at,
+            "updated_at": t.updated_at,
+            "message_count": t.message_count(),
+            "last_msg": (last_msg.body[:60] + "...") if last_msg and len(last_msg.body) > 60 else (last_msg.body if last_msg else ""),
+        })
+
+    return render(request, "accounts/support_home.html", {
+        "tickets": tickets_data,
+        "active": "profile",
+    })
+
+
+@login_required
+def support_detail(request, ticket_id):
+    from .models import SupportTicket, SupportMessage
+
+    ticket = SupportTicket.objects.filter(id=ticket_id, user=request.user).first()
+    if not ticket:
+        messages.error(request, "تیکت پیدا نشد.")
+        return redirect("accounts:support_home")
+
+    if request.method == "POST":
+        action = request.POST.get("action", "reply")
+        if action == "reply":
+            body = (request.POST.get("body") or "").strip()[:2000]
+            if body:
+                SupportMessage.objects.create(
+                    ticket=ticket, sender=request.user, body=body, is_staff=False,
+                )
+                if ticket.status == "closed":
+                    ticket.status = "open"
+                else:
+                    ticket.status = "open"
+                ticket.save()
+            return redirect("accounts:support_detail", ticket_id=ticket.id)
+        elif action == "close":
+            ticket.status = "closed"
+            ticket.save()
+            messages.info(request, "تیکت بسته شد.")
+            return redirect("accounts:support_detail", ticket_id=ticket.id)
+        elif action == "delete":
+            ticket.delete()
+            messages.success(request, "تیکت حذف شد.")
+            return redirect("accounts:support_home")
+
+    msgs_list = ticket.messages.select_related("sender").all()
+    msgs_data = [{
+        "id": m.id,
+        "sender": m.sender,
+        "sender_alias": (m.sender.alias if m.sender else "🤖 پشتیبانی"),
+        "body": m.body,
+        "is_staff": m.is_staff,
+        "is_me": m.sender_id == request.user.id if m.sender_id else False,
+        "created_at": m.created_at,
+    } for m in msgs_list]
+
+    return render(request, "accounts/support_detail.html", {
+        "ticket": ticket,
+        "ticket_messages": msgs_data,
+        "active": "profile",
+    })

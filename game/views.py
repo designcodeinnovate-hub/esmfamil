@@ -84,6 +84,24 @@ def bot_setup(request):
     if not request.user.has_chosen_avatar:
         return redirect("accounts:avatar_select")
 
+    mode = request.GET.get("mode", "normal")
+    is_speed = (mode == "speed")
+    is_challenge = (mode == "challenge")
+
+    # Direct speed mode - no setup, start immediately
+    if is_speed and request.method == "GET":
+        difficulty = "medium"
+        selected = DEFAULT_CATEGORIES[:8]
+        letter = bot_logic.bot_pick_letter(difficulty)
+        game = Game.objects.create(
+            host=request.user, status="in_round",
+            categories=selected, mode="bot",
+            difficulty=difficulty, letter_mode="random",
+        )
+        Player.objects.create(game=game, user=request.user)
+        Round.objects.create(game=game, number=1, letter=letter, duration=20)
+        return redirect("game:bot_play", game_id=game.id)
+
     if request.method == "POST":
         difficulty = request.POST.get("difficulty", "medium")
         if difficulty not in ("easy", "medium", "hard"):
@@ -102,9 +120,15 @@ def bot_setup(request):
             if not letter:
                 letter = bot_logic.bot_pick_letter(difficulty)
         else:
-            letter = bot_logic.bot_pick_letter(difficulty)
+            if is_challenge:
+                letter = random.choice(list("ثضظژذغ"))
+            else:
+                letter = bot_logic.bot_pick_letter(difficulty)
 
-        base_time = {"easy": 150, "medium": 120, "hard": 90}[difficulty]
+        if is_speed:
+            base_time = 20
+        else:
+            base_time = {"easy": 150, "medium": 120, "hard": 90}[difficulty]
         letter_hardness = LETTER_DIFFICULTY.get(letter, 1)
         duration = base_time + (letter_hardness - 1) * 20
 
@@ -407,7 +431,7 @@ def match_start(request):
     MatchQueue.objects.filter(user=request.user).delete()
 
     # اضافه به صف جدید
-    MatchQueue.objects.create(user=request.user)
+    MatchQueue.objects.create(user=request.user, mode="1v1")
 
     # چک کن اگه حریف داره
     return redirect("game:match_wait")
@@ -425,12 +449,13 @@ def match_wait(request):
     import random
 
     # چک کن توی صف هست
-    my_queue = MatchQueue.objects.filter(user=request.user).first()
+    my_queue = MatchQueue.objects.filter(user=request.user, mode="1v1").first()
     if not my_queue:
         return redirect("game:rooms")
 
     # کسی هست که از من زودتر اومده؟
     opponent_queue = MatchQueue.objects.filter(
+        mode="1v1",
         joined_at__lt=my_queue.joined_at
     ).exclude(user=request.user).first()
 
@@ -478,7 +503,7 @@ def match_status(request):
     from .models import MatchQueue, Game
     from django.http import JsonResponse
 
-    my_queue = MatchQueue.objects.filter(user=request.user).first()
+    my_queue = MatchQueue.objects.filter(user=request.user, mode="1v1").first()
     if not my_queue:
         return JsonResponse({"status": "cancelled"})
 
@@ -513,6 +538,11 @@ def _require_complete(user):
         return redirect("accounts:complete_registration")
     return None
 
+
+
+
+
+
 @login_required
 def rooms_manage(request):
     check = _require_complete(request.user)
@@ -530,34 +560,154 @@ def rooms_manage(request):
     rooms_data = []
     for r in active_rooms:
         count = r.players.count()
+        is_member = r.players.filter(user=request.user).exists()
         rooms_data.append({
             "obj": r,
             "count": count,
             "is_full": count >= r.max_players,
             "has_password": bool(r.password),
+            "is_member": is_member,
+            "host_avatar": get_emoji(r.host.avatar_id),
+            "game_type": r.intended_game_type or "—",
         })
 
     if request.method == "POST":
         room_name = (request.POST.get("room_name") or "").strip()[:50] or "اتاق بازی"
         password = (request.POST.get("password") or "").strip()[:32]
-        max_players = int(request.POST.get("max_players") or 8)
+        try:
+            max_players = int(request.POST.get("max_players") or 8)
+        except (ValueError, TypeError):
+            max_players = 8
+        max_players = max(2, min(15, max_players))
+
+        game_type = request.POST.get("game_type", "player")
+        valid_types = ["player", "team", "challenge", "speed", "bot", "puzzle"]
+        if game_type not in valid_types:
+            game_type = "player"
+
         selected = [c for c in request.POST.getlist("categories") if c in DEFAULT_CATEGORIES]
         if not selected:
-            selected = DEFAULT_CATEGORIES
+            selected = DEFAULT_CATEGORIES[:8]
 
         game = Game.objects.create(
             host=request.user, status="waiting",
             categories=selected, mode="group", password=password,
-            room_name=room_name, max_players=max_players
+            room_name=room_name, max_players=max_players,
+            intended_game_type=game_type,
         )
         Player.objects.create(game=game, user=request.user)
-        return redirect("game:rooms_manage")
+        return redirect("game:room", room_code=game.code)
 
     return render(request, "game/rooms_manage.html", {
         "categories": DEFAULT_CATEGORIES,
         "rooms": rooms_data,
         "query": query,
-        "active": "games",
+        "active": "rooms",
+        "game_types": [
+            ("player", "⚔️ با پلیر (۱v۱)"),
+            ("team", "🛡️ تیمی (۲v۲)"),
+            ("challenge", "🔥 چالشی"),
+            ("speed", "⏱️ سرعتی"),
+            ("puzzle", "🎯 معما"),
+            ("bot", "🤖 با بات"),
+        ],
+    })
+
+
+@login_required
+def room(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    room_obj = Game.objects.filter(code=room_code).first()
+    if not room_obj:
+        return redirect("game:rooms_manage")
+
+    my_player, _ = Player.objects.get_or_create(game=room_obj, user=request.user)
+
+    # If host and no game type selected yet, show selection modal
+    if room_obj.host_id == request.user.id and not room_obj.intended_game_type:
+        if request.method == "POST" and request.POST.get("action") == "select_game_type":
+            game_type = request.POST.get("game_type", "player")
+            valid = ["player", "team", "challenge", "speed", "bot", "puzzle"]
+            if game_type in valid:
+                room_obj.intended_game_type = game_type
+                room_obj.save(update_fields=["intended_game_type"])
+            return redirect("game:room", room_code=room_obj.code)
+
+    # Handle "I'm ready" toggle
+    if request.method == "POST" and request.POST.get("action") == "toggle_ready":
+        my_player.is_ready = not my_player.is_ready
+        my_player.save(update_fields=["is_ready"])
+        return redirect("game:room", room_code=room_obj.code)
+
+    # Handle "Start game" by host
+    if request.method == "POST" and request.POST.get("action") == "start_game":
+        if room_obj.host_id != request.user.id:
+            return redirect("game:room", room_code=room_obj.code)
+
+        gt = room_obj.intended_game_type
+        if gt == "player":
+            # Start 1v1 with first two ready players
+            ready_players = list(room_obj.players.filter(is_ready=True).select_related("user"))
+            if len(ready_players) < 2:
+                messages.error(request, "حداقل ۲ بازیکن آماده لازم است.")
+                return redirect("game:room", room_code=room_obj.code)
+            # Redirect to match flow
+            return redirect("game:rooms_manage")
+        elif gt == "team":
+            ready_count = room_obj.players.filter(is_ready=True).count()
+            if ready_count < 4:
+                messages.error(request, "بازی تیمی به ۴ بازیکن آماده نیاز دارد.")
+                return redirect("game:room", room_code=room_obj.code)
+            return redirect("game:team_start")
+        elif gt == "challenge":
+            return redirect("game:challenge")
+        elif gt == "speed":
+            return redirect("/game/quick/bot/?mode=speed")
+        elif gt == "puzzle":
+            return redirect("game:puzzle_setup")
+        elif gt == "bot":
+            return redirect("game:bot_setup")
+
+    # Players list
+    players = []
+    for p in room_obj.players.select_related("user"):
+        players.append({
+            "user_id": p.user.id,
+            "alias": p.user.alias,
+            "avatar": get_emoji(p.user.avatar_id),
+            "avatar_type": getattr(p.user, "avatar_type", "emoji"),
+            "avatar_id": p.user.avatar_id,
+            "is_ready": p.is_ready,
+            "score": p.score,
+            "is_host": p.user_id == room_obj.host_id,
+            "is_me": p.user_id == request.user.id,
+        })
+
+    is_host = room_obj.host_id == request.user.id
+    ready_count = sum(1 for p in players if p["is_ready"])
+    can_start = is_host and ready_count >= 2
+
+    return render(request, "game/room.html", {
+        "room": room_obj,
+        "players": players,
+        "is_host": is_host,
+        "my_is_ready": my_player.is_ready,
+        "host": room_obj.host,
+        "host_avatar": get_emoji(room_obj.host.avatar_id),
+        "ready_count": ready_count,
+        "can_start": can_start,
+        "game_type_display": dict([
+            ("player", "⚔️ با پلیر"),
+            ("team", "🛡️ تیمی"),
+            ("challenge", "🔥 چالشی"),
+            ("speed", "⏱️ سرعتی"),
+            ("puzzle", "🎯 معما"),
+            ("bot", "🤖 با بات"),
+        ]).get(room_obj.intended_game_type or "", "—"),
+        "active": "rooms",
     })
 
 @login_required
@@ -566,34 +716,40 @@ def join_room(request, room_code):
     if check:
         return check
 
-    room = Game.objects.filter(code=room_code).first()
-    if not room:
+    room_obj = Game.objects.filter(code=room_code).first()
+    if not room_obj:
         return redirect("game:rooms_manage")
 
-    if room.players.count() >= room.max_players:
+    is_member = room_obj.players.filter(user=request.user).exists()
+    if not is_member and room_obj.players.count() >= room_obj.max_players:
         return render(request, "game/rooms_manage.html", {
             "categories": DEFAULT_CATEGORIES,
             "rooms": [],
             "error": "ظرفیت این اتاق پر شده است.",
-            "active": "games",
+            "query": "",
+            "active": "rooms",
         })
 
     if request.method == "POST":
         password = (request.POST.get("password") or "").strip()
-        if room.password and room.password != password:
+        if room_obj.password and room_obj.password != password:
             return render(request, "game/room_password.html", {
-                "room": room,
-                "error": "رمز عبور اشتباه است."
+                "room": room_obj,
+                "error": "رمز عبور اشتباه است.",
+                "active": "rooms",
             })
-        
-        Player.objects.get_or_create(game=room, user=request.user)
-        return redirect("game:room", room_code=room.code)
+        Player.objects.get_or_create(game=room_obj, user=request.user)
+        return redirect("game:room", room_code=room_obj.code)
 
-    if room.password:
-        return render(request, "game/room_password.html", {"room": room})
+    if room_obj.password and not is_member:
+        return render(request, "game/room_password.html", {
+            "room": room_obj,
+            "active": "rooms",
+        })
 
-    Player.objects.get_or_create(game=room, user=request.user)
-    return redirect("game:room", room_code=room.code)
+    Player.objects.get_or_create(game=room_obj, user=request.user)
+    return redirect("game:room", room_code=room_obj.code)
+
 
 @login_required
 def room(request, room_code):
@@ -601,25 +757,730 @@ def room(request, room_code):
     if check:
         return check
 
-    room = Game.objects.filter(code=room_code).first()
-    if not room:
+    room_obj = Game.objects.filter(code=room_code).first()
+    if not room_obj:
         return redirect("game:rooms_manage")
 
-    Player.objects.get_or_create(game=room, user=request.user)
+    Player.objects.get_or_create(game=room_obj, user=request.user)
 
     players = []
-    for p in room.players.select_related("user"):
+    my_is_ready = False
+    for p in room_obj.players.select_related("user"):
+        if p.user_id == request.user.id:
+            my_is_ready = p.is_ready
         players.append({
             "user_id": p.user.id,
             "alias": p.user.alias,
             "avatar": get_emoji(p.user.avatar_id),
+            "avatar_type": getattr(p.user, "avatar_type", "emoji"),
+            "avatar_id": p.user.avatar_id,
             "is_ready": p.is_ready,
             "score": p.score,
+            "is_host": p.user_id == room_obj.host_id,
         })
 
+    is_host = room_obj.host_id == request.user.id
+
     return render(request, "game/room.html", {
-        "room": room,
-        "categories": room.categories,
+        "room": room_obj,
+        "categories": room_obj.categories,
         "players": players,
+        "is_host": is_host,
+        "my_is_ready": my_is_ready,
+        "host": room_obj.host,
+        "host_avatar": get_emoji(room_obj.host.avatar_id),
+        "active": "rooms",
+    })
+
+
+@login_required
+def leave_room(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    if request.method != "POST":
+        return redirect("game:room", room_code=room_code)
+
+    room_obj = Game.objects.filter(code=room_code).first()
+    if not room_obj:
+        return redirect("game:rooms_manage")
+
+    is_host = room_obj.host_id == request.user.id
+
+    if is_host:
+        try:
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"game_{room_obj.id}",
+                {"type": "ev.room_closed"}
+            )
+        except Exception:
+            pass
+        room_obj.players.all().delete()
+        room_obj.delete()
+    else:
+        room_obj.players.filter(user=request.user).delete()
+
+    return redirect("game:rooms_manage")
+
+
+# ============================================================
+# بازی تیمی ۴ نفره (2 vs 2)
+# ============================================================
+import random as _random
+
+TEAM_DURATION = 90
+TEAM_ROUNDS = 3
+
+
+@login_required
+def team_start(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    from .models import MatchQueue
+    MatchQueue.objects.filter(user=request.user).delete()
+    MatchQueue.objects.create(user=request.user, mode="team")
+    return redirect("game:team_wait")
+
+
+@login_required
+def team_wait(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from .models import MatchQueue, Game, Player, Round
+
+    my_q = MatchQueue.objects.filter(user=request.user, mode="team").first()
+    if not my_q:
+        return redirect("game:rooms")
+
+    # گروه‌بندی ۴ نفره: اگه ۴ نفر تو صف هستن، همه رو با هم بفرست
+    total = MatchQueue.objects.filter(mode="team").count()
+    if total >= 4:
+        entries = list(MatchQueue.objects.filter(mode="team").order_by("joined_at")[:4])
+        if any(e.user_id == request.user.id for e in entries):
+            users = [e.user for e in entries]
+            MatchQueue.objects.filter(user__in=users).delete()
+
+            g = Game.objects.create(
+                host=request.user, status="waiting",
+                categories=DEFAULT_CATEGORIES[:8], mode="team",
+                difficulty="medium", letter_mode="random",
+                room_name="بازی تیمی",
+            )
+            for u in users:
+                Player.objects.create(game=g, user=u)
+
+            return redirect("game:team_select", room_code=g.code)
+
+    return render(request, "game/team_wait.html", {"active": "games"})
+
+
+@login_required
+def team_cancel(request):
+    from .models import MatchQueue
+    MatchQueue.objects.filter(user=request.user).delete()
+    return redirect("game:rooms")
+
+
+@login_required
+def team_status(request):
+    from .models import MatchQueue, Game
+    from django.http import JsonResponse
+    if not MatchQueue.objects.filter(user=request.user, mode="team").exists():
+        # user left queue, check if in a team game
+        g = Game.objects.filter(players__user=request.user, mode="team").order_by("-created_at").first()
+        if g and g.status != "finished":
+            return JsonResponse({"status": "matched", "url": f"/game/team/select/{g.code}/"})
+        return JsonResponse({"status": "cancelled"})
+    return JsonResponse({"status": "waiting", "count": MatchQueue.objects.count()})
+
+
+@login_required
+def team_select(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from .models import Game, Player, Round
+
+    g = Game.objects.filter(code=room_code, mode="team").first()
+    if not g:
+        return redirect("game:rooms")
+
+    my_p = Player.objects.filter(game=g, user=request.user).first()
+    if not my_p:
+        return redirect("game:rooms")
+
+    # اگه بازی شروع شده، برو به play
+    if g.status == "in_round":
+        return redirect("game:team_play", room_code=g.code)
+
+    if request.method == "POST":
+        action = request.POST.get("action", "")
+        if action == "choose_team":
+            team = request.POST.get("team", "")
+            if team in ("A", "B"):
+                count = Player.objects.filter(game=g, team=team).exclude(user=request.user).count()
+                if count < 2:
+                    my_p.team = team
+                    my_p.save(update_fields=["team"])
+
+        elif action == "start":
+            if g.host_id == request.user.id:
+                all_players = Player.objects.filter(game=g)
+                if all_players.count() == 4 and all_players.exclude(team="").count() == 4:
+                    team_a = all_players.filter(team="A").count()
+                    team_b = all_players.filter(team="B").count()
+                    if team_a == 2 and team_b == 2:
+                        letter = _random.choice(list("ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی"))
+                        Round.objects.filter(game=g).delete()
+                        Round.objects.create(game=g, number=1, letter=letter, duration=TEAM_DURATION)
+                        g.status = "in_round"
+                        g.save(update_fields=["status"])
+                        return redirect("game:team_play", room_code=g.code)
+
+        return redirect("game:team_select", room_code=g.code)
+
+    players_data = []
+    for pl in Player.objects.filter(game=g).select_related("user"):
+        players_data.append({
+            "id": pl.id,
+            "user": pl.user,
+            "avatar": get_emoji(pl.user.avatar_id),
+            "team": pl.team,
+            "is_host": pl.user_id == g.host_id,
+            "is_me": pl.user_id == request.user.id,
+        })
+
+    team_a = [p for p in players_data if p["team"] == "A"]
+    team_b = [p for p in players_data if p["team"] == "B"]
+    unassigned = [p for p in players_data if not p["team"]]
+
+    can_start = (
+        g.host_id == request.user.id
+        and len(team_a) == 2
+        and len(team_b) == 2
+    )
+
+    return render(request, "game/team_select.html", {
+        "game": g,
+        "team_a": team_a,
+        "team_b": team_b,
+        "unassigned": unassigned,
+        "my_team": my_p.team,
+        "can_start": can_start,
+        "active": "games",
+    })
+
+
+@login_required
+def team_play(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from .models import Game, Player, Round, Answer
+    from django.utils import timezone
+
+    g = Game.objects.filter(code=room_code, mode="team").first()
+    if not g:
+        return redirect("game:rooms")
+
+    my_p = Player.objects.filter(game=g, user=request.user).first()
+    if not my_p:
+        return redirect("game:rooms")
+
+    if g.status == "finished":
+        return redirect("game:team_result", room_code=g.code)
+
+    round_obj = g.rounds.order_by("-number").first()
+    if not round_obj:
+        return redirect("game:team_select", room_code=g.code)
+
+    # اگه تایم تموم شده یا هر دو تیم استوپ کردن → round end
+    elapsed = (timezone.now() - round_obj.started_at).total_seconds()
+    time_up = elapsed >= round_obj.duration
+
+    stop_a = Player.objects.filter(game=g, team="A", stopped_round=round_obj.number).count()
+    stop_b = Player.objects.filter(game=g, team="B", stopped_round=round_obj.number).count()
+    one_team_done = (stop_a >= 2) or (stop_b >= 2)
+
+    if (time_up or one_team_done) and not round_obj.stopped_at:
+        round_obj.stopped_at = timezone.now()
+        round_obj.save(update_fields=["stopped_at"])
+        return redirect("game:team_round_end", room_code=g.code)
+
+    if round_obj.stopped_at:
+        return redirect("game:team_round_end", room_code=g.code)
+
+    if request.method == "POST":
+        # ثبت پاسخ‌ها
+        for cat in g.categories:
+            raw = (request.POST.get(f"cat_{cat}") or "").strip()[:64]
+            norm = _normalize(raw)
+            score = 0
+            if norm and norm[0] == round_obj.letter:
+                if cat in ("اسم", "فامیل"):
+                    score = 10
+                else:
+                    from .bot_data import is_valid_word
+                    score = 10 if is_valid_word(norm, cat, round_obj.letter) else 0
+
+            Answer.objects.update_or_create(
+                round=round_obj, user=request.user, category=cat,
+                defaults={"value": raw, "normalized": norm, "score": score},
+            )
+
+        my_p.stopped_round = round_obj.number
+        my_p.save(update_fields=["stopped_round"])
+        return redirect("game:team_play", room_code=g.code)
+
+    my_stopped = my_p.stopped_round == round_obj.number
+    teammate = Player.objects.filter(game=g, team=my_p.team).exclude(user=request.user).first()
+    teammate_stopped = teammate and teammate.stopped_round == round_obj.number
+
+    team_a_players = Player.objects.filter(game=g, team="A").select_related("user")
+    team_b_players = Player.objects.filter(game=g, team="B").select_related("user")
+
+    return render(request, "game/team_play.html", {
+        "game": g,
+        "round": round_obj,
+        "categories": g.categories,
+        "duration": round_obj.duration,
+        "my_p": my_p,
+        "my_stopped": my_stopped,
+        "teammate_stopped": teammate_stopped,
+        "team_a_players": team_a_players,
+        "team_b_players": team_b_players,
+        "elapsed": int(elapsed),
+        "active": "games",
+    })
+
+
+@login_required
+def team_status_ajax(request, room_code):
+    from .models import Game, Player, Round
+    from django.utils import timezone
+    from django.http import JsonResponse
+
+    g = Game.objects.filter(code=room_code, mode="team").first()
+    if not g:
+        return JsonResponse({"status": "error"})
+
+    round_obj = g.rounds.order_by("-number").last()
+    if not round_obj:
+        return JsonResponse({"status": "no_round"})
+
+    elapsed = (timezone.now() - round_obj.started_at).total_seconds()
+    time_up = elapsed >= round_obj.duration
+    stop_a = Player.objects.filter(game=g, team="A", stopped_round=round_obj.number).count()
+    stop_b = Player.objects.filter(game=g, team="B", stopped_round=round_obj.number).count()
+    one_team_done = (stop_a >= 2) or (stop_b >= 2)
+
+    if round_obj.stopped_at or time_up or one_team_done:
+        return JsonResponse({"status": "round_end", "url": f"/game/team/round-end/{g.code}/"})
+
+    my_p = Player.objects.filter(game=g, user=request.user).first()
+    teammate = Player.objects.filter(game=g, team=my_p.team).exclude(user=request.user).first() if my_p else None
+
+    return JsonResponse({
+        "status": "playing",
+        "my_stopped": my_p and my_p.stopped_round == round_obj.number,
+        "teammate_stopped": teammate and teammate.stopped_round == round_obj.number,
+        "stop_a": stop_a,
+        "stop_b": stop_b,
+        "elapsed": int(elapsed),
+    })
+
+
+@login_required
+def team_round_end(request, room_code):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from .models import Game, Player, Round, Answer
+
+    g = Game.objects.filter(code=room_code, mode="team").first()
+    if not g:
+        return redirect("game:rooms")
+
+    round_obj = g.rounds.order_by("-number").last()
+    if not round_obj:
+        return redirect("game:team_select", room_code=g.code)
+
+    # محاسبه امتیاز این راند
+    answers = Answer.objects.filter(round=round_obj)
+    team_scores = {"A": 0, "B": 0}
+    for a in answers:
+        p_obj = Player.objects.filter(game=g, user=a.user).first()
+        if p_obj and p_obj.team in ("A", "B"):
+            team_scores[p_obj.team] += a.score
+
+    # ذخیره به Player.score
+    for pl in Player.objects.filter(game=g):
+        prev_total = Answer.objects.filter(
+            user=pl.user, round__game=g,
+        ).aggregate(s=models.Sum("score"))["s"] or 0
+        pl.score = prev_total
+        pl.save(update_fields=["score"])
+
+    # آیا راند بعدی هست؟
+    has_next = round_obj.number < TEAM_ROUNDS
+
+    if request.method == "POST" and request.POST.get("action") == "next_ready":
+        my_p = Player.objects.filter(game=g, user=request.user).first()
+        if my_p:
+            my_p.team_ready = True
+            my_p.save(update_fields=["team_ready"])
+
+        # چک کن همه آماده‌ن
+        ready_count = Player.objects.filter(game=g, team_ready=True).count()
+        if ready_count >= 4 and has_next:
+            letter = _random.choice(list("ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی"))
+            Round.objects.create(game=g, number=round_obj.number + 1, letter=letter, duration=TEAM_DURATION)
+            Player.objects.filter(game=g).update(team_ready=False, stopped_round=0)
+            return redirect("game:team_play", room_code=g.code)
+        elif ready_count >= 4 and not has_next:
+            g.status = "finished"
+            g.save(update_fields=["status"])
+            # جایزه
+            winner_team = None
+            if team_scores["A"] > team_scores["B"]:
+                winner_team = "A"
+            elif team_scores["B"] > team_scores["A"]:
+                winner_team = "B"
+
+            if winner_team:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                winners = Player.objects.filter(game=g, team=winner_team).values_list("user_id", flat=True)
+                for uid in winners:
+                    u = User.objects.filter(id=uid).first()
+                    if u:
+                        u.coins = (u.coins or 0) + 50
+                        u.gems = (u.gems or 0) + 5
+                        u.save(update_fields=["coins", "gems"])
+            return redirect("game:team_result", room_code=g.code)
+
+        return redirect("game:team_round_end", room_code=g.code)
+
+    # جمع بندی راند
+    round_data = []
+    for pl in Player.objects.filter(game=g).select_related("user"):
+        ans = Answer.objects.filter(round=round_obj, user=pl.user)
+        pl_round_score = ans.aggregate(s=models.Sum("score"))["s"] or 0
+        round_data.append({
+            "user": pl.user,
+            "avatar": get_emoji(pl.user.avatar_id),
+            "team": pl.team,
+            "round_score": pl_round_score,
+            "total_score": pl.score,
+        })
+
+    my_p = Player.objects.filter(game=g, user=request.user).first()
+    team_ready = my_p.team_ready if my_p else False
+
+    return render(request, "game/team_round_end.html", {
+        "game": g,
+        "round": round_obj,
+        "team_scores": team_scores,
+        "round_data": round_data,
+        "has_next": has_next,
+        "team_ready": team_ready,
+        "active": "games",
+    })
+
+
+@login_required
+def team_result(request, room_code):
+    from .models import Game, Player, Round, Answer
+
+    g = Game.objects.filter(code=room_code, mode="team").first()
+    if not g:
+        return redirect("game:rooms")
+
+    total_a = 0
+    total_b = 0
+    for pl in Player.objects.filter(game=g):
+        total = Answer.objects.filter(user=pl.user, round__game=g).aggregate(s=models.Sum("score"))["s"] or 0
+        if pl.team == "A":
+            total_a += total
+        elif pl.team == "B":
+            total_b += total
+
+    winner = "A" if total_a > total_b else ("B" if total_b > total_a else "tie")
+
+    return render(request, "game/team_result.html", {
+        "game": g,
+        "total_a": total_a,
+        "total_b": total_b,
+        "winner": winner,
+        "active": "games",
+    })
+
+@login_required
+def challenge_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from django.utils import timezone
+    try:
+        from .models import Tournament, TournamentEntry
+    except ImportError:
+        return render(request, "game/challenge.html", {
+            "weekly": [], "daily": [], "hourly": [], "active": "games",
+        })
+
+    now = timezone.now()
+    Tournament.objects.filter(end_at__lt=now, status__in=["scheduled", "active"]).update(status="finished")
+
+    def _list(t_type):
+        qs = Tournament.objects.filter(tournament_type=t_type).order_by("-start_at")[:10]
+        out = []
+        for x in qs:
+            is_joined = TournamentEntry.objects.filter(tournament=x, user=request.user).exists()
+            out.append({
+                "id": x.id,
+                "name": x.name,
+                "icon": x.icon,
+                "description": x.description,
+                "tournament_type": x.tournament_type,
+                "status": x.status,
+                "get_status_display": x.get_status_display(),
+                "start_at": x.start_at,
+                "end_at": x.end_at,
+                "start_at_ts": int(x.start_at.timestamp()),
+                "end_at_ts": int(x.end_at.timestamp()),
+                "entry_count": x.entry_count(),
+                "max_players": x.max_players,
+                "prize_coins": x.prize_coins,
+                "prize_gems": x.prize_gems,
+                "entry_fee_coins": x.entry_fee_coins,
+                "is_live": x.is_live,
+                "is_finished": x.is_finished,
+                "is_upcoming": x.is_upcoming,
+                "is_joined": is_joined,
+            })
+        return out
+
+    return render(request, "game/challenge.html", {
+        "weekly": _list("weekly"),
+        "daily": _list("daily"),
+        "hourly": _list("hourly"),
+        "active": "games",
+    })
+
+
+@login_required
+def tournament_join(request, tournament_id):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    from django.utils import timezone
+    from .models import Tournament, TournamentEntry
+    from django.contrib import messages
+
+    t = Tournament.objects.filter(id=tournament_id).first()
+    if not t:
+        messages.error(request, "تورنمنت پیدا نشد.")
+        return redirect("game:challenge")
+
+    if not t.is_live:
+        messages.error(request, "این تورنمنت در حال برگزاری نیست.")
+        return redirect("game:challenge")
+
+    if t.entry_count() >= t.max_players:
+        messages.error(request, "ظرفیت پر شده.")
+        return redirect("game:challenge")
+
+    if TournamentEntry.objects.filter(tournament=t, user=request.user).exists():
+        messages.info(request, "قبلاً ثبت‌نام کردی.")
+        return redirect("game:challenge")
+
+    if t.entry_fee_coins and (request.user.coins or 0) < t.entry_fee_coins:
+        messages.error(request, f"سکه کافی نداری (نیاز: {t.entry_fee_coins}).")
+        return redirect("game:challenge")
+
+    if t.entry_fee_gems and (request.user.gems or 0) < t.entry_fee_gems:
+        messages.error(request, f"جم کافی نداری (نیاز: {t.entry_fee_gems}).")
+        return redirect("game:challenge")
+
+    if t.entry_fee_coins:
+        request.user.coins -= t.entry_fee_coins
+    if t.entry_fee_gems:
+        request.user.gems -= t.entry_fee_gems
+    if t.entry_fee_coins or t.entry_fee_gems:
+        request.user.save(update_fields=["coins", "gems"])
+
+    TournamentEntry.objects.create(tournament=t, user=request.user)
+    messages.success(request, f"در تورنمنت «{t.name}» ثبت‌نام کردی!")
+    return redirect("game:challenge")
+
+# ============================================================
+# PUZZLE GAME (بازی معما - unscramble words)
+# ============================================================
+PUZZLE_WORDS_EASY = [
+    "کتاب", "خانه", "دوست", "میوه", "نان", "دریا", "ماه", "گل",
+    "شهر", "آب", "مادر", "پدر", "گربه", "مرغ", "سیب", "انار",
+]
+PUZZLE_WORDS_MEDIUM = [
+    "دانشگاه", "کتابخانه", "خانواده", "دوستی", "کوهستان",
+    "خورشید", "ستاره", "پرستو", "عقاب", "باران", "مدرسه",
+    "دانشمند", "فرودگاه", "بیمارستان", "آشپزخانه",
+]
+PUZZLE_WORDS_HARD = [
+    "دانشگاه", "کتابخانه", "خانواده", "پرستو", "خورشید",
+    "بیمارستان", "فرودگاه", "دانشمند", "آشپزخانه",
+    "کوهنوردی", "کامپیوتر", "تلویزیون", "یخچال", "پنکه",
+]
+
+PUZZLE_ROUNDS = 5
+PUZZLE_TIME = 90
+
+
+def _scramble_word(word):
+    """Scramble letters of a word, ensuring result != original."""
+    import random
+    chars = list(word)
+    if len(chars) < 2:
+        return word
+    for _ in range(30):
+        random.shuffle(chars)
+        result = "".join(chars)
+        if result != word:
+            return result
+    chars[0], chars[1] = chars[1], chars[0]
+    return "".join(chars)
+
+
+@login_required
+def puzzle_setup(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    if request.method == "POST":
+        difficulty = request.POST.get("difficulty", "medium")
+        if difficulty not in ("easy", "medium", "hard"):
+            difficulty = "medium"
+
+        import random
+        if difficulty == "easy":
+            pool = PUZZLE_WORDS_EASY
+        elif difficulty == "hard":
+            pool = PUZZLE_WORDS_HARD
+        else:
+            pool = PUZZLE_WORDS_MEDIUM
+
+        words = random.sample(pool, min(PUZZLE_ROUNDS, len(pool)))
+
+        from .models import Game, Player
+        game = Game.objects.create(
+            host=request.user, status="in_round",
+            categories=["معما"], mode="puzzle",
+            difficulty=difficulty, letter_mode="random",
+        )
+        Player.objects.create(game=game, user=request.user)
+
+        # Scramble and save to session
+        scrambled = [{"original": w, "scrambled": _scramble_word(w)} for w in words]
+        request.session["puzzle_game_id"] = str(game.id)
+        request.session["puzzle_words"] = scrambled
+        request.session["puzzle_difficulty"] = difficulty
+
+        return redirect("game:puzzle_play")
+
+    return render(request, "game/puzzle_setup.html", {
+        "active": "games",
+    })
+
+
+@login_required
+def puzzle_play(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    game_id = request.session.get("puzzle_game_id")
+    words = request.session.get("puzzle_words")
+    if not game_id or not words:
+        return redirect("game:puzzle_setup")
+
+    return render(request, "game/puzzle_play.html", {
+        "words": words,
+        "duration": PUZZLE_TIME,
+        "active": "games",
+    })
+
+
+@login_required
+def puzzle_submit(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+
+    if request.method != "POST":
+        return redirect("game:puzzle_setup")
+
+    game_id = request.session.get("puzzle_game_id")
+    words = request.session.get("puzzle_words") or []
+    difficulty = request.session.get("puzzle_difficulty", "medium")
+
+    if not game_id or not words:
+        return redirect("game:puzzle_setup")
+
+    # Check answers
+    results = []
+    correct_count = 0
+    for i, w in enumerate(words):
+        user_answer = (request.POST.get(f"word_{i}") or "").strip()
+        original = w["original"]
+        is_correct = _normalize(user_answer) == _normalize(original)
+        if is_correct:
+            correct_count += 1
+        results.append({
+            "scrambled": w["scrambled"],
+            "original": original,
+            "user_answer": user_answer,
+            "is_correct": is_correct,
+        })
+
+    # Calculate score based on difficulty
+    base_points = {"easy": 10, "medium": 15, "hard": 25}.get(difficulty, 15)
+    score = correct_count * base_points
+
+    # Save to Player
+    try:
+        from .models import Game, Player
+        game = Game.objects.get(id=game_id)
+        player, _ = Player.objects.get_or_create(game=game, user=request.user)
+        player.score = score
+        player.save(update_fields=["score"])
+        game.status = "finished"
+        game.save(update_fields=["status"])
+    except Exception:
+        pass
+
+    # Clear session
+    for key in ["puzzle_game_id", "puzzle_words", "puzzle_difficulty"]:
+        request.session.pop(key, None)
+
+    return render(request, "game/puzzle_result.html", {
+        "results": results,
+        "score": score,
+        "correct_count": correct_count,
+        "total": len(words),
+        "difficulty": difficulty,
+        "base_points": base_points,
+        "active": "games",
     })
 

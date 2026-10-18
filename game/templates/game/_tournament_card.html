@@ -1,0 +1,50 @@
+{% load jalali_tags %}
+<div class="tour-card tour-{{ t.tournament_type }}">
+  <div class="tour-head">
+    <div class="tour-icon">{{ t.icon }}</div>
+    <div class="tour-info">
+      <div class="tour-name">{{ t.name }}</div>
+      <div class="tour-sub">
+        {% if t.is_live %}
+          <span class="tour-status-live">در حال برگزاری</span>
+        {% elif t.is_finished %}
+          <span style="color:#94a3b8;">پایان یافته</span>
+        {% elif t.is_upcoming %}
+          <span style="color:#fde68a;">شروع در آینده</span>
+        {% else %}
+          <span style="color:#94a3b8;">{{ t.get_status_display }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="tour-details">
+    <div class="tour-detail">👥 <b>{{ t.entry_count }}</b> / {{ t.max_players }}</div>
+    {% if t.prize_coins %}<div class="tour-detail">🪙 <b>{{ t.prize_coins }}</b></div>{% endif %}
+    {% if t.prize_gems %}<div class="tour-detail">💎 <b>{{ t.prize_gems }}</b></div>{% endif %}
+    {% if t.entry_fee_coins %}<div class="tour-detail">ورود: <b>{{ t.entry_fee_coins }}</b> سکه</div>{% endif %}
+  </div>
+
+  <div class="tour-details" style="font-size: 10px; opacity: 0.85;">
+    <div class="tour-detail">📅 {{ t.start_at|jdate:"Y/m/d H:i" }}</div>
+    <div class="tour-detail">⏳ {{ t.end_at|jdate:"Y/m/d H:i" }}</div>
+  </div>
+
+  {% if t.is_upcoming %}
+    <div style="font-size: 11px; color: var(--muted); text-align: center; margin: 8px 0;">شروع تا:</div>
+    <div class="countdown" data-end-ts="{{ t.start_at_ts }}"></div>
+    <button class="tour-btn disabled" disabled>⏳ هنوز شروع نشده</button>
+  {% elif t.is_live %}
+    <div style="font-size: 11px; color: var(--muted); text-align: center; margin: 8px 0;">پایان تا:</div>
+    <div class="countdown" data-end-ts="{{ t.end_at_ts }}"></div>
+    {% if t.is_joined %}
+      <button class="tour-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" disabled>✓ در صف هستی</button>
+    {% else %}
+      <a href="/game/challenge/{{ t.id }}/join/" class="tour-btn">🚀 شرکت در مسابقه</a>
+    {% endif %}
+  {% elif t.is_finished %}
+    <button class="tour-btn disabled" disabled>🏁 پایان یافته</button>
+  {% else %}
+    <button class="tour-btn disabled" disabled>{{ t.get_status_display }}</button>
+  {% endif %}
+</div>

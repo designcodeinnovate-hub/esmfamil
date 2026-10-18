@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ویرایش کاربر {{ u.username }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(139,92,246,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .topbar h1 { font-size: 19px; color: #c4b5fd; }
+    .topbar .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: bold; text-decoration: none; }
+    .topbar .back { background: rgba(148,163,184,0.2); color: #fff; }
+    .topbar .logout { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+    .topbar .view { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4); }
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+
+    .card { background: #12121f; border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+    .card h3 { color: #fdba74; font-size: 15px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    label { display: block; color: #94a3b8; font-size: 12px; margin: 12px 0 6px; font-weight: bold; }
+    label .hint { color: #64748b; font-weight: normal; font-size: 11px; margin-right: 6px; }
+
+    input[type=text], input[type=email], input[type=password], input[type=number] {
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(148,163,184,0.2); background: #0a0a15;
+      color: #fff; font-size: 14px; font-family: inherit;
+      box-sizing: border-box;
+    }
+    input:focus { outline: none; border-color: #facc15; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 500px) { .row { grid-template-columns: 1fr; } }
+
+    .toggles { display: flex; flex-direction: column; gap: 12px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(15,23,42,0.5); border-radius: 10px; }
+    .toggle-info { flex: 1; }
+    .toggle-title { font-size: 13px; color: #fff; font-weight: bold; margin-bottom: 2px; }
+    .toggle-desc { font-size: 11px; color: #64748b; }
+
+    .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: rgba(71,85,105,0.6); border-radius: 26px; cursor: pointer; transition: 0.3s; }
+    .slider::before { content: ""; position: absolute; width: 18px; height: 18px; left: 4px; top: 4px; background: #fff; border-radius: 50%; transition: 0.3s; }
+    .switch input:checked + .slider { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .switch input:checked + .slider::before { transform: translateX(-20px); }
+
+    .btn-submit { width: 100%; margin-top: 18px; padding: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; font-family: inherit; cursor: pointer; color: #fff; background: linear-gradient(135deg, #8b5cf6, #6b4eff); box-shadow: 0 8px 20px rgba(139,92,246,0.4); transition: 0.2s; }
+    .btn-submit:hover { transform: translateY(-2px); }
+
+    .quick-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .qa-btn { padding: 10px 18px; border: none; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; }
+    .qa-coins { background: linear-gradient(135deg, #facc15, #ca8a04); color: #1a1a1a; }
+    .qa-gems { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; }
+
+    .danger-card { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 16px; padding: 22px; }
+    .danger-card h3 { color: #fca5a5; }
+    .btn-delete { padding: 12px 24px; border: none; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 6px 18px rgba(239,68,68,0.4); }
+
+    .info-banner { background: rgba(59,130,246,0.1); border-right: 3px solid #3b82f6; padding: 12px 16px; border-radius: 10px; font-size: 12px; color: #93c5fd; margin-bottom: 16px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <h1>✏️ ویرایش کاربر: {{ u.username }}</h1>
+    <div class="actions">
+      <a href="{% url 'custom_admin:user_detail' u.id %}" class="view">👁 مشاهده</a>
+      <a href="{% url 'custom_admin:dashboard' %}" class="back">← بازگشت</a>
+      <a href="{% url 'custom_admin:logout' %}" class="logout">خروج</a>
+    </div>
+  </div>
+
+  {% if message %}
+    <div class="msg msg-{{ message.type }}">{{ message.text }}</div>
+  {% endif %}
+
+  <div class="info-banner">
+    💡 <b>توجه:</b> این صفحه به شما اجازه می‌دهد <b>همه</b> اطلاعات کاربر را تغییر دهید. تغییرات بلافاصله اعمال می‌شوند.
+  </div>
+
+  <form method="post" action="{% url 'custom_admin:user_update' u.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="update">
+    <input type="hidden" name="redirect_to" value="edit">
+
+    <div class="card">
+      <h3>👤 اطلاعات ورود</h3>
+
+      <label>نام کاربری (username)</label>
+      <input type="text" name="username" value="{{ u.username }}" required minlength="3" maxlength="32">
+      <div style="font-size:11px; color:#64748b; margin-top:4px;">فقط حروف انگلیسی، اعداد و _ — ۳ تا ۳۲ کاراکتر</div>
+
+      <label>پسورد جدید <span class="hint">(خالی = بدون تغییر)</span></label>
+      <input type="password" name="password" placeholder="حداقل ۶ کاراکتر" minlength="6" autocomplete="new-password">
+    </div>
+
+    <div class="card">
+      <h3>📋 اطلاعات پروفایل</h3>
+
+      <div class="row">
+        <div>
+          <label>نام نمایشی (alias)</label>
+          <input type="text" name="alias" value="{{ u.alias }}" maxlength="32">
+        </div>
+        <div>
+          <label>ایمیل</label>
+          <input type="email" name="email" value="{{ u.email|default:'' }}" maxlength="254">
+        </div>
+      </div>
+
+      <label>موبایل</label>
+      <input type="text" name="phone" value="{{ u.phone|default:'' }}" maxlength="20">
+    </div>
+
+    <div class="card">
+      <h3>💰 اقتصاد درون‌بازی</h3>
+
+      <div class="row">
+        <div>
+          <label>🪙 سکه</label>
+          <input type="number" name="coins" value="{{ u.coins|default:0 }}" min="0">
+        </div>
+        <div>
+          <label>💎 جم</label>
+          <input type="number" name="gems" value="{{ u.gems|default:0 }}" min="0">
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <form method="post" action="{% url 'custom_admin:user_update' u.id %}" style="display:contents;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="quick_coins">
+          <button type="submit" name="delta" value="100" class="qa-btn qa-coins">+۱۰۰ سکه</button>
+        </form>
+        <form method="post" action="{% url 'custom_admin:user_update' u.id %}" style="display:contents;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="quick_gems">
+          <button type="submit" name="delta" value="10" class="qa-btn qa-gems">+۱۰ جم</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🔐 وضعیت‌ها</h3>
+      <div class="toggles">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">فعال (is_active)</div>
+            <div class="toggle-desc">کاربر می‌تونه وارد بشه یا نه</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" name="is_active" {% if u.is_active %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">ادمین (is_staff)</div>
+            <div class="toggle-desc">دسترسی به پنل جنگو</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" name="is_staff" {% if u.is_staff %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">حساب مهمان</div>
+            <div class="toggle-desc">مهمان دسترسی محدود داره</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" name="is_guest" {% if u.is_guest %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit">💾 ذخیره همه تغییرات</button>
+  </form>
+
+  <div class="danger-card" style="margin-top: 16px;">
+    <h3>⚠️ منطقه خطر</h3>
+    <p style="font-size: 12px; color: #94a3b8; margin: 12px 0; line-height: 1.7;">حذف کاربر غیرقابل بازگشت است. تمام بازی‌ها، اعلان‌ها، دوستی‌ها و اتحادش حذف می‌شود.</p>
+    <form method="post" action="{% url 'custom_admin:user_delete' u.id %}" onsubmit="return confirm('آیا مطمئنید؟ حذف {{ u.username }} غیرقابل بازگشت است.');">
+      {% csrf_token %}
+      <button type="submit" class="btn-delete">🗑️ حذف کامل کاربر</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

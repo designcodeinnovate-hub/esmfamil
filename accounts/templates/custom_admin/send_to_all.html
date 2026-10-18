@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>جایزه به همه — پنل ادمین</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(239,68,68,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; }
+    .topbar h1 { font-size: 20px; color: #fca5a5; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold; }
+    
+    
+    
+    
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+    .card { background: #12121f; border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+    .card h3 { color: #fdba74; font-size: 16px; margin-bottom: 16px; }
+    .stats { background: rgba(59,130,246,0.1); border-right: 3px solid #3b82f6; padding: 12px 16px; border-radius: 10px; font-size: 13px; color: #93c5fd; margin-bottom: 16px; }
+    label { display: block; color: #94a3b8; font-size: 12px; margin: 12px 0 6px; font-weight: bold; }
+    input[type=number], input[type=text], textarea { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1.5px solid rgba(148,163,184,0.2); background: #0a0a15; color: #fff; font-size: 15px; font-family: inherit; box-sizing: border-box; }
+    textarea { resize: vertical; min-height: 80px; }
+    input:focus, textarea:focus { outline: none; border-color: #facc15; }
+    button.send-btn { width: 100%; margin-top: 16px; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; font-family: inherit; cursor: pointer; color: #fff; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 8px 20px rgba(34,197,94,0.4); }
+    button.send-btn:hover { transform: translateY(-1px); }
+    button.reset-btn { width: 100%; margin-top: 10px; padding: 14px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold; font-family: inherit; cursor: pointer; color: #fca5a5; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ============================================================
+       ULTIMATE STABLE ADMIN LAYOUT
+       All heights, widths, paddings are FIXED
+       No page-specific overrides can change them
+       ============================================================ */
+    
+    /* Force consistent body */
+    body { 
+      padding: 16px 16px 40px !important;
+      margin: 0 !important;
+    }
+    
+    /* Force consistent container */
+    .container { 
+      max-width: 1400px !important; 
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+    
+    /* Sticky wrapper - fixed position */
+    .admin-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 500 !important;
+      background: #0a0a15 !important;
+      padding: 4px 0 8px !important;
+      margin: 0 0 20px 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Topbar - FIXED HEIGHT */
+    .admin-sticky-header .topbar,
+    .admin-sticky-header > .topbar { 
+      height: 60px !important;
+      min-height: 60px !important;
+      max-height: 60px !important;
+      padding: 0 22px !important;
+      margin: 0 0 8px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Topbar h1 - fixed font */
+    .admin-sticky-header .topbar h1 { 
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    /* Topbar links/buttons - fixed size */
+    .admin-sticky-header .topbar a,
+    .admin-sticky-header .topbar button { 
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      padding: 0 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+    
+    /* ===== TABS - FIXED HEIGHT ===== */
+    .admin-tabs {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      white-space: nowrap !important;
+      padding: 4px !important;
+      margin: 0 !important;
+      background: #12121f !important;
+      border: 1px solid rgba(148,163,184,0.15) !important;
+      border-radius: 14px !important;
+      box-sizing: border-box !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    .admin-tabs::-webkit-scrollbar { 
+      display: none !important;
+      height: 0 !important;
+    }
+    
+    /* Each tab - FIXED HEIGHT */
+    .admin-tab {
+      flex: 0 0 auto !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      font-weight: bold !important;
+      color: #94a3b8 !important;
+      white-space: nowrap !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s !important;
+      border: none !important;
+    }
+    
+    .admin-tab:hover { 
+      background: rgba(148,163,184,0.1) !important; 
+      color: #fff !important; 
+    }
+    
+    .admin-tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="admin-sticky-header">
+  <div class="topbar">
+    <h1>🎁 جایزه به همه</h1>
+  </div>
+
+  <div class="admin-tabs">
+    <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
+    <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
+    <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
+    <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
+    <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
+    <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
+    <a href="/panel-admin/guest-log/" class="admin-tab {% if '/panel-admin/guest-log/' in request.path %}active{% endif %}">🎲 مهمان‌ها</a>
+    <a href="/panel-admin/send-to-all/" class="admin-tab {% if '/panel-admin/send-to-all/' in request.path %}active{% endif %}">🎁 جایزه همه</a>
+  </div>
+  </div>
+
+  <div class="card">
+    <h3>🎁 ارسال سکه/جم به همه کاربران</h3>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="send">
+      <div class="row-2">
+        <div>
+          <label>🪙 سکه (هر کاربر)</label>
+          <input type="number" name="coins" value="0" placeholder="مثلاً 500">
+        </div>
+        <div>
+          <label>💎 جم (هر کاربر)</label>
+          <input type="number" name="gems" value="0" placeholder="مثلاً 10">
+        </div>
+      </div>
+      <label>📝 پیام (اختیاری)</label>
+      <textarea name="note" maxlength="200" placeholder="مثلاً: هدیه ویژه به مناسبت بازگشایی!"></textarea>
+      <button type="submit" class="send-btn" onclick="return confirm('این جایزه به همه {{ total_users }} کاربر داده می‌شه. مطمئنی؟');">🎁 ارسال به همه</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>⚠️ اقدامات خطرناک</h3>
+    <form method="post" onsubmit="return confirm('همه سکه‌ها و جم‌های همه کاربران صفر می‌شوند. مطمئنی؟');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="reset_all">
+      <button type="submit" class="reset-btn">🗑️ صفر کردن همه سکه و جم‌ها</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -44,16 +44,6 @@
     .row .k { color: #94a3b8; }
     .row .v { color: #fff; font-family: monospace; }
 
-    .algo-tag {
-      display: inline-block;
-      background: rgba(139, 92, 246, 0.2);
-      color: #c4b5fd;
-      padding: 3px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-family: monospace;
-    }
-
     input[type=text], input[type=password] {
       width: 100%; padding: 12px 14px; border-radius: 10px;
       border: 1.5px solid rgba(148, 163, 184, 0.2);
@@ -103,12 +93,150 @@
       background-position: center;
       overflow: hidden;
     }
+
+    /* ============================================================
+       ULTIMATE STABLE ADMIN LAYOUT
+       All heights, widths, paddings are FIXED
+       No page-specific overrides can change them
+       ============================================================ */
+    
+    /* Force consistent body */
+    body { 
+      padding: 16px 16px 40px !important;
+      margin: 0 !important;
+    }
+    
+    /* Force consistent container */
+    .container { 
+      max-width: 1400px !important; 
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+    
+    /* Sticky wrapper - fixed position */
+    .admin-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 500 !important;
+      background: #0a0a15 !important;
+      padding: 4px 0 8px !important;
+      margin: 0 0 20px 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Topbar - FIXED HEIGHT */
+    .admin-sticky-header .topbar,
+    .admin-sticky-header > .topbar { 
+      height: 60px !important;
+      min-height: 60px !important;
+      max-height: 60px !important;
+      padding: 0 22px !important;
+      margin: 0 0 8px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Topbar h1 - fixed font */
+    .admin-sticky-header .topbar h1 { 
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    /* Topbar links/buttons - fixed size */
+    .admin-sticky-header .topbar a,
+    .admin-sticky-header .topbar button { 
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      padding: 0 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+    
+    /* ===== TABS - FIXED HEIGHT ===== */
+    .admin-tabs {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      white-space: nowrap !important;
+      padding: 4px !important;
+      margin: 0 !important;
+      background: #12121f !important;
+      border: 1px solid rgba(148,163,184,0.15) !important;
+      border-radius: 14px !important;
+      box-sizing: border-box !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    .admin-tabs::-webkit-scrollbar { 
+      display: none !important;
+      height: 0 !important;
+    }
+    
+    /* Each tab - FIXED HEIGHT */
+    .admin-tab {
+      flex: 0 0 auto !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      font-weight: bold !important;
+      color: #94a3b8 !important;
+      white-space: nowrap !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s !important;
+      border: none !important;
+    }
+    
+    .admin-tab:hover { 
+      background: rgba(148,163,184,0.1) !important; 
+      color: #fff !important; 
+    }
+    
+    .admin-tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
+    }
+
   </style>
 </head>
 <body>
 <div class="container">
   <a class="back" href="{% url 'custom_admin:dashboard' %}">← بازگشت به داشبورد</a>
-  <h1>👤 جزئیات کاربر: {{ u.username }}</h1>
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <h1 style="margin: 14px 0 0;">👤 جزئیات کاربر: {{ u.username }}</h1>
+    <a href="{% url 'custom_admin:user_edit' u.id %}" style="margin-top: 14px; padding: 10px 18px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold;">✏️ ویرایش کامل</a>
+      <a href="{% url 'custom_admin:user_notify' u.id %}" style="margin-top: 14px; padding: 10px 18px; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold;">🔔 ارسال اعلان</a>
+  </div>
 
   {% if message %}
     <div class="msg {% if message.type == 'success' %}msg-ok{% else %}msg-err{% endif %}">
@@ -134,19 +262,25 @@
     <h3>📋 اطلاعات پایه</h3>
     <div class="row"><span class="k">نام کاربری</span><span class="v">{{ u.username }}</span></div>
     <div class="row"><span class="k">نام نمایشی</span><span class="v">{{ u.alias }}</span></div>
-    <div class="row"><span class="k">شناسه عمومی</span><span class="v">#{{ u.public_id }}</span></div>
     <div class="row"><span class="k">موبایل</span><span class="v">{{ u.phone|default:"—" }}</span></div>
-    <div class="row"><span class="k">آواتار</span><span class="v">{{ u.avatar_id|default:"—" }} ({{ u.avatar_type }})</span></div>
     <div class="row"><span class="k">وضعیت فعال</span><span class="v">{% if u.is_active %}✓ فعال{% else %}✗ غیرفعال{% endif %}</span></div>
     <div class="row"><span class="k">ادمین</span><span class="v">{{ u.is_staff }}</span></div>
     <div class="row"><span class="k">مهمان</span><span class="v">{{ u.is_guest }}</span></div>
     <div class="row"><span class="k">عضویت</span><span class="v">{{ u.date_joined|date:"Y/m/d H:i" }}</span></div>
     <div class="row"><span class="k">آخرین ورود</span><span class="v">{% if u.last_login %}{{ u.last_login|date:"Y/m/d H:i" }}{% else %}—{% endif %}</span></div>
-    <div class="row">
-      <span class="k">الگوریتم پسورد</span>
-      <span class="v">
-        <span class="algo-tag">{{ u.password|slice:":20" }}…</span>
-      </span>
+
+    <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(148,163,184,0.15);">
+      <form method="post" action="{% url 'custom_admin:user_toggle_staff' u.id %}" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="redirect_to" value="detail">
+        {% if u.is_staff %}
+          <input type="hidden" name="action" value="demote">
+          <button type="submit" class="action btn-danger" style="background: linear-gradient(135deg, #ef4444, #dc2626); color:#fff;" onclick="return confirm('از ادمینی خارج شود؟');">❌ حذف از ادمینی</button>
+        {% else %}
+          <input type="hidden" name="action" value="promote">
+          <button type="submit" class="action btn-warning" onclick="return confirm('به ادمین ارتقا یابد؟');">👑 ارتقا به ادمین</button>
+        {% endif %}
+      </form>
     </div>
   </div>
 

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}اتحاد{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero-card { padding: 26px 22px; background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.4), transparent 55%), radial-gradient(circle at 0% 100%, rgba(236,72,153,0.2), transparent 55%), linear-gradient(135deg, #1a0f2e, #170a24, #0f0f1e); border: 2px solid rgba(139,92,246,0.55); border-radius: 24px; margin-bottom: 18px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 15px 40px rgba(139,92,246,0.25); }
+  .hero-card .icon { font-size: 56px; margin-bottom: 8px; filter: drop-shadow(0 0 20px rgba(167,139,250,0.6)); }
+  .hero-card h1 { font-size: 22px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, #e9d5ff, #a78bfa, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-card p { color: var(--muted); font-size: 13px; line-height: 1.7; margin-bottom: 18px; }
+  .create-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-radius: 16px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; text-decoration: none; font-weight: 900; font-size: 16px; box-shadow: 0 10px 30px rgba(34,197,94,0.4); transition: 0.2s; }
+  .create-btn:hover { transform: translateY(-2px); }
+  .create-btn .plus { font-size: 22px; font-weight: 900; }
+  .search-bar { display: flex; gap: 8px; background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 4px; margin-bottom: 18px; }
+  .search-bar:focus-within { border-color: var(--purple); }
+  .search-bar input { flex: 1; padding: 12px 16px; border-radius: 12px; border: none; background: transparent; color: #fff; font-size: 15px; font-family: inherit; }
+  .search-bar input:focus { outline: none; }
+  .search-bar button { padding: 0 20px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; border: none; font-weight: bold; font-family: inherit; cursor: pointer; font-size: 15px; }
+  .section-title { font-size: 15px; color: var(--gold); font-weight: bold; margin: 8px 0 14px; display: flex; align-items: center; gap: 8px; }
+  .section-title .count { background: rgba(244,197,66,0.15); padding: 3px 10px; border-radius: 8px; font-size: 11px; font-family: monospace; }
+  .alliance-list { display: flex; flex-direction: column; gap: 10px; }
+  .alliance-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 18px; transition: 0.2s; }
+  .alliance-card:hover { border-color: rgba(139,92,246,0.6); transform: translateX(-3px); }
+  .alliance-card.is-full { opacity: 0.6; }
+  .alliance-emblem { width: 56px; height: 56px; flex-shrink: 0; border-radius: 16px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.15)); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 30px; }
+  .alliance-info { flex: 1; min-width: 0; }
+  .alliance-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .alliance-name { font-size: 15px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alliance-tag { background: var(--gold); color: #1a1a1a; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; font-family: monospace; }
+  .alliance-meta { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .alliance-meta .dot { opacity: 0.5; }
+  .join-btn { padding: 10px 16px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; border: none; font-family: inherit; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 6px 15px rgba(139,92,246,0.35); flex-shrink: 0; }
+  .join-btn:hover { transform: scale(1.05); }
+  .join-btn.full { background: rgba(148,163,184,0.2); box-shadow: none; cursor: not-allowed; }
+  .empty-state { text-align: center; padding: 50px 20px; background: var(--card); border: 1.5px dashed var(--border); border-radius: 20px; }
+  .empty-state .icon { font-size: 60px; margin-bottom: 14px; display: block; opacity: 0.5; }
+  .empty-state h3 { font-size: 17px; margin-bottom: 8px; }
+  .empty-state p { color: var(--muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+  .pass-modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .pass-modal-bg.active { display: flex; }
+  .pass-modal { background: linear-gradient(135deg, rgba(30,41,59,0.98), rgba(15,23,42,0.98)); border: 1.5px solid rgba(139,92,246,0.5); border-radius: 22px; padding: 26px 22px; max-width: 380px; width: 100%; text-align: center; }
+  .pass-modal .icon { font-size: 48px; margin-bottom: 10px; }
+  .pass-modal h3 { font-size: 18px; color: #c4b5fd; margin-bottom: 6px; }
+  .pass-modal p { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+  .pass-modal input { width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); color: #fff; font-size: 16px; font-family: monospace; text-align: center; letter-spacing: 3px; margin-bottom: 14px; box-sizing: border-box; }
+  .pass-modal-actions { display: flex; gap: 8px; }
+  .pass-modal-actions button { flex: 1; padding: 12px; border-radius: 12px; font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
+  .btn-join-p { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; }
+  .btn-cancel-p { background: rgba(148,163,184,0.2); color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="hero-card">
+    <div class="icon">🛡️</div>
+    <h1>اتحاد</h1>
+    <p>با دوستانت یه تیم بساز،<br>با هم بازی کن و به بالای جدول برس!</p>
+    <a href="/alliance/create/" class="create-btn">
+      <span class="plus">+</span>
+      <span>ساخت اتحاد جدید</span>
+    </a>
+  </div>
+
+  <form method="get" class="search-bar">
+    <input type="text" name="q" placeholder="جستجوی نام یا تگ اتحاد..." value="{{ query }}" autocomplete="off">
+    <button type="submit">🔍</button>
+  </form>
+
+  <div class="section-title">
+    <span>🌍 اتحادهای فعال</span>
+    <span class="count">{{ alliances|length }}</span>
+  </div>
+
+  {% if alliances %}
+    <div class="alliance-list">
+      {% for a in alliances %}
+        <div class="alliance-card {% if a.is_full %}is-full{% endif %}">
+          <div class="alliance-emblem">{{ a.obj.emblem }}</div>
+          <div class="alliance-info">
+            <div class="alliance-name-row">
+              <div class="alliance-name">{{ a.obj.name }}</div>
+              {% if a.obj.tag %}<span class="alliance-tag">{{ a.obj.tag }}</span>{% endif %}
+              {% if a.has_password %}<span>🔒</span>{% endif %}
+            </div>
+            <div class="alliance-meta">
+              <span>{{ a.leader_avatar }} {{ a.obj.leader.alias }}</span>
+              <span class="dot">•</span>
+              <span>{{ a.count }} / {{ a.obj.max_members }} عضو</span>
+            </div>
+          </div>
+          {% if a.is_full %}
+            <button class="join-btn full" disabled>پر</button>
+          {% elif a.has_password %}
+            <button class="join-btn" onclick="openPass({{ a.obj.id }}, '{{ a.obj.name|escapejs }}')">🔐 ورود</button>
+          {% else %}
+            <form method="post" action="/alliance/join-id/{{ a.obj.id }}/" style="display:inline; margin:0;">
+              {% csrf_token %}
+              <button type="submit" class="join-btn">ورود</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% elif query %}
+    <div class="empty-state">
+      <span class="icon">🔍</span>
+      <h3>نتیجه‌ای پیدا نشد</h3>
+      <p>اتحادی با این مشخصات وجود ندارد.</p>
+      <a href="/alliance/" class="join-btn" style="display:inline-block; padding:12px 22px;">پاک کردن</a>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <span class="icon">🏰</span>
+      <h3>هنوز اتحادی نیست!</h3>
+      <p>اولین نفری باش که یه اتحاد می‌سازه</p>
+      <a href="/alliance/create/" class="create-btn" style="max-width:280px; margin:0 auto;">
+        <span class="plus">+</span><span>ساخت اولین اتحاد</span>
+      </a>
+    </div>
+  {% endif %}
+
+  <div class="pass-modal-bg" id="passModal">
+    <div class="pass-modal">
+      <div class="icon">🔐</div>
+      <h3>رمز اتحاد</h3>
+      <p>اتحاد <b id="passName"></b> رمز دارد.<br>رمز را وارد کن.</p>
+      <form method="post" id="passForm">
+        {% csrf_token %}
+        <input type="password" name="password" placeholder="رمز" required autofocus>
+        <div class="pass-modal-actions">
+          <button type="submit" class="btn-join-p">ورود</button>
+          <button type="button" class="btn-cancel-p" onclick="closePass()">انصراف</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function openPass(id, name) {
+    document.getElementById('passForm').action = '/alliance/join-id/' + id + '/';
+    document.getElementById('passName').textContent = name;
+    document.getElementById('passModal').classList.add('active');
+    setTimeout(function() {
+      var inp = document.querySelector('#passForm input[name="password"]');
+      if (inp) inp.focus();
+    }, 100);
+  }
+  function closePass() {
+    document.getElementById('passModal').classList.remove('active');
+  }
+  document.getElementById('passModal').addEventListener('click', function(e) {
+    if (e.target.id === 'passModal') closePass();
+  });
+</script>
+{% endblock %}

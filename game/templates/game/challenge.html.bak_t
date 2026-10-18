@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}چالش{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+
+  .intro-card {
+    text-align: center; padding: 24px 20px;
+    background: radial-gradient(circle at 100% 0%, rgba(239,68,68,0.25), transparent 60%),
+                radial-gradient(circle at 0% 100%, rgba(244,197,66,0.15), transparent 60%),
+                linear-gradient(135deg, #2a0a0a, #0f0f1e);
+    border: 1.5px solid rgba(239,68,68,0.4);
+    border-radius: 20px; margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(239,68,68,0.15);
+  }
+  .intro-card .icon { font-size: 56px; margin-bottom: 8px; filter: drop-shadow(0 0 20px rgba(239,68,68,0.4)); }
+  .intro-card h2 {
+    font-size: 20px; font-weight: 900; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fca5a5, #f4c542);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .intro-card p { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+  .challenge-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px; border-radius: 18px;
+    margin-bottom: 14px; cursor: pointer;
+    border: 1.5px solid; transition: 0.22s;
+    position: relative; overflow: hidden;
+  }
+  .challenge-card:hover { transform: translateY(-3px); }
+  .challenge-card.weekly {
+    background: radial-gradient(circle at 100% 0%, rgba(234,179,8,0.3), transparent 60%),
+                linear-gradient(135deg, #2a1e0a, #1a0f1a);
+    border-color: rgba(234,179,8,0.5);
+  }
+  .challenge-card.weekly:hover { border-color: rgba(234,179,8,0.9); }
+  .challenge-card.daily {
+    background: radial-gradient(circle at 100% 0%, rgba(59,130,246,0.3), transparent 60%),
+                linear-gradient(135deg, #0a1a2a, #0f0f1e);
+    border-color: rgba(59,130,246,0.5);
+  }
+  .challenge-card.daily:hover { border-color: rgba(59,130,246,0.9); }
+  .challenge-card.hourly {
+    background: radial-gradient(circle at 100% 0%, rgba(6,182,212,0.3), transparent 60%),
+                linear-gradient(135deg, #0a1e2a, #0f0f1e);
+    border-color: rgba(6,182,212,0.5);
+  }
+  .challenge-card.hourly:hover { border-color: rgba(6,182,212,0.9); }
+
+  .cc-icon {
+    font-size: 38px; width: 64px; height: 64px;
+    border-radius: 16px; background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cc-body { flex: 1; }
+  .cc-title { font-size: 17px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+  .cc-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .soon-badge {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(234,179,8,0.95); color: #1a1a1a;
+    font-size: 10px; font-weight: 900;
+    padding: 3px 9px; border-radius: 6px;
+    z-index: 2;
+  }
+  .cc-arrow { font-size: 20px; color: rgba(255,255,255,0.4); }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <a href="/game/rooms/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>⚔️ <span>چالش</span></h1>
+  </div>
+
+  <div class="intro-card">
+    <div class="icon">⚔️</div>
+    <h2>میدون نبرد بازیکنان</h2>
+    <p>با بهترین‌ها رقابت کن، امتیاز بگیر و به بالای جدول برس</p>
+  </div>
+
+  <div class="challenge-card weekly" onclick="alert('🏆 تورنمنت هفتگی به زودی فعال می‌شود!')">
+    <span class="soon-badge">به زودی</span>
+    <div class="cc-icon">🏆</div>
+    <div class="cc-body">
+      <div class="cc-title">تورنمنت هفتگی</div>
+      <div class="cc-desc">هر هفته با بهترین بازیکنان رقابت کن، جوایز ویژه بگیر</div>
+    </div>
+    <div class="cc-arrow">←</div>
+  </div>
+
+  <div class="challenge-card daily" onclick="alert('📅 مسابقه روزانه به زودی فعال می‌شود!')">
+    <span class="soon-badge">به زودی</span>
+    <div class="cc-icon">📅</div>
+    <div class="cc-body">
+      <div class="cc-title">مسابقه روزانه</div>
+      <div class="cc-desc">هر روز یک رقابت جدید — ۲۴ ساعت فرصت برای صدرنشینی</div>
+    </div>
+    <div class="cc-arrow">←</div>
+  </div>
+
+  <div class="challenge-card hourly" onclick="alert('⏰ مسابقه ساعتی به زودی فعال می‌شود!')">
+    <span class="soon-badge">به زودی</span>
+    <div class="cc-icon">⏰</div>
+    <div class="cc-body">
+      <div class="cc-title">مسابقه ساعتی</div>
+      <div class="cc-desc">سرعت مهمه! هر ساعت یه مسابقه‌ی جدید با امتیاز دوبرابر</div>
+    </div>
+    <div class="cc-arrow">←</div>
+  </div>
+{% endblock %}

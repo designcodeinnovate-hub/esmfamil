@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>فروشگاه — پنل ادمین</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 1300px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(239,68,68,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; }
+    .topbar h1 { font-size: 20px; color: #fca5a5; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold; }
+    
+    
+    
+    
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+    .card { background: #12121f; border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    .card h3 { color: #fdba74; font-size: 15px; margin-bottom: 14px; }
+    details summary { cursor: pointer; font-size: 14px; font-weight: bold; color: #22c55e; padding: 10px; border-radius: 10px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); }
+    details[open] summary { margin-bottom: 14px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    label { display: block; color: #94a3b8; font-size: 12px; margin-bottom: 4px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid rgba(148,163,184,0.2); background: #0a0a15; color: #fff; font-size: 13px; font-family: inherit; }
+    button.submit { padding: 12px 24px; border: none; border-radius: 10px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; }
+    .item-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.1); border-radius: 12px; margin-bottom: 8px; }
+    .item-row.inactive { opacity: 0.5; }
+    .item-row .em { font-size: 26px; width: 42px; height: 42px; border-radius: 10px; background: rgba(139,92,246,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .item-row .info { flex: 1; min-width: 0; }
+    .item-row .nm { font-size: 14px; font-weight: bold; color: #fff; }
+    .item-row .mt { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .item-row .price { font-family: monospace; font-size: 12px; color: #facc15; margin: 0 8px; }
+    .btn-t { padding: 6px 12px; border: none; border-radius: 8px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-toggle-on { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .btn-toggle-off { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
+    .btn-del { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .empty { text-align: center; padding: 40px; color: #64748b; }
+
+    /* ============================================================
+       ULTIMATE STABLE ADMIN LAYOUT
+       All heights, widths, paddings are FIXED
+       No page-specific overrides can change them
+       ============================================================ */
+    
+    /* Force consistent body */
+    body { 
+      padding: 16px 16px 40px !important;
+      margin: 0 !important;
+    }
+    
+    /* Force consistent container */
+    .container { 
+      max-width: 1400px !important; 
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+    
+    /* Sticky wrapper - fixed position */
+    .admin-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 500 !important;
+      background: #0a0a15 !important;
+      padding: 4px 0 8px !important;
+      margin: 0 0 20px 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Topbar - FIXED HEIGHT */
+    .admin-sticky-header .topbar,
+    .admin-sticky-header > .topbar { 
+      height: 60px !important;
+      min-height: 60px !important;
+      max-height: 60px !important;
+      padding: 0 22px !important;
+      margin: 0 0 8px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Topbar h1 - fixed font */
+    .admin-sticky-header .topbar h1 { 
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    /* Topbar links/buttons - fixed size */
+    .admin-sticky-header .topbar a,
+    .admin-sticky-header .topbar button { 
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      padding: 0 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+    
+    /* ===== TABS - FIXED HEIGHT ===== */
+    .admin-tabs {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      white-space: nowrap !important;
+      padding: 4px !important;
+      margin: 0 !important;
+      background: #12121f !important;
+      border: 1px solid rgba(148,163,184,0.15) !important;
+      border-radius: 14px !important;
+      box-sizing: border-box !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    .admin-tabs::-webkit-scrollbar { 
+      display: none !important;
+      height: 0 !important;
+    }
+    
+    /* Each tab - FIXED HEIGHT */
+    .admin-tab {
+      flex: 0 0 auto !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      font-weight: bold !important;
+      color: #94a3b8 !important;
+      white-space: nowrap !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s !important;
+      border: none !important;
+    }
+    
+    .admin-tab:hover { 
+      background: rgba(148,163,184,0.1) !important; 
+      color: #fff !important; 
+    }
+    
+    .admin-tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="admin-sticky-header">
+  <div class="topbar">
+    <h1>🛒 مدیریت فروشگاه</h1>
+  </div>
+
+  <div class="admin-tabs">
+    <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
+    <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
+    <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
+    <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
+    <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
+    <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
+    <a href="/panel-admin/support/" class="admin-tab {% if '/panel-admin/support' in request.path %}active{% endif %}">💬 پشتیبانی</a>
+  </div>
+  </div>
+
+  <div class="card">
+    <h3>📦 آیتم‌ها ({{ items|length }})</h3>
+    {% for item in items %}
+      <div class="item-row {% if not item.is_active %}inactive{% endif %}">
+        <div class="em">{{ item.icon }}</div>
+        <div class="info">
+          <div class="nm">{{ item.name }}</div>
+          <div class="mt">{{ item.get_category_display }} · {{ item.reward_type|default:"بدون جایزه" }} · موجودی: {{ item.stock|default:"∞" }}</div>
+        </div>
+        <span class="price">{% if item.price_coins %}🪙{{ item.price_coins }}{% endif %}{% if item.price_gems %} 💎{{ item.price_gems }}{% endif %}</span>
+        <form method="post" action="/panel-admin/shop/{{ item.id }}/toggle/" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn-t {% if item.is_active %}btn-toggle-on{% else %}btn-toggle-off{% endif %}">{% if item.is_active %}فعال{% else %}غیرفعال{% endif %}</button>
+        </form>
+        <form method="post" action="/panel-admin/shop/{{ item.id }}/delete/" style="display:inline;" onsubmit="return confirm('حذف {{ item.name }}؟');">
+          {% csrf_token %}
+          <button type="submit" class="btn-t btn-del">حذف</button>
+        </form>
+      </div>
+    {% empty %}
+      <div class="empty">هنوز آیتمی ساخته نشده.</div>
+    {% endfor %}
+  </div>
+</div>
+</body>
+</html>

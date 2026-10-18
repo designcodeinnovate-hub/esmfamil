@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}در حال بازی{% endblock %}
+
+{% block extra_css %}
+<style>
+  .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .letter-box {
+    background: radial-gradient(circle, rgba(244,197,66,0.2), transparent);
+    width: 80px; height: 80px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 45px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 0 20px rgba(244,197,66,0.6);
+    border: 2px solid rgba(244,197,66,0.4);
+  }
+  .timer-wrapper { position: relative; width: 80px; height: 80px; }
+  .timer-svg { transform: rotate(-90deg); width: 80px; height: 80px; }
+  .timer-circle-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 6; }
+  .timer-circle-progress { fill: none; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 219; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+  .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; font-weight: bold; font-family: monospace; color: #fff; }
+
+  .answers-grid { display: flex; flex-direction: column; gap: 8px; padding-bottom: 70px; }
+  .answer-row {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(30,41,59,0.5); padding: 4px 10px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .answer-row .label { width: 80px; color: var(--muted); font-size: 13px; font-weight: bold; }
+  .answer-row input {
+    flex: 1; background: transparent; border: none; border-bottom: 1.5px solid var(--border);
+    color: #fff; font-size: 15px; padding: 6px 4px; font-family: inherit;
+  }
+  .answer-row input:focus { outline: none; border-bottom-color: var(--gold); }
+
+  /* دکمه استپ کوچیک‌تر */
+  .stop-wrapper {
+    position: fixed; bottom: 80px; left: 16px; right: 16px; max-width: 520px; margin: 0 auto; z-index: 50;
+  }
+  button.stop {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 900; font-family: inherit; cursor: pointer;
+    color: #fff; background: linear-gradient(135deg, #ef4444, #b91c1c);
+    box-shadow: 0 8px 20px rgba(239,68,68,0.4); transition: 0.2s;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="game-header">
+    <div class="letter-box">{{ round.letter }}</div>
+    <div class="timer-wrapper">
+      <svg class="timer-svg"><circle class="timer-circle-bg" cx="40" cy="40" r="36"></circle><circle class="timer-circle-progress" id="timerProgress" cx="40" cy="40" r="36"></circle></svg>
+      <div class="timer-text" id="timerText">{{ duration }}</div>
+    </div>
+  </div>
+
+  <form method="post" action="/game/quick/bot/submit/{{ game.id }}/" id="form">
+    {% csrf_token %}
+    <div class="answers-grid">
+      {% for c in categories %}
+        <div class="answer-row">
+          <div class="label">{{ c }}</div>
+          <input type="text" name="cat_{{ c }}" autocomplete="off" maxlength="64">
+        </div>
+      {% endfor %}
+    </div>
+    <div class="stop-wrapper">
+      <button type="submit" class="stop">✋ استپ!</button>
+    </div>
+  </form>
+
+<script>
+  let total = {{ duration }};
+  let left = total;
+  const textEl = document.getElementById('timerText');
+  const circle = document.getElementById('timerProgress');
+  const form = document.getElementById('form');
+  const circumference = 2 * Math.PI * 36;
+  circle.style.strokeDasharray = circumference;
+
+  const timer = setInterval(() => {
+    left--;
+    textEl.textContent = left;
+    circle.style.strokeDashoffset = circumference - (left / total) * circumference;
+    if (left <= 10) { circle.style.stroke = '#ef4444'; textEl.style.color = '#ef4444'; } 
+    else if (left <= total / 2) { circle.style.stroke = '#eab308'; textEl.style.color = '#eab308'; }
+    if (left <= 0) { clearInterval(timer); form.submit(); }
+  }, 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,304 @@
+{% load jalali_tags %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اعلان به {{ u.username }} — پنل ادمین</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(139,92,246,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .topbar h1 { font-size: 19px; color: #c4b5fd; }
+    .topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: bold; text-decoration: none; }
+    .topbar .back { background: rgba(148,163,184,0.2); color: #fff; }
+    .topbar .view { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4); }
+    .topbar .edit { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+    .topbar .logout { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+
+    .user-card { display: flex; align-items: center; gap: 16px; padding: 18px 22px; background: linear-gradient(135deg, #12121f, #1a1a2e); border: 1.5px solid rgba(139,92,246,0.3); border-radius: 18px; margin-bottom: 20px; }
+    .user-av { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #6b4eff); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15); }
+    .user-info { flex: 1; }
+    .user-name { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+    .user-meta { font-size: 12px; color: #94a3b8; font-family: monospace; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; margin-right: 6px; }
+    .badge-guest { background: rgba(234,179,8,0.2); color: #fde68a; }
+    .badge-staff { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+    .badge-active { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .badge-inactive { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+
+    .card { background: #12121f; border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+    .card h3 { color: #fdba74; font-size: 15px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    label { display: block; color: #94a3b8; font-size: 12px; margin: 12px 0 6px; font-weight: bold; }
+    input[type=text], textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid rgba(148,163,184,0.2); background: #0a0a15; color: #fff; font-size: 14px; font-family: inherit; box-sizing: border-box; }
+    textarea { resize: vertical; min-height: 90px; }
+    input:focus, textarea:focus { outline: none; border-color: #facc15; }
+
+    button.submit { width: 100%; margin-top: 16px; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; font-family: inherit; cursor: pointer; color: #fff; background: linear-gradient(135deg, #8b5cf6, #6b4eff); box-shadow: 0 8px 20px rgba(139,92,246,0.4); transition: 0.2s; }
+    button.submit:hover { transform: translateY(-1px); }
+
+    .notif-item { display: flex; gap: 12px; padding: 14px; background: rgba(15,23,42,0.5); border: 1px solid rgba(148,163,184,0.1); border-radius: 12px; margin-bottom: 8px; }
+    .notif-icon { width: 42px; height: 42px; border-radius: 10px; background: rgba(245,158,11,0.2); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title { font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+    .notif-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; margin-bottom: 4px; }
+    .notif-meta { font-size: 10px; color: #64748b; font-family: monospace; }
+    .notif-meta .read { color: #4ade80; font-weight: bold; }
+    .notif-meta .unread { color: #facc15; font-weight: bold; }
+    .btn-del-small { padding: 6px 10px; background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; height: fit-content; }
+    .btn-del-small:hover { background: rgba(239,68,68,0.3); }
+
+    .clear-btn { padding: 10px 20px; background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .clear-btn:hover { background: rgba(239,68,68,0.3); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #64748b; }
+    .empty-state .icon { font-size: 60px; display: block; margin-bottom: 12px; opacity: 0.5; }
+
+    /* ============================================================
+       ULTIMATE STABLE ADMIN LAYOUT
+       All heights, widths, paddings are FIXED
+       No page-specific overrides can change them
+       ============================================================ */
+    
+    /* Force consistent body */
+    body { 
+      padding: 16px 16px 40px !important;
+      margin: 0 !important;
+    }
+    
+    /* Force consistent container */
+    .container { 
+      max-width: 1400px !important; 
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+    
+    /* Sticky wrapper - fixed position */
+    .admin-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 500 !important;
+      background: #0a0a15 !important;
+      padding: 4px 0 8px !important;
+      margin: 0 0 20px 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Topbar - FIXED HEIGHT */
+    .admin-sticky-header .topbar,
+    .admin-sticky-header > .topbar { 
+      height: 60px !important;
+      min-height: 60px !important;
+      max-height: 60px !important;
+      padding: 0 22px !important;
+      margin: 0 0 8px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Topbar h1 - fixed font */
+    .admin-sticky-header .topbar h1 { 
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    /* Topbar links/buttons - fixed size */
+    .admin-sticky-header .topbar a,
+    .admin-sticky-header .topbar button { 
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      padding: 0 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+    
+    /* ===== TABS - FIXED HEIGHT ===== */
+    .admin-tabs {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      white-space: nowrap !important;
+      padding: 4px !important;
+      margin: 0 !important;
+      background: #12121f !important;
+      border: 1px solid rgba(148,163,184,0.15) !important;
+      border-radius: 14px !important;
+      box-sizing: border-box !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    .admin-tabs::-webkit-scrollbar { 
+      display: none !important;
+      height: 0 !important;
+    }
+    
+    /* Each tab - FIXED HEIGHT */
+    .admin-tab {
+      flex: 0 0 auto !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      font-weight: bold !important;
+      color: #94a3b8 !important;
+      white-space: nowrap !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s !important;
+      border: none !important;
+    }
+    
+    .admin-tab:hover { 
+      background: rgba(148,163,184,0.1) !important; 
+      color: #fff !important; 
+    }
+    
+    .admin-tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="admin-sticky-header">
+  <div class="topbar">
+    <h1>🔔 ارسال اعلان به کاربر</h1>
+    <div class="topbar-actions">
+      <a href="{% url 'custom_admin:user_detail' u.id %}" class="view">👁 مشاهده</a>
+      <a href="{% url 'custom_admin:user_edit' u.id %}" class="edit">✏️ ویرایش</a>
+      <a href="{% url 'custom_admin:dashboard' %}" class="back">← بازگشت</a>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
+    <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
+    <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
+    <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
+    <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
+    <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
+    <a href="/panel-admin/support/" class="admin-tab {% if '/panel-admin/support' in request.path %}active{% endif %}">💬 پشتیبانی</a>
+  </div>
+  </div>
+
+  <div class="user-card">
+    <div class="user-av">
+      {% if u.avatar_id is not None %}{{ u.avatar_id }}{% else %}👤{% endif %}
+    </div>
+    <div class="user-info">
+      <div class="user-name">
+        {{ u.alias|default:u.username }}
+        {% if u.is_guest %}<span class="badge badge-guest">مهمان</span>{% endif %}
+        {% if u.is_staff %}<span class="badge badge-staff">ادمین</span>{% endif %}
+        {% if u.is_active %}<span class="badge badge-active">فعال</span>{% else %}<span class="badge badge-inactive">غیرفعال</span>{% endif %}
+      </div>
+      <div class="user-meta">@{{ u.username }}</div>
+    </div>
+  </div>
+
+  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
+
+  <div class="card">
+    <h3>📤 ارسال اعلان جدید</h3>
+    <form method="post">
+      {% csrf_token %}
+      <label>عنوان اعلان</label>
+      <input type="text" name="title" maxlength="100" required placeholder="مثلاً: هدیه ویژه برای شما!">
+      <label>متن اعلان</label>
+      <textarea name="body" maxlength="300" placeholder="متن کامل اعلان که کاربر می‌بیند..."></textarea>
+      <label>لینک (اختیاری)</label>
+      <input type="text" name="url" maxlength="200" placeholder="مثلاً /accounts/shop/">
+      <button type="submit" class="submit">📤 ارسال اعلان</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>
+      📋 اعلان‌های {{ u.alias|default:u.username }} ({{ total_count }})
+      {% if total_count > 0 %}
+      <form method="post" action="{% url 'custom_admin:user_notify_clear' u.id %}" style="display:inline; margin-right:auto;" onsubmit="return confirm('همه اعلان‌های این کاربر حذف شوند؟');">
+        {% csrf_token %}
+        <button type="submit" class="clear-btn">🗑️ پاک کردن همه</button>
+      </form>
+      {% endif %}
+    </h3>
+
+    {% if notifications %}
+      {% for n in notifications %}
+        <div class="notif-item">
+          <div class="notif-icon">
+            {% if n.type == "admin_broadcast" %}📢
+            {% elif n.type == "friend_request" %}👋
+            {% elif n.type == "game_invite" %}🎮
+            {% else %}🔔{% endif %}
+          </div>
+          <div class="notif-body">
+            <div class="notif-title">{{ n.title }}</div>
+            {% if n.body %}<div class="notif-desc">{{ n.body }}</div>{% endif %}
+            <div class="notif-meta">
+              {% if n.sender %}👤 {{ n.sender.alias }}{% else %}📢 مدیر{% endif %}
+              · {{ n.created_at|jdate:"Y/m/d H:i" }}
+              · {% if n.is_read %}<span class="read">✓ خوانده شد</span>{% else %}<span class="unread">● نخوانده</span>{% endif %}
+              {% if n.url %} · 🔗 {{ n.url }}{% endif %}
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <form method="post" action="{% url 'custom_admin:user_notify_toggle_read' u.id n.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-del-small" style="background:{% if n.is_read %}rgba(234,179,8,0.15){% else %}rgba(34,197,94,0.15){% endif %}; color:{% if n.is_read %}#fde68a{% else %}#4ade80{% endif %}; border-color:{% if n.is_read %}rgba(234,179,8,0.3){% else %}rgba(34,197,94,0.3){% endif %};">
+                {% if n.is_read %}● نخوانده{% else %}✓ خوانده{% endif %}
+              </button>
+            </form>
+            <form method="post" action="{% url 'custom_admin:user_notify_delete' u.id n.id %}" onsubmit="return confirm('حذف این اعلان؟');">
+              {% csrf_token %}
+              <button type="submit" class="btn-del-small">حذف</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <span class="icon">📭</span>
+        هنوز اعلانی برای این کاربر ارسال نشده.
+      </div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

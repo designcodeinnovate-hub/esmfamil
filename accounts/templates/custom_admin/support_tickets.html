@@ -1,0 +1,280 @@
+{% load jalali_tags %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>پشتیبانی — پنل ادمین</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 16px 16px 40px; }
+.container { max-width: 1400px; margin: 0 auto; }
+
+.admin-sticky-header {
+  position: sticky; top: 0; z-index: 500;
+  background: #0a0a15; padding: 4px 0 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+}
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(135deg, #1e1b4b, #0f0f1e);
+  border: 1px solid rgba(139,92,246,0.4);
+  padding: 16px 22px; border-radius: 16px; margin-bottom: 8px;
+}
+.topbar h1 { font-size: 20px; color: #c4b5fd; }
+
+.admin-tabs {
+  display: flex !important; gap: 6px !important;
+  overflow-x: auto !important; overflow-y: hidden !important;
+  white-space: nowrap !important; padding: 8px !important;
+  background: #12121f !important;
+  border: 1px solid rgba(148,163,184,0.15) !important;
+  border-radius: 14px !important;
+  scrollbar-width: none !important;
+  height: 48px !important;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tab {
+  flex: 0 0 auto !important; height: 40px !important;
+  display: inline-flex !important; align-items: center !important;
+  padding: 0 14px !important; border-radius: 10px !important;
+  text-decoration: none !important; font-size: 12px !important;
+  font-weight: bold !important; color: #94a3b8 !important;
+  white-space: nowrap !important;
+}
+.admin-tab:hover { background: rgba(148,163,184,0.1) !important; color: #fff !important; }
+.admin-tab.active { background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #fff !important; }
+
+.msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+.msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+
+/* ===== Stats ===== */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 700px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+.stat-card {
+  padding: 18px; border-radius: 16px; text-align: center;
+  border: 1.5px solid; position: relative; overflow: hidden;
+  transition: 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card.open {
+  background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(15,23,42,0.6));
+  border-color: rgba(234,179,8,0.4);
+}
+.stat-card.answered {
+  background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(15,23,42,0.6));
+  border-color: rgba(34,197,94,0.4);
+}
+.stat-card.closed {
+  background: linear-gradient(135deg, rgba(100,116,139,0.15), rgba(15,23,42,0.6));
+  border-color: rgba(100,116,139,0.4);
+}
+.stat-card.total {
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(15,23,42,0.6));
+  border-color: rgba(139,92,246,0.4);
+}
+.stat-icon { font-size: 28px; margin-bottom: 6px; }
+.stat-val { font-size: 26px; font-weight: 900; font-family: monospace; color: #fff; margin-bottom: 3px; }
+.stat-lbl { font-size: 11px; color: #94a3b8; font-weight: bold; }
+
+/* ===== Filter ===== */
+.filter-row {
+  display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  padding: 8px; background: #12121f; border: 1px solid rgba(148,163,184,0.15);
+  border-radius: 14px;
+}
+.filter-btn {
+  padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: bold;
+  text-decoration: none; color: #94a3b8;
+  background: transparent; border: 1px solid transparent;
+  transition: 0.2s;
+}
+.filter-btn:hover { background: rgba(148,163,184,0.1); color: #fff; }
+.filter-btn.active {
+  background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+  color: #fff; border-color: transparent;
+  box-shadow: 0 4px 15px rgba(139,92,246,0.4);
+}
+
+/* ===== Ticket list ===== */
+.tickets-list { display: flex; flex-direction: column; gap: 10px; }
+
+.ticket-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px; background: #12121f;
+  border: 1.5px solid rgba(148,163,184,0.15);
+  border-radius: 14px;
+  text-decoration: none; color: #e2e8f0;
+  transition: 0.2s;
+  position: relative; overflow: hidden;
+}
+.ticket-item:hover {
+  border-color: rgba(139,92,246,0.6);
+  transform: translateX(-4px);
+  box-shadow: 0 8px 25px rgba(139,92,246,0.15);
+}
+.ticket-item::before {
+  content: ""; position: absolute;
+  top: 0; bottom: 0; right: 0; width: 4px;
+  background: #94a3b8;
+}
+.ticket-item.status-open::before { background: linear-gradient(180deg, #facc15, #eab308); }
+.ticket-item.status-answered::before { background: linear-gradient(180deg, #4ade80, #22c55e); }
+.ticket-item.status-closed::before { background: linear-gradient(180deg, #64748b, #475569); }
+
+.ticket-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: bold; color: #fff;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.1);
+}
+.ticket-body { flex: 1; min-width: 0; }
+.ticket-subject {
+  font-size: 15px; font-weight: bold; color: #fff;
+  margin-bottom: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ticket-meta {
+  font-size: 11px; color: #94a3b8;
+  font-family: monospace;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ticket-meta .dot { opacity: 0.5; }
+.ticket-last-msg {
+  font-size: 12px; color: #cbd5e1;
+  margin-top: 6px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 6px 10px; background: rgba(15,23,42,0.5);
+  border-radius: 8px;
+}
+.ticket-status {
+  padding: 6px 14px; border-radius: 10px;
+  font-size: 11px; font-weight: 900;
+  flex-shrink: 0;
+}
+.ticket-status.open {
+  background: rgba(234,179,8,0.2); color: #fde68a;
+  border: 1px solid rgba(234,179,8,0.4);
+}
+.ticket-status.answered {
+  background: rgba(34,197,94,0.2); color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.4);
+}
+.ticket-status.closed {
+  background: rgba(100,116,139,0.2); color: #cbd5e1;
+  border: 1px solid rgba(100,116,139,0.4);
+}
+.ticket-arrow {
+  font-size: 20px; color: #64748b;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+.ticket-item:hover .ticket-arrow { color: #c4b5fd; transform: translateX(-4px); }
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  background: #12121f; border: 1.5px dashed rgba(148,163,184,0.2);
+  border-radius: 18px;
+  color: #64748b;
+}
+.empty-state .icon { font-size: 64px; display: block; margin-bottom: 14px; opacity: 0.5; }
+.empty-state h3 { font-size: 17px; color: #fff; margin-bottom: 8px; }
+.empty-state p { font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="admin-sticky-header">
+    <div class="topbar"><h1>💬 پشتیبانی — تیکت‌ها</h1></div>
+    <div class="admin-tabs">
+      <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
+      <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
+      <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
+      <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
+      <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
+      <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
+      <a href="/panel-admin/support/" class="admin-tab {% if '/panel-admin/support' in request.path %}active{% endif %}">💬 پشتیبانی</a>
+    </div>
+  </div>
+
+  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
+
+  <div class="stats-grid">
+    <div class="stat-card open">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-val">{{ count_open }}</div>
+      <div class="stat-lbl">باز</div>
+    </div>
+    <div class="stat-card answered">
+      <div class="stat-icon">✅</div>
+      <div class="stat-val">{{ count_answered }}</div>
+      <div class="stat-lbl">پاسخ داده</div>
+    </div>
+    <div class="stat-card closed">
+      <div class="stat-icon">🔒</div>
+      <div class="stat-val">{{ count_closed }}</div>
+      <div class="stat-lbl">بسته</div>
+    </div>
+    <div class="stat-card total">
+      <div class="stat-icon">📊</div>
+      <div class="stat-val">{{ count_total }}</div>
+      <div class="stat-lbl">کل</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <a href="?" class="filter-btn {% if not status_filter %}active{% endif %}">📋 همه ({{ count_total }})</a>
+    <a href="?status=open" class="filter-btn {% if status_filter == 'open' %}active{% endif %}">⏳ باز ({{ count_open }})</a>
+    <a href="?status=answered" class="filter-btn {% if status_filter == 'answered' %}active{% endif %}">✅ پاسخ داده ({{ count_answered }})</a>
+    <a href="?status=closed" class="filter-btn {% if status_filter == 'closed' %}active{% endif %}">🔒 بسته ({{ count_closed }})</a>
+  </div>
+
+  {% if tickets %}
+    <div class="tickets-list">
+      {% for t in tickets %}
+        <a href="/panel-admin/support/{{ t.id }}/" class="ticket-item status-{{ t.status }}">
+          <div class="ticket-avatar">
+            {% if t.avatar_id is not None %}{{ t.avatar_id }}{% else %}👤{% endif %}
+          </div>
+          <div class="ticket-body">
+            <div class="ticket-subject">{{ t.subject }}</div>
+            <div class="ticket-meta">
+              <span>👤 {{ t.user_alias }}</span>
+              <span class="dot">·</span>
+              <span>@{{ t.username }}</span>
+              <span class="dot">·</span>
+              <span>🕐 {{ t.updated_at|jdate:"Y/m/d H:i" }}</span>
+              <span class="dot">·</span>
+              <span>💬 {{ t.message_count }} پیام</span>
+            </div>
+            {% if t.last_msg %}
+              <div class="ticket-last-msg">💭 {{ t.last_msg }}</div>
+            {% endif %}
+          </div>
+          <span class="ticket-status {{ t.status }}">{{ t.status_display }}</span>
+          <span class="ticket-arrow">←</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <span class="icon">📭</span>
+      <h3>هیچ تیکتی نیست</h3>
+      <p>
+        {% if status_filter %}
+          با این فیلتر تیکتی پیدا نشد.
+        {% else %}
+          کاربران هنوز تیکتی ارسال نکرده‌اند.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

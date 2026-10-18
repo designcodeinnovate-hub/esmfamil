@@ -3,54 +3,55 @@
 
 {% block extra_css %}
 <style>
-  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
   .page-head h1 { font-size: 22px; font-weight: bold; }
   .page-head h1 span { color: var(--gold); }
-  
-  .shop-banner {
-    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.3), transparent 60%),
-                linear-gradient(135deg, #1a0f2e, #0f0f1e);
-    border: 1.5px solid rgba(139,92,246,0.4);
-    border-radius: 20px; padding: 24px; text-align: center; margin-bottom: 24px;
-    position: relative; overflow: hidden;
-  }
-  .shop-banner::before {
-    content: "🛒"; position: absolute; right: -10px; bottom: -20px; font-size: 100px; opacity: 0.1;
-  }
-  .shop-banner h2 { color: #fff; font-size: 20px; margin-bottom: 8px; }
-  .shop-banner p { color: var(--muted); font-size: 13px; line-height: 1.6; }
-
-  .shop-item {
-    display: flex; align-items: center; gap: 16px;
-    padding: 16px; margin-bottom: 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    cursor: pointer; transition: all 0.2s;
-    position: relative;
-  }
-  .shop-item:hover {
-    border-color: var(--purple);
-    transform: translateX(-3px);
-    box-shadow: 0 8px 25px rgba(139,92,246,0.15);
-  }
-  .shop-icon {
-    font-size: 36px; width: 60px; height: 60px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(244,197,66,0.1));
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .shop-body { flex: 1; }
-  .shop-title { font-size: 16px; font-weight: bold; margin-bottom: 4px; color: #fff; }
-  .shop-desc { font-size: 12px; color: var(--muted); }
-  .shop-price {
-    background: rgba(234, 179, 8, 0.15); color: var(--gold);
-    padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: bold;
-    border: 1px solid rgba(234, 179, 8, 0.3);
-  }
-  .shop-item.soon { opacity: 0.7; cursor: not-allowed; }
-  .shop-item.soon:hover { border-color: var(--border); transform: none; box-shadow: none; }
+  .wallet-header { display: flex; gap: 10px; margin-bottom: 18px; }
+  .wallet-card { flex: 1; padding: 16px 14px; border-radius: 18px; text-align: center; }
+  .wallet-coins-bg { background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.35), transparent 60%), linear-gradient(135deg, #2a1a0e, #1a0f0a); border: 2px solid rgba(244,197,66,0.5); }
+  .wallet-gems-bg { background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.4), transparent 60%), linear-gradient(135deg, #1a0f2e, #150a24); border: 2px solid rgba(139,92,246,0.5); }
+  .wallet-icon { font-size: 32px; margin-bottom: 6px; }
+  .wallet-amount { font-size: 22px; font-weight: 900; font-family: monospace; color: #fff; }
+  .wallet-label { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 3px; }
+  .flash { padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; font-size: 13px; }
+  .flash-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .flash-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+  .exchange-box { background: linear-gradient(135deg, #0f0f1e, #1a1a2e); border: 1.5px solid rgba(6,182,212,0.4); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
+  .exchange-title { font-size: 15px; font-weight: bold; color: #22d3ee; margin-bottom: 14px; text-align: center; }
+  .exchange-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .exchange-row label { font-size: 12px; color: var(--muted); min-width: 60px; }
+  .exchange-row input, .exchange-row select { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: #fff; font-size: 14px; font-family: monospace; }
+  .exchange-btn { width: 100%; padding: 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 6px; }
+  .exchange-rate { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+  .cat-header { display: flex; align-items: center; gap: 10px; margin: 22px 0 12px; }
+  .cat-header .icon { font-size: 24px; }
+  .cat-header h2 { font-size: 17px; font-weight: bold; color: #fff; }
+  .cat-header .count { font-size: 11px; padding: 2px 8px; border-radius: 8px; background: rgba(148,163,184,0.2); color: var(--muted); font-family: monospace; }
+  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .item-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 14px 10px; text-align: center; transition: 0.2s; position: relative; overflow: hidden; }
+  .item-card:hover { transform: translateY(-2px); border-color: var(--gold); }
+  .item-card.box { border-color: rgba(139,92,246,0.4); }
+  .item-card.box:hover { border-color: var(--purple); box-shadow: 0 8px 25px rgba(139,92,246,0.25); }
+  .item-card.box::before { content: ""; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent, rgba(139,92,246,0.15), transparent, rgba(6,182,212,0.15), transparent); animation: spin 8s linear infinite; z-index: 0; pointer-events: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .item-card > * { position: relative; z-index: 1; }
+  .item-icon { font-size: 42px; margin-bottom: 8px; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+  .item-name { font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 4px; line-height: 1.4; min-height: 36px; }
+  .item-desc { font-size: 10px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; min-height: 28px; }
+  .item-price { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; font-family: monospace; margin-bottom: 8px; }
+  .item-price.coins { background: rgba(244,197,66,0.15); color: #fde68a; border: 1px solid rgba(244,197,66,0.3); }
+  .item-price.gems { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+  .item-price.free { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+  .item-buy-btn { width: 100%; padding: 9px; border: none; border-radius: 10px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; }
+  .item-buy-btn:hover { transform: scale(1.03); }
+  .item-buy-btn:disabled { background: rgba(100,116,139,0.3); color: #94a3b8; cursor: not-allowed; transform: none; }
+  .item-buy-btn.gem-buy { background: linear-gradient(135deg, #8b5cf6, #6b4eff); }
+  .item-sold-out { position: absolute; top: 8px; left: 8px; background: rgba(239,68,68,0.9); color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; z-index: 2; }
+  .purchase-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 6px; }
+  .purchase-item .pi-icon { font-size: 22px; }
+  .purchase-item .pi-body { flex: 1; }
+  .purchase-item .pi-name { font-size: 13px; font-weight: bold; color: #fff; }
+  .purchase-item .pi-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
 </style>
 {% endblock %}
 
@@ -60,35 +61,141 @@
     <h1>🛒 <span>فروشگاه</span></h1>
   </div>
 
-  <div class="shop-banner">
-    <h2>به فروشگاه خوش آمدی!</h2>
-    <p>به‌زودی می‌تونی با سکه‌ها و جم‌هایی که از بازی به دست میاری،<br>آواتارها و امکانات خاص بخری.</p>
+  <div class="wallet-header">
+    <div class="wallet-card wallet-coins-bg">
+      <div class="wallet-icon">🪙</div>
+      <div class="wallet-amount">{{ user_coins }}</div>
+      <div class="wallet-label">سکه</div>
+    </div>
+    <div class="wallet-card wallet-gems-bg">
+      <div class="wallet-icon">💎</div>
+      <div class="wallet-amount">{{ user_gems }}</div>
+      <div class="wallet-label">جم</div>
+    </div>
   </div>
 
-  <div class="shop-item soon" onclick="alert('این بخش به‌زودی فعال می‌شود!')">
-    <div class="shop-icon">👑</div>
-    <div class="shop-body">
-      <div class="shop-title">آواتارهای پرمیوم</div>
-      <div class="shop-desc">شخصیت‌های خاص و کمیاب</div>
-    </div>
-    <div class="shop-price">به‌زودی</div>
+  {% if messages %}
+    {% for m in messages %}<div class="flash flash-{{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% endif %}
+
+  <div class="exchange-box">
+    <div class="exchange-title">💱 تبدیل ارز</div>
+    <form method="post" action="/accounts/shop/exchange/">
+      {% csrf_token %}
+      <div class="exchange-row">
+        <label>جهت:</label>
+        <select name="direction">
+          <option value="coins_to_gems">🪙 سکه → 💎 جم</option>
+          <option value="gems_to_coins">💎 جم → 🪙 سکه</option>
+        </select>
+      </div>
+      <div class="exchange-row">
+        <label>مقدار:</label>
+        <input type="number" name="amount" min="1" required placeholder="10">
+      </div>
+      <button type="submit" class="exchange-btn">تبدیل کن</button>
+      <div class="exchange-rate">۱۰۰۰ سکه = ۱۰ جم · ۱۰ جم = ۸۰۰ سکه</div>
+    </form>
   </div>
 
-  <div class="shop-item soon" onclick="alert('این بخش به‌زودی فعال می‌شود!')">
-    <div class="shop-icon">🎨</div>
-    <div class="shop-body">
-      <div class="shop-title">تم‌های ویژه</div>
-      <div class="shop-desc">ظاهر بازی رو عوض کن</div>
+  {% if categories.box %}
+  <div class="cat-header"><span class="icon">🎁</span><h2>جعبه‌های شانس</h2><span class="count">{{ categories.box|length }}</span></div>
+  <div class="items-grid">
+    {% for item in categories.box %}
+    <div class="item-card box">
+      {% if item.is_sold_out %}<span class="item-sold-out">تمام شد</span>{% endif %}
+      <span class="item-icon">{{ item.icon }}</span>
+      <div class="item-name">{{ item.name }}</div>
+      <div class="item-desc">{{ item.description }}</div>
+      {% if item.price_coins %}<div class="item-price coins">🪙 {{ item.price_coins }}</div>
+      {% elif item.price_gems %}<div class="item-price gems">💎 {{ item.price_gems }}</div>
+      {% else %}<div class="item-price free">رایگان</div>{% endif %}
+      <form method="post" action="/accounts/shop/buy/{{ item.id }}/">
+        {% csrf_token %}
+        {% if item.is_sold_out %}<button type="button" class="item-buy-btn" disabled>تمام شد</button>
+        {% else %}<button type="submit" class="item-buy-btn {% if item.price_gems and not item.price_coins %}gem-buy{% endif %}">خرید</button>{% endif %}
+      </form>
     </div>
-    <div class="shop-price">به‌زودی</div>
+    {% endfor %}
   </div>
+  {% endif %}
 
-  <div class="shop-item soon" onclick="alert('این بخش به‌زودی فعال می‌شود!')">
-    <div class="shop-icon">💎</div>
-    <div class="shop-body">
-      <div class="shop-title">بسته‌های جم و سکه</div>
-      <div class="shop-desc">ارز داخل بازی برای خرید</div>
+  {% if categories.bundle %}
+  <div class="cat-header"><span class="icon">💰</span><h2>بسته‌های ارز</h2><span class="count">{{ categories.bundle|length }}</span></div>
+  <div class="items-grid">
+    {% for item in categories.bundle %}
+    <div class="item-card">
+      {% if item.is_sold_out %}<span class="item-sold-out">تمام شد</span>{% endif %}
+      <span class="item-icon">{{ item.icon }}</span>
+      <div class="item-name">{{ item.name }}</div>
+      <div class="item-desc">{{ item.description }}</div>
+      {% if item.price_coins %}<div class="item-price coins">🪙 {{ item.price_coins }}</div>
+      {% elif item.price_gems %}<div class="item-price gems">💎 {{ item.price_gems }}</div>
+      {% else %}<div class="item-price free">رایگان</div>{% endif %}
+      <form method="post" action="/accounts/shop/buy/{{ item.id }}/">
+        {% csrf_token %}
+        {% if item.is_sold_out %}<button type="button" class="item-buy-btn" disabled>تمام شد</button>
+        {% else %}<button type="submit" class="item-buy-btn {% if item.price_gems and not item.price_coins %}gem-buy{% endif %}">خرید</button>{% endif %}
+      </form>
     </div>
-    <div class="shop-price">به‌زودی</div>
+    {% endfor %}
   </div>
+  {% endif %}
+
+  {% if categories.boost %}
+  <div class="cat-header"><span class="icon">⚡</span><h2>بوست‌ها</h2><span class="count">{{ categories.boost|length }}</span></div>
+  <div class="items-grid">
+    {% for item in categories.boost %}
+    <div class="item-card">
+      <span class="item-icon">{{ item.icon }}</span>
+      <div class="item-name">{{ item.name }}</div>
+      <div class="item-desc">{{ item.description }}</div>
+      {% if item.price_coins %}<div class="item-price coins">🪙 {{ item.price_coins }}</div>
+      {% elif item.price_gems %}<div class="item-price gems">💎 {{ item.price_gems }}</div>
+      {% else %}<div class="item-price free">رایگان</div>{% endif %}
+      <form method="post" action="/accounts/shop/buy/{{ item.id }}/">
+        {% csrf_token %}
+        <button type="submit" class="item-buy-btn {% if item.price_gems and not item.price_coins %}gem-buy{% endif %}">خرید</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if categories.theme %}
+  <div class="cat-header"><span class="icon">🎨</span><h2>تم‌ها</h2><span class="count">{{ categories.theme|length }}</span></div>
+  <div class="items-grid">
+    {% for item in categories.theme %}
+    <div class="item-card">
+      <span class="item-icon">{{ item.icon }}</span>
+      <div class="item-name">{{ item.name }}</div>
+      <div class="item-desc">{{ item.description }}</div>
+      {% if item.price_gems %}<div class="item-price gems">💎 {{ item.price_gems }}</div>
+      {% else %}<div class="item-price coins">🪙 {{ item.price_coins }}</div>{% endif %}
+      <form method="post" action="/accounts/shop/buy/{{ item.id }}/">
+        {% csrf_token %}
+        <button type="submit" class="item-buy-btn gem-buy">خرید</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if recent_purchases %}
+  <div class="cat-header"><span class="icon">📜</span><h2>خریدهای اخیر</h2></div>
+  {% for p in recent_purchases %}
+  <div class="purchase-item">
+    <div class="pi-icon">{{ p.item_icon }}</div>
+    <div class="pi-body">
+      <div class="pi-name">{{ p.item_name }}</div>
+      <div class="pi-meta">
+        {% if p.price_paid_coins %}{{ p.price_paid_coins }} سکه{% endif %}
+        {% if p.price_paid_gems %} {{ p.price_paid_gems }} جم{% endif %}
+        · {{ p.created_at|date:"Y/m/d H:i" }}
+      </div>
+    </div>
+    {% if p.reward_given %}<div style="font-size:11px; color:#86efac; font-weight:bold;">{{ p.reward_given }}</div>{% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
 {% endblock %}

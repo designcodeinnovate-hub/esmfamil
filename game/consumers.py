@@ -43,6 +43,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self._start_game()
         elif action == "submit":
             await self._handle_submit(content.get("answers", {}))
+        elif action == "chat":
+            await self._handle_chat(content.get("body", ""))
 
     @database_sync_to_async
     def _get_room(self):
@@ -114,6 +116,44 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def ev_round_start(self, event):
         await self.send_json({"type": "round_start", "letter": event["letter"], "duration": event["duration"]})
+
+
+    @database_sync_to_async
+    def _get_user_info(self):
+        return {
+            "user_id": self.user.id,
+            "sender": self.user.alias,
+            "avatar": get_emoji(self.user.avatar_id),
+        }
+
+    async def _handle_chat(self, body):
+        body = (body or "").strip()[:200]
+        if not body:
+            return
+        info = await self._get_user_info()
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                "type": "ev.chat_msg",
+                "user_id": info["user_id"],
+                "sender": info["sender"],
+                "avatar": info["avatar"],
+                "body": body,
+            },
+        )
+
+
+    async def ev_room_closed(self, event):
+        await self.send_json({"type": "room_closed"})
+
+    async def ev_chat_msg(self, event):
+        await self.send_json({
+            "type": "chat_msg",
+            "user_id": event["user_id"],
+            "sender": event["sender"],
+            "avatar": event["avatar"],
+            "body": event["body"],
+        })
 
     @database_sync_to_async
     def _handle_submit_db(self, answers):

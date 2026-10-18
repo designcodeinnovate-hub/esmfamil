@@ -3,53 +3,183 @@
 
 {% block extra_css %}
 <style>
-  .wait-box {
-    text-align: center; padding: 60px 20px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 24px; margin-top: 40px;
-  }
-  .spinner {
-    width: 90px; height: 90px; margin: 0 auto 26px;
-    border: 5px solid rgba(244,197,66,0.2);
-    border-top-color: var(--gold);
-    border-radius: 50%; animation: spin 1.2s linear infinite;
+  .wait-wrap {
+    text-align: center;
+    padding: 40px 20px 30px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(59,130,246,0.35), transparent 55%),
+      radial-gradient(circle at 50% 100%, rgba(139,92,246,0.2), transparent 55%),
+      linear-gradient(135deg, #0a1428, #0a0f1e, #0f0f1e);
+    border: 2px solid rgba(59,130,246,0.5);
+    border-radius: 28px;
+    margin-top: 20px;
     position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(59,130,246,0.3);
   }
-  .spinner::after {
-    content: "🎯"; position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); font-size: 32px;
+  .wait-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(96,165,250,0.1) 90deg,
+      transparent 180deg,
+      rgba(139,92,246,0.1) 270deg,
+      transparent 360deg
+    );
+    animation: waitRotate 10s linear infinite;
+    z-index: 0;
+    pointer-events: none;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  h1 {
-    font-size: 24px; margin-bottom: 10px;
-    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  @keyframes waitRotate { to { transform: rotate(360deg); } }
+
+  .wait-wrap > * { position: relative; z-index: 1; }
+
+  /* Radar spinner */
+  .radar {
+    width: 140px; height: 140px;
+    margin: 0 auto 26px;
+    position: relative;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%);
+  }
+  .radar::before,
+  .radar::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(96,165,250,0.4);
+    animation: radarPing 2.5s ease-out infinite;
+  }
+  .radar::before { inset: 30px; }
+  .radar::after  { inset: 30px; animation-delay: 1.25s; }
+  @keyframes radarPing {
+    0%   { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .radar-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(96,165,250,0.6) 60deg,
+      transparent 90deg
+    );
+    animation: sweep 2s linear infinite;
+    mask: radial-gradient(circle, black 40%, transparent 75%);
+    -webkit-mask: radial-gradient(circle, black 40%, transparent 75%);
+  }
+  @keyframes sweep { to { transform: rotate(360deg); } }
+  .radar-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    filter: drop-shadow(0 0 15px rgba(96,165,250,0.8));
+    animation: centerPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes centerPulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); }
+    50%     { transform: translate(-50%,-50%) scale(1.15); }
+  }
+
+  .wait-title {
+    font-size: 22px; font-weight: 900; margin-bottom: 8px;
+    background: linear-gradient(135deg, #bfdbfe, #60a5fa, #3b82f6);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  p.sub { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 20px; }
-  .count {
-    display: inline-block; background: rgba(244,197,66,0.15);
-    color: var(--gold); padding: 8px 20px; border-radius: 14px;
-    font-size: 15px; font-weight: bold; margin-bottom: 22px;
-    border: 1px solid rgba(244,197,66,0.3);
+  .wait-sub {
+    color: var(--muted); font-size: 13px; line-height: 1.7;
+    margin-bottom: 22px;
   }
+
+  .players-count {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 999px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(139,92,246,0.15));
+    border: 1.5px solid rgba(96,165,250,0.5);
+    color: #bfdbfe; font-size: 14px; font-weight: bold;
+    margin-bottom: 26px;
+    box-shadow: 0 6px 20px rgba(59,130,246,0.25);
+  }
+  .players-count .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4ade80; box-shadow: 0 0 10px #4ade80;
+    animation: dotPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .players-count b { color: #fff; font-family: monospace; font-size: 16px; }
+
+  .wait-tips {
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(96,165,250,0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    text-align: right;
+  }
+  .wait-tips .tip-title {
+    font-size: 11px; color: #93c5fd; font-weight: bold;
+    margin-bottom: 8px; letter-spacing: 0.5px;
+  }
+  .wait-tips ul {
+    list-style: none; padding: 0; margin: 0;
+  }
+  .wait-tips li {
+    font-size: 12px; color: #cbd5e1;
+    padding: 3px 0; line-height: 1.6;
+  }
+  .wait-tips li::before { content: "✦ "; color: #60a5fa; margin-left: 4px; }
+
   .cancel-btn {
-    display: inline-block; padding: 14px 32px; border-radius: 14px;
-    background: rgba(239,68,68,0.15); color: #f87171;
-    border: 1px solid rgba(239,68,68,0.35);
-    text-decoration: none; font-weight: bold; font-size: 15px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 13px 32px; border-radius: 14px;
+    background: rgba(239,68,68,0.15); color: #fca5a5;
+    border: 1.5px solid rgba(239,68,68,0.4);
+    text-decoration: none; font-weight: bold; font-size: 14px;
+    transition: all 0.2s;
+  }
+  .cancel-btn:hover {
+    background: rgba(239,68,68,0.3);
+    border-color: #ef4444;
+    color: #fff;
+    transform: translateY(-2px);
   }
 </style>
 {% endblock %}
 
 {% block content %}
-  <div class="wait-box">
-    <div class="spinner"></div>
-    <h1>در حال جستجوی حریف…</h1>
-    <p class="sub">کمی صبر کن. وقتی یه نفر پیدا شه،<br>خودکار به اتاق بازی می‌ری.</p>
-    <div class="count" id="countBox">در انتظار…</div>
-    <br>
-    <a href="/game/match/cancel/" class="cancel-btn">✕ لغو</a>
+  <div class="wait-wrap">
+    <div class="radar">
+      <div class="radar-sweep"></div>
+      <div class="radar-center">🎯</div>
+    </div>
+
+    <div class="wait-title">در حال جستجوی حریف...</div>
+    <div class="wait-sub">کمی صبر کن، به‌محض پیدا شدن<br>حریف، خودکار به بازی می‌ری.</div>
+
+    <div class="players-count">
+      <span class="dot"></span>
+      <span>در صف:</span>
+      <b id="countBox">...</b>
+      <span>نفر</span>
+    </div>
+
+    <div class="wait-tips">
+      <div class="tip-title">💡 نکته</div>
+      <ul>
+        <li>بازی سریع شروع می‌شه، آماده باش</li>
+        <li>می‌تونی هم‌زمان با دوستات هم بازی کنی</li>
+        <li>اگه خسته شدی، لغو کن</li>
+      </ul>
+    </div>
+
+    <a href="/game/match/cancel/" class="cancel-btn">✕ لغو جستجو</a>
   </div>
 {% endblock %}
 
@@ -75,11 +205,20 @@
         } else if (data.status === 'cancelled') {
           clearInterval(interval);
           window.location.href = '/game/rooms/';
-        } else if (data.count) {
-          document.getElementById('countBox').textContent = data.count + ' نفر در صف';
+        } else if (data.count !== undefined) {
+          const box = document.getElementById('countBox');
+          if (box) box.textContent = data.count;
         }
       })
       .catch(e => console.log(e));
+  }
+</script>
+
+<script>
+  // Pause background music during gameplay
+  if (window.__music) {
+    window.__music.isGameplay = true;
+    window.__music.pause();
   }
 </script>
 {% endblock %}

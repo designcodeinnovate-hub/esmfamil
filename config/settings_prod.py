@@ -30,4 +30,38 @@ if _redis:
         }
     }
 
+
+# ============================================================
+# CSRF & Security (FIXED)
+# ============================================================
+_csrf = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+if _csrf:
+    CSRF_TRUSTED_ORIGINS = [u.strip() for u in _csrf.split(",") if u.strip()]
+else:
+    # Fallback: allow current Runflare domain
+    CSRF_TRUSTED_ORIGINS = [
+        "https://esmfamil-c78-esmfamil-db.runflare.cloud",
+        "https://esmfamil.com",
+        "https://www.esmfamil.com",
+    ]
+
+# Make sure ALLOWED_HOSTS includes runflare domain
+_runflare = "esmfamil-c78-esmfamil-db.runflare.cloud"
+if _runflare not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_runflare)
+if "esmfamil.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("esmfamil.com")
+if "www.esmfamil.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("www.esmfamil.com")
+
+# SSL proxy header (critical for CSRF behind proxy)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+# ===== Security (auto-added) =====
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_HSTS_SECONDS = 0

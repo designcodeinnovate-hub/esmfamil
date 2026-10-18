@@ -1,0 +1,14 @@
+from django.urls import path
+from . import views
+
+app_name = "alliance"
+
+urlpatterns = [
+    path("", views.alliance_home, name="home"),
+    path("create/", views.create_alliance, name="create"),
+    path("join/", views.join_by_code, name="join"),
+    path("<int:alliance_id>/", views.alliance_detail, name="detail"),
+    path("<int:alliance_id>/chat/", views.alliance_chat, name="chat"),
+    path("<int:alliance_id>/leave/", views.leave_alliance, name="leave"),
+    path("<int:alliance_id>/kick/<int:user_id>/", views.kick_member, name="kick"),
+]

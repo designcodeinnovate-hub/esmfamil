@@ -11,6 +11,7 @@ urlpatterns = [
     path("reject/<int:req_id>/", views.reject_request, name="reject_request"),
     path("remove/<int:user_id>/", views.remove_friend, name="remove_friend"),
     path("chat/<int:user_id>/", views.chat_view, name="chat"),
+    path("notifications/", views.notifications_view, name="notifications"),
     
     # دعوت به بازی
     path("invite/<int:user_id>/", views.send_game_invite, name="send_game_invite"),

@@ -317,20 +317,47 @@
     background: rgba(239, 68, 68, 0.4);
     color: #fff;
   }
+
+  .wallet-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 12px; text-decoration: none; font-size: 12px; font-weight: bold; font-family: monospace; transition: 0.2s; }
+  .wallet-coins { background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(234,179,8,0.1)); border: 1.5px solid rgba(244,197,66,0.5); color: #fde68a; }
+  .wallet-gems { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1)); border: 1.5px solid rgba(139,92,246,0.5); color: #c4b5fd; }
+  .wallet-chip:hover { transform: scale(1.05); }
+  .wallet-chip .wc-icon { font-size: 14px; }
+  .wallet-chip .wc-num { color: #fff; font-size: 13px; font-weight: 900; }
+
+  .beta-badge-animated {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #eab308, #f59e0b);
+    color: #1a1a1a;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    box-shadow: 0 4px 12px rgba(234,179,8,0.4);
+    animation: betaPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes betaPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(234,179,8,0.4); }
+    50%      { transform: scale(1.08); box-shadow: 0 6px 20px rgba(234,179,8,0.7); }
+  }
 </style>
+
+
 {% endblock %}
 
 {% block content %}
 
-  <div class="top-bar">
-    <div class="version-badge">
-      <span>🧪</span>
-      <span>نسخه آزمایشی</span>
-    </div>
+  <div class="top-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+  <div class="beta-badge-animated">
+    <span style="font-size:14px;">🧪</span>
+    <span>نسخه آزمایشی</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px;">
     <a href="/accounts/settings/" class="settings-icon" title="تنظیمات">⚙️</a>
   </div>
+</div>
 
-  <div class="user-row">
+<div class="user-row">
     {% if user.avatar_type == "image" and user.avatar_id %}
       <div class="user-av-box image-bg" style="background-image: url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');"></div>
     {% else %}
@@ -367,29 +394,23 @@
   {% endif %}
 
   <!-- دو دکمه دایره‌ای کوچیک بالا -->
-  <div class="round-row">
-    <a href="/game/top-players/" class="round-btn round-top" title="بازیکنان برتر">
-      <span class="rb-icon">⭐</span>
-      <span class="rb-label">برتر</span>
-    </a>
-    <a href="/accounts/shop/" class="round-btn round-shop" title="فروشگاه">
-      <span class="rb-icon">🛒</span>
-      <span class="rb-label">فروشگاه</span>
-    </a>
-  </div>
-
-  <!-- بازی با بات -->
-  <a href="/game/quick/" class="bot-btn">
-    <div class="bb-icon">⚡</div>
-    <div class="bb-body">
-      <div class="bb-title">بازی با بات</div>
-      <div class="bb-desc">سه سطح سختی — همین الان بازی کن</div>
-    </div>
-    <div class="bb-arrow">←</div>
+  <div class="round-row" style="display:flex; gap:10px; justify-content:flex-end; margin-bottom:14px; flex-wrap:wrap;">
+  <a href="/game/top-players/" class="round-btn round-top" title="بازیکنان برتر">
+    <span class="rb-icon">⭐</span>
+    <span class="rb-label">برتر</span>
   </a>
+  <div class="round-btn round-shop-disabled" title="به زودی" style="opacity:0.45; cursor:not-allowed; background:rgba(148,163,184,0.15); border:1.5px solid rgba(148,163,184,0.25);">
+    <span class="rb-icon" style="filter:grayscale(1);">🛒</span>
+    <span class="rb-label" style="color:#94a3b8;">به زودی</span>
+  </div>
+  <a href="/accounts/support/" class="round-btn round-top" title="پشتیبانی" style="background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(6,182,212,0.15)); border-color: rgba(59,130,246,0.55);">
+    <span class="rb-icon">💬</span>
+    <span class="rb-label">پشتیبانی</span>
+  </a>
+</div>
 
-  <!-- اعلان‌ها -->
-  <a href="/social/notifications/" class="notif-btn">
+<!-- اعلان‌ها -->
+  <a href="/notifications/" class="notif-btn">
     <div class="nb-icon">
       🔔
       {% if unread_notifications %}
@@ -406,13 +427,12 @@
   </a>
 
   <!-- چالش -->
-  <div class="challenge-btn" onclick="alert('⚔️ چالش هنوز آماده نیست!\\n\\nبه‌زودی می‌تونی با دوستات به چالش بپردازی.')">
-    <span class="soon-badge">به‌زودی</span>
+  <a href="/game/challenge/" class="challenge-btn" style="text-decoration:none;">
     <div class="ch-icon">⚔️</div>
     <div class="ch-body">
       <div class="ch-title">چالش</div>
-      <div class="ch-desc">با دوستات رقابت کن</div>
+      <div class="ch-desc">تورنمنت، مسابقه روزانه و ساعتی</div>
     </div>
-  </div>
+  </a>
 
 {% endblock %}

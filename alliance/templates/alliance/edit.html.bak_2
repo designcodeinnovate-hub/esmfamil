@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}ویرایش اتحاد{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head h1 { font-size: 22px; font-weight: bold; }
+  .page-head h1 span { color: var(--gold); }
+  .error-msg {
+    background: rgba(239,68,68,0.15); color: #fca5a5;
+    border: 1px solid rgba(239,68,68,0.35);
+    padding: 12px 16px; border-radius: 12px;
+    margin-bottom: 14px; font-size: 13px; text-align: right;
+  }
+  .box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 14px; }
+  .box h3 { font-size: 14px; color: var(--gold); margin-bottom: 16px; }
+  label { display: block; color: var(--muted); font-size: 13px; margin: 12px 0 6px; }
+  input[type=text], input[type=password], input[type=number], textarea {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 15px; font-family: inherit;
+    box-sizing: border-box;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--purple); }
+  .emojis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .emoji-opt {
+    padding: 12px 0; text-align: center; font-size: 26px;
+    background: var(--bg); border: 2px solid transparent;
+    border-radius: 12px; cursor: pointer; transition: 0.15s;
+  }
+  .emoji-opt:hover { border-color: var(--gold); }
+  .emoji-opt input { display: none; }
+  .emoji-opt:has(input:checked) {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, rgba(244,197,66,0.25), rgba(139,92,246,0.15));
+    box-shadow: 0 0 20px rgba(244,197,66,0.35);
+  }
+  button.save {
+    width: 100%; margin-top: 16px; padding: 16px;
+    border: none; border-radius: 14px;
+    font-size: 16px; font-weight: bold;
+    font-family: inherit; cursor: pointer;
+    color: #fff;
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    box-shadow: 0 10px 30px rgba(139,92,246,0.4);
+    transition: 0.2s;
+  }
+  button.save:hover { transform: translateY(-2px); }
+  .current-info {
+    background: rgba(139,92,246,0.08);
+    border: 1px dashed rgba(139,92,246,0.3);
+    border-radius: 12px; padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 12px; color: var(--muted);
+  }
+  .current-info b { color: var(--purple); }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <a href="/alliance/{{ alliance.id }}/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <h1>✏️ <span>ویرایش اتحاد</span></h1>
+  </div>
+
+  {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="box">
+      <h3>🎨 نماد اتحاد</h3>
+      <div class="emojis">
+        {% for e in emojis %}
+          <label class="emoji-opt">
+            <input type="radio" name="emblem" value="{{ e }}" {% if e == alliance.emblem %}checked{% endif %}>
+            {{ e }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="current-info">
+        <b>راهنما:</b> رهبر می‌تونه نام، تگ، توضیح، ظرفیت و رمز رو تغییر بده.
+      </div>
+
+      <h3>📝 اطلاعات اتحاد</h3>
+      <label>نام اتحاد</label>
+      <input type="text" name="name" maxlength="40" required value="{{ alliance.name }}">
+
+      <label>تگ (اختیاری)</label>
+      <input type="text" name="tag" maxlength="8" value="{{ alliance.tag }}" placeholder="مثلاً IRN">
+
+      <label>توضیح</label>
+      <textarea name="description" maxlength="200" placeholder="درباره اتحاد...">{{ alliance.description }}</textarea>
+    </div>
+
+    <div class="box">
+      <h3>⚙️ تنظیمات</h3>
+
+      <label>ظرفیت اعضا (۵ تا ۵۰)</label>
+      <input type="number" name="max_members" min="5" max="50" value="{{ alliance.max_members }}">
+
+      <label>رمز اتحاد (اختیاری — خالی = بدون رمز)</label>
+      <input type="password" name="password" maxlength="32" value="{{ alliance.password }}" placeholder="خالی = بدون رمز">
+    </div>
+
+    <button type="submit" class="save">💾 ذخیره تغییرات</button>
+  </form>
+{% endblock %}

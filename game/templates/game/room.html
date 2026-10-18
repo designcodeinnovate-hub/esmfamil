@@ -1,134 +1,118 @@
 {% extends "base.html" %}
-{% block title %}اتاق {{ room.room_name }}{% endblock %}
-
+{% block title %}{{ room.room_name }}{% endblock %}
 {% block extra_css %}
 <style>
-  .room-header { text-align: center; padding: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 16px; }
-  .room-name { font-size: 22px; font-weight: bold; color: var(--gold); margin-bottom: 6px; }
-  .room-host { font-size: 13px; color: var(--muted); }
-
-  .players-box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 16px; }
-  .players-box h3 { font-size: 15px; color: var(--gold); margin-bottom: 14px; }
-  .player-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .player-row:last-child { border-bottom: none; }
-  .player-av { width: 42px; height: 42px; border-radius: 50%; background: rgba(51,65,85,0.5); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-  .player-av.ready { border: 2px solid #22c55e; box-shadow: 0 0 12px rgba(34,197,94,0.4); }
-  .player-info { flex: 1; }
-  .player-name { font-weight: bold; margin-bottom: 2px; }
-  .player-status { font-size: 11px; padding: 3px 8px; border-radius: 6px; }
-  .status-ready { background: rgba(34,197,94,0.2); color: #4ade80; }
-  .status-wait { background: rgba(148,163,184,0.15); color: var(--muted); }
-
-  .actions { display: flex; gap: 10px; flex-direction: column; }
-  .btn { padding: 14px; border-radius: 14px; font-size: 15px; font-weight: bold; font-family: inherit; cursor: pointer; text-align: center; border: none; transition: 0.2s; text-decoration: none; }
-  .btn-ready { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
-  .btn-unready { background: rgba(148,163,184,0.15); color: var(--text); border: 1px solid var(--border); }
-  .btn-start { background: linear-gradient(135deg, #f4c542, #eab308); color: #1a1a1a; }
-
-  .chat-box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; margin-top: 16px; }
-  .chat-box h3 { font-size: 15px; color: var(--gold); margin-bottom: 12px; }
-  .chat-messages { max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
-  .chat-msg { padding: 8px 12px; background: var(--bg); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
-  .chat-msg .sender { color: var(--gold); font-weight: bold; margin-left: 6px; }
-  .chat-input { display: flex; gap: 8px; }
-  .chat-input input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: #fff; font-family: inherit; }
-  .chat-input button { padding: 10px 18px; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.room-hero{text-align:center;padding:24px 20px;background:radial-gradient(circle at 100% 0%,rgba(139,92,246,.3),transparent 60%),linear-gradient(135deg,#1a0f2e,#0f0f1e);border:1.5px solid rgba(139,92,246,.4);border-radius:22px;margin-bottom:16px}
+.room-name{font-size:22px;font-weight:900;margin-bottom:6px;background:linear-gradient(135deg,#c4b5fd,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.room-meta{font-size:12px;color:var(--muted)}
+.game-type-badge{display:inline-block;padding:6px 16px;border-radius:10px;background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:#86efac;font-weight:bold;font-size:13px;margin-top:10px}
+.players-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:16px}
+.players-card h3{font-size:15px;color:var(--gold);margin-bottom:14px;display:flex;justify-content:space-between}
+.player-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.player-row:last-child{border-bottom:none}
+.pav{width:44px;height:44px;border-radius:50%;background:rgba(15,23,42,.6);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;background-size:cover;background-position:center}
+.pav.ready{border-color:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.5)}
+.pinfo{flex:1}
+.pname{font-size:14px;font-weight:bold;color:#fff;display:flex;align-items:center;gap:6px}
+.host-badge{background:linear-gradient(135deg,#f4c542,#eab308);color:#1a1a1a;font-size:9px;padding:2px 6px;border-radius:5px;font-weight:900}
+.pstatus{font-size:11px;margin-top:2px}
+.pstatus.ready{color:#4ade80}
+.pstatus.wait{color:var(--muted)}
+.actions{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.act-btn{flex:1;min-width:140px;padding:16px;border:none;border-radius:14px;font-family:inherit;font-weight:900;font-size:15px;cursor:pointer;transition:0.2s}
+.btn-ready{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 8px 20px rgba(34,197,94,.4)}
+.btn-notready{background:rgba(148,163,184,.2);color:#cbd5e1;border:1px solid var(--border)}
+.btn-start{background:linear-gradient(135deg,#f4c542,#eab308);color:#1a1a1a;box-shadow:0 8px 20px rgba(244,197,66,.4)}
+.btn-start:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.ready-info{text-align:center;padding:12px;background:rgba(34,197,94,.08);border-radius:12px;font-size:13px;color:#86efac;margin-bottom:16px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-bg.active{display:flex}
+.modal{background:linear-gradient(135deg,rgba(30,41,59,.98),rgba(15,23,42,.98));border:1.5px solid rgba(139,92,246,.5);border-radius:24px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.7)}
+.modal h3{font-size:20px;font-weight:900;text-align:center;margin-bottom:6px;background:linear-gradient(135deg,#c4b5fd,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.modal p{text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px}
+.game-opt{display:block;padding:14px 16px;margin-bottom:8px;border-radius:14px;background:rgba(15,23,42,.6);border:1.5px solid var(--border);cursor:pointer;font-size:15px;font-weight:bold;color:#fff;transition:.2s;text-align:center}
+.game-opt:hover{border-color:var(--purple);background:rgba(139,92,246,.2);transform:translateX(-3px)}
 </style>
 {% endblock %}
-
 {% block content %}
-  <div class="room-header">
-    <div class="room-name">{{ room.room_name }}</div>
-    <div class="room-host">میزبان: {{ room.host.alias }} — ظرفیت: {{ room.max_players }} نفر</div>
-  </div>
+<div class="head"><a href="/game/rooms/manage/" class="back-btn"><span class="arrow-icon">→</span></a></div>
 
-  <div class="players-box">
-    <h3>👥 بازیکنان ({{ players|length }})</h3>
-    <div id="playersList">
-      {% for p in players %}
-        <div class="player-row">
-          <div class="player-av {% if p.is_ready %}ready{% endif %}">{{ p.avatar }}</div>
-          <div class="player-info">
-            <div class="player-name">{{ p.alias }}{% if p.user_id == user.id %} (شما){% endif %}</div>
-          </div>
-          {% if p.is_ready %}
-            <span class="player-status status-ready">آماده</span>
-          {% else %}
-            <span class="player-status status-wait">در انتظار</span>
-          {% endif %}
+<div class="room-hero">
+  <div class="room-name">{{ room.room_name }}</div>
+  <div class="room-meta">میزبان: {{ host_avatar }} {{ host.alias }}{% if is_host %} (شما){% endif %} · {{ players|length }} / {{ room.max_players }} نفر</div>
+  {% if room.intended_game_type %}
+    <div class="game-type-badge">🎮 {{ game_type_display }}</div>
+  {% else %}
+    <div class="game-type-badge" style="background:rgba(234,179,8,.2);border-color:rgba(234,179,8,.4);color:#fde68a;">در انتظار انتخاب بازی توسط میزبان</div>
+  {% endif %}
+</div>
+
+{% if ready_count > 0 %}
+<div class="ready-info">✓ {{ ready_count }} بازیکن آماده‌ست</div>
+{% endif %}
+
+<div class="players-card">
+  <h3>👥 بازیکنان <span style="font-size:11px;color:var(--muted);">{{ players|length }} / {{ room.max_players }}</span></h3>
+  {% for p in players %}
+    <div class="player-row">
+      {% if p.avatar_type == 'image' and p.avatar_id %}
+        <div class="pav {% if p.is_ready %}ready{% endif %}" style="background-image:url('/static/avatars/images/{{ p.avatar_id|stringformat:"03d" }}.jpg');"></div>
+      {% else %}
+        <div class="pav {% if p.is_ready %}ready{% endif %}">{{ p.avatar }}</div>
+      {% endif %}
+      <div class="pinfo">
+        <div class="pname">
+          {{ p.alias }}
+          {% if p.is_host %}<span class="host-badge">👑 میزبان</span>{% endif %}
+          {% if p.is_me %}<span style="color:var(--teal);font-size:10px;">(شما)</span>{% endif %}
         </div>
-      {% endfor %}
+        <div class="pstatus {% if p.is_ready %}ready{% else %}wait{% endif %}">
+          {% if p.is_ready %}✓ آماده{% else %}⏳ در انتظار{% endif %}
+        </div>
+      </div>
+      <div style="font-size:16px;font-weight:900;color:var(--gold);font-family:monospace;">{{ p.score }}</div>
     </div>
-  </div>
+  {% endfor %}
+</div>
 
-  <div class="actions">
-    <button id="btnReady" class="btn btn-ready">✅ آماده‌ام</button>
-    {% if user.id == room.host_id %}
-      <button id="btnStart" class="btn btn-start" style="display:none;">🚀 شروع بازی</button>
-    {% endif %}
-  </div>
+<div class="actions">
+  {% if not is_host %}
+    <form method="post" style="flex:1;margin:0;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_ready">
+      <button type="submit" class="act-btn {% if my_is_ready %}btn-notready{% else %}btn-ready{% endif %}" style="width:100%;">
+        {% if my_is_ready %}✗ لغو آمادگی{% else %}✓ من آماده‌ام{% endif %}
+      </button>
+    </form>
+  {% else %}
+    <form method="post" style="flex:1;margin:0;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="start_game">
+      <button type="submit" class="act-btn btn-start" style="width:100%;" {% if not can_start %}disabled{% endif %}>
+        🚀 شروع بازی{% if not can_start %} (نیاز به ۲+ آماده){% endif %}
+      </button>
+    </form>
+  {% endif %}
+</div>
 
-  <div class="chat-box">
-    <h3>💬 چت اتاق</h3>
-    <div class="chat-messages" id="chatMessages"></div>
-    <form class="chat-input" id="chatForm">
-      <input type="text" id="chatInput" placeholder="پیامت را بنویس..." autocomplete="off">
-      <button type="submit">ارسال</button>
+<!-- Modal: select game type (host only, if not selected yet) -->
+{% if is_host and not room.intended_game_type %}
+<div class="modal-bg active" id="selectGameModal">
+  <div class="modal">
+    <h3>🎮 انتخاب بازی</h3>
+    <p>یه بازی انتخاب کن تا بقیه ببینن</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="select_game_type">
+      <button type="submit" name="game_type" value="player" class="game-opt">⚔️ با پلیر (۱v۱)</button>
+      <button type="submit" name="game_type" value="team" class="game-opt">🛡️ تیمی (۲v۲)</button>
+      <button type="submit" name="game_type" value="challenge" class="game-opt">🔥 چالشی</button>
+      <button type="submit" name="game_type" value="speed" class="game-opt">⏱️ سرعتی</button>
+      <button type="submit" name="game_type" value="puzzle" class="game-opt">🎯 معما</button>
+      <button type="submit" name="game_type" value="bot" class="game-opt">🤖 با بات</button>
     </form>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const roomCode = "{{ room.code }}";
-const myId = {{ user.id }};
-
-const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-const ws = new WebSocket(`${proto}//${window.location.host}/ws/game/${roomCode}/`);
-const $ = id => document.getElementById(id);
-
-ws.onmessage = (e) => {
-  const msg = JSON.parse(e.data);
-  if (msg.type === "state") onState(msg.state);
-  else if (msg.type === "chat") onChat(msg);
-};
-
-function send(obj) { ws.send(JSON.stringify(obj)); }
-
-function onState(s) {
-  const list = s.players.map(p => {
-    const me = p.user_id === myId ? " (شما)" : "";
-    return `<div class="player-row">
-      <div class="player-av ${p.is_ready ? 'ready' : ''}">${p.avatar || '👤'}</div>
-      <div class="player-info"><div class="player-name">${p.alias || p.user__alias}${me}</div></div>
-      <span class="player-status ${p.is_ready ? 'status-ready' : 'status-wait'}">${p.is_ready ? 'آماده' : 'در انتظار'}</span>
-    </div>`;
-  }).join("");
-  $("playersList").innerHTML = list;
-
-  const allReady = s.players.length >= 2 && s.players.every(p => p.is_ready);
-  if ($("btnStart")) {
-    $("btnStart").style.display = allReady ? "block" : "none";
-  }
-}
-
-function onChat(msg) {
-  const el = document.createElement("div");
-  el.className = "chat-msg";
-  el.innerHTML = `<span class="sender">${msg.sender}:</span> ${msg.body}`;
-  $("chatMessages").appendChild(el);
-  $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
-}
-
-$("btnReady").onclick = () => send({ action: "ready" });
-if ($("btnStart")) $("btnStart").onclick = () => send({ action: "start" });
-
-$("chatForm").onsubmit = (e) => {
-  e.preventDefault();
-  const text = $("chatInput").value.trim();
-  if (!text) return;
-  send({ action: "chat", body: text });
-  $("chatInput").value = "";
-};
-</script>
+</div>
+{% endif %}
 {% endblock %}

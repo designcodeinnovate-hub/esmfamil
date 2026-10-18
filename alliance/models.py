@@ -25,6 +25,7 @@ class Alliance(models.Model):
         related_name="led_alliances",
     )
     max_members = models.PositiveIntegerField(default=30)
+    password = models.CharField(max_length=32, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

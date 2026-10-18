@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}پشتیبانی{% endblock %}
+{% block extra_css %}
+<style>
+.head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.head h1{font-size:22px;font-weight:bold}
+.head h1 span{color:var(--gold)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px}
+.card h3{font-size:15px;color:var(--gold);margin-bottom:14px}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:bold}
+.form-row input,.form-row textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:#fff;font-size:14px;font-family:inherit;box-sizing:border-box}
+.form-row textarea{min-height:100px;resize:vertical}
+.form-row input:focus,.form-row textarea:focus{outline:none;border-color:var(--gold)}
+.btn-send{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-family:inherit;font-weight:bold;font-size:15px;cursor:pointer}
+.ticket-item{display:flex;align-items:center;gap:12px;padding:14px;background:rgba(15,23,42,.5);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;text-decoration:none;color:#fff;transition:.2s}
+.ticket-item:hover{border-color:var(--purple);transform:translateX(-3px)}
+.ticket-icon{width:42px;height:42px;border-radius:10px;background:rgba(139,92,246,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ticket-body{flex:1;min-width:0}
+.ticket-subject{font-size:14px;font-weight:bold;margin-bottom:3px;color:#fff}
+.ticket-meta{font-size:11px;color:var(--muted);font-family:monospace}
+.ticket-status{padding:4px 10px;border-radius:8px;font-size:10px;font-weight:bold}
+.status-open{background:rgba(234,179,8,.2);color:#fde68a}
+.status-answered{background:rgba(34,197,94,.2);color:#4ade80}
+.status-closed{background:rgba(100,116,139,.2);color:#cbd5e1}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px}
+.empty .icon{font-size:50px;display:block;margin-bottom:10px;opacity:.5}
+.msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px}
+.msg-success{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.msg-error{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.35)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head"><a href="/game/" class="back-btn"><span class="arrow-icon">→</span></a><h1>💬 <span>پشتیبانی</span></h1></div>
+
+{% if messages %}{% for m in messages %}<div class="msg msg-{{ m.tags }}">{{ m }}</div>{% endfor %}{% endif %}
+
+<div class="card">
+  <h3>📝 ارسال تیکت جدید</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-row"><label>موضوع</label><input type="text" name="subject" required maxlength="100" placeholder="خلاصه مشکل..."></div>
+    <div class="form-row"><label>توضیحات</label><textarea name="body" required maxlength="2000" placeholder="جزئیات مشکل یا انتقاد یا پیشنهاد..."></textarea></div>
+    <button type="submit" class="btn-send">📤 ارسال تیکت</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>📋 تیکت‌های من ({{ tickets|length }})</h3>
+  {% if tickets %}
+    {% for t in tickets %}
+      <a href="{% url 'accounts:support_detail' t.id %}" class="ticket-item">
+        <div class="ticket-icon">💬</div>
+        <div class="ticket-body">
+          <div class="ticket-subject">{{ t.subject }}</div>
+          <div class="ticket-meta">{{ t.created_at|date:"Y/m/d H:i" }} · {{ t.message_count }} پیام</div>
+          {% if t.last_msg %}<div class="ticket-meta" style="margin-top:2px;">{{ t.last_msg }}</div>{% endif %}
+        </div>
+        <span class="ticket-status status-{{ t.status }}">{{ t.status_display }}</span>
+      </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty"><span class="icon">📭</span>هنوز تیکتی ارسال نکردی.</div>
+  {% endif %}
+</div>
+{% endblock %}

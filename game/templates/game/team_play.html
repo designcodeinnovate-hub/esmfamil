@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}بازی تیمی - راند {{ round.number }}{% endblock %}
+{% block extra_css %}
+<style>
+  .team-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; }
+  .letter-big { width: 66px; height: 66px; border-radius: 50%; background: radial-gradient(circle, rgba(244,197,66,0.3), transparent); display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; color: var(--gold); border: 3px solid rgba(244,197,66,0.5); animation: lp 2s infinite; }
+  @keyframes lp { 0%,100% { box-shadow: 0 0 0 0 rgba(244,197,66,0.7); } 50% { box-shadow: 0 0 0 12px rgba(244,197,66,0); } }
+  .round-info { flex: 1; }
+  .round-info .lbl { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .round-info .title { font-size: 16px; font-weight: bold; color: #fff; }
+  .timer-big { font-size: 26px; font-weight: 900; font-family: monospace; color: var(--gold); }
+
+  .teams-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .mini-team { padding: 10px; border-radius: 12px; text-align: center; font-size: 12px; }
+  .mini-a { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: #93c5fd; }
+  .mini-b { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; }
+  .mini-team .players { font-size: 11px; margin-top: 4px; opacity: 0.85; }
+
+  .answer-row { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(15,23,42,0.5)); padding: 8px 14px; border-radius: 14px; border: 1.5px solid rgba(148,163,184,0.15); margin-bottom: 8px; }
+  .answer-row .label { width: 82px; color: var(--gold); font-size: 13px; font-weight: bold; }
+  .answer-row input { flex: 1; background: transparent; border: none; color: #fff; font-size: 15px; padding: 6px 4px; font-family: inherit; }
+  .answer-row input:focus { outline: none; }
+
+  .submit-bar { position: fixed; left: 16px; right: 16px; max-width: 520px; margin: 0 auto; bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 8px); z-index: 50; }
+  .stop-btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-family: inherit; font-weight: 900; font-size: 17px; cursor: pointer; color: #fff; background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 10px 30px rgba(239,68,68,0.5); }
+
+  .waiting-box { text-align: center; padding: 40px 20px; background: var(--card); border: 2px dashed rgba(139,92,246,0.4); border-radius: 20px; margin-top: 20px; }
+  .waiting-box .icon { font-size: 60px; margin-bottom: 12px; }
+  .waiting-box h2 { font-size: 18px; color: #c4b5fd; margin-bottom: 8px; }
+  .waiting-box p { color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .answers-grid { padding-bottom: 90px; }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="team-header">
+    <div class="letter-big">{{ round.letter }}</div>
+    <div class="round-info">
+      <div class="lbl">راند {{ round.number }} از ۳</div>
+      <div class="title">بازی تیمی</div>
+    </div>
+    <div class="timer-big" id="timer">{{ duration }}</div>
+  </div>
+
+  <div class="teams-mini">
+    <div class="mini-team mini-a">
+      <div>🔵 تیم آبی {% if my_p.team == "A" %}(شما){% endif %}</div>
+      <div class="players">
+        {% for p in team_a_players %}
+          {{ p.user.alias }}{% if p.stopped_round == round.number %} ✓{% endif %}{% if not forloop.last %} · {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    <div class="mini-team mini-b">
+      <div>🔴 تیم قرمز {% if my_p.team == "B" %}(شما){% endif %}</div>
+      <div class="players">
+        {% for p in team_b_players %}
+          {{ p.user.alias }}{% if p.stopped_round == round.number %} ✓{% endif %}{% if not forloop.last %} · {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if my_stopped %}
+    <div class="waiting-box">
+      <div class="icon">{% if teammate_stopped %}✅{% else %}⏳{% endif %}</div>
+      <h2>{% if teammate_stopped %}تیم شما آماده!{% else %}منتظر هم‌تیمی...{% endif %}</h2>
+      <p>{% if teammate_stopped %}وقتی تیم مقابل هم استوپ کرد، امتیازها حساب می‌شن.{% else %}شما استوپ زدی، حالا منتظر هم‌تیمی هستیم.{% endif %}</p>
+    </div>
+  {% else %}
+    <form method="post" id="form">
+      {% csrf_token %}
+      <div class="answers-grid">
+        {% for c in categories %}
+          <div class="answer-row">
+            <div class="label">{{ c }}</div>
+            <input type="text" name="cat_{{ c }}" autocomplete="off" maxlength="64" placeholder="با {{ round.letter }} شروع شود...">
+          </div>
+        {% endfor %}
+      </div>
+      <div class="submit-bar">
+        <button type="submit" class="stop-btn">✋ استوپ!</button>
+      </div>
+    </form>
+  {% endif %}
+
+<script>
+  let left = {{ duration }} - {{ elapsed }};
+  if (left < 0) left = 0;
+  const timerEl = document.getElementById('timer');
+  const timer = setInterval(() => {
+    left--;
+    if (timerEl) timerEl.textContent = left;
+    if (left <= 0) { clearInterval(timer); }
+  }, 1000);
+
+  let lastState = "{% if my_stopped %}1{% else %}0{% endif %}-{% if teammate_stopped %}1{% else %}0{% endif %}";
+  setInterval(() => {
+    fetch('/game/team/play-status/{{ game.code }}/').then(r=>r.json()).then(d => {
+      if (d.status === 'round_end') { clearInterval(timer); window.location.href = d.url; return; }
+      if (d.status === 'playing') {
+        const st = (d.my_stopped ? 1 : 0) + "-" + (d.teammate_stopped ? 1 : 0);
+        if (st !== lastState) { window.location.reload(); }
+      }
+    }).catch(()=>{});
+  }, 2000);
+</script>
+{% endblock %}
+
+<script>
+  // Pause background music during gameplay
+  if (window.__music) {
+    window.__music.isGameplay = true;
+    window.__music.pause();
+  }
+</script>

@@ -38,6 +38,7 @@ class Notification(models.Model):
         ("game_invite", "دعوت به بازی"),
         ("game_result", "نتیجه بازی"),
         ("alliance_invite", "دعوت به اتحاد"),
+        ("admin_broadcast", "اعلان مدیر"),
     ]
 
     user = models.ForeignKey(
@@ -51,6 +52,11 @@ class Notification(models.Model):
     url = models.CharField(max_length=200, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
 
     class Meta:
         ordering = ("-created_at",)
@@ -68,3 +74,21 @@ class GameInvite(models.Model):
     
     def __str__(self):
         return f"{self.from_user.alias} -> {self.to_user.alias} ({self.status})"
+
+
+class NotificationRead(models.Model):
+    """Track when each user reads a broadcast notification."""
+    notification = models.ForeignKey(
+        Notification, on_delete=models.CASCADE, related_name="reads"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+"
+    )
+    read_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("notification", "user")
+        ordering = ("-read_at",)
+
+    def __str__(self):
+        return f"{self.user.alias} read #{self.notification_id}"

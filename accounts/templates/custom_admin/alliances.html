@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اتحادها — پنل ادمین</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 1300px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(239,68,68,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; }
+    .topbar h1 { font-size: 20px; color: #fca5a5; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold; }
+    
+    
+    
+    
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+    .search-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-row input { flex: 1; padding: 13px 18px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.2); background: #1a1a2e; color: #fff; font-size: 15px; font-family: inherit; }
+    .search-row input:focus { outline: none; border-color: #facc15; }
+    .search-row button { padding: 13px 22px; border-radius: 12px; border: none; background: linear-gradient(135deg, #facc15, #eab308); color: #1a1a1a; font-weight: bold; font-size: 14px; font-family: inherit; cursor: pointer; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+    .empty-state .icon { font-size: 60px; display: block; margin-bottom: 12px; opacity: 0.5; }
+    .alliance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+    .alliance-card { background: linear-gradient(135deg, #12121f, #1a1a2e); border: 1px solid rgba(139,92,246,0.3); border-radius: 18px; padding: 18px; transition: 0.2s; }
+    .alliance-card:hover { border-color: rgba(139,92,246,0.7); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,92,246,0.2); }
+    .ac-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .ac-emblem { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.15)); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
+    .ac-info { flex: 1; min-width: 0; }
+    .ac-name { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+    .ac-tag { background: #facc15; color: #1a1a1a; font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: bold; font-family: monospace; }
+    .ac-meta { font-size: 11px; color: #64748b; font-family: monospace; }
+    .ac-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .ac-stat { padding: 8px 10px; background: rgba(15,23,42,0.5); border-radius: 10px; text-align: center; }
+    .ac-stat .lbl { font-size: 10px; color: #64748b; margin-bottom: 2px; }
+    .ac-stat .val { font-size: 14px; font-weight: bold; color: #facc15; font-family: monospace; }
+    .ac-actions { display: flex; gap: 8px; }
+    .ac-actions a, .ac-actions button { flex: 1; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; text-decoration: none; }
+    .btn-manage { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4) !important; }
+    .btn-manage:hover { background: rgba(139,92,246,0.35); }
+    .btn-del { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35) !important; }
+    .btn-del:hover { background: rgba(239,68,68,0.3); }
+    .password-badge { font-size: 12px; }
+
+    /* ============================================================
+       ULTIMATE STABLE ADMIN LAYOUT
+       All heights, widths, paddings are FIXED
+       No page-specific overrides can change them
+       ============================================================ */
+    
+    /* Force consistent body */
+    body { 
+      padding: 16px 16px 40px !important;
+      margin: 0 !important;
+    }
+    
+    /* Force consistent container */
+    .container { 
+      max-width: 1400px !important; 
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+    
+    /* Sticky wrapper - fixed position */
+    .admin-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 500 !important;
+      background: #0a0a15 !important;
+      padding: 4px 0 8px !important;
+      margin: 0 0 20px 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Topbar - FIXED HEIGHT */
+    .admin-sticky-header .topbar,
+    .admin-sticky-header > .topbar { 
+      height: 60px !important;
+      min-height: 60px !important;
+      max-height: 60px !important;
+      padding: 0 22px !important;
+      margin: 0 0 8px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Topbar h1 - fixed font */
+    .admin-sticky-header .topbar h1 { 
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    /* Topbar links/buttons - fixed size */
+    .admin-sticky-header .topbar a,
+    .admin-sticky-header .topbar button { 
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      padding: 0 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+    
+    /* ===== TABS - FIXED HEIGHT ===== */
+    .admin-tabs {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      white-space: nowrap !important;
+      padding: 4px !important;
+      margin: 0 !important;
+      background: #12121f !important;
+      border: 1px solid rgba(148,163,184,0.15) !important;
+      border-radius: 14px !important;
+      box-sizing: border-box !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    .admin-tabs::-webkit-scrollbar { 
+      display: none !important;
+      height: 0 !important;
+    }
+    
+    /* Each tab - FIXED HEIGHT */
+    .admin-tab {
+      flex: 0 0 auto !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      font-weight: bold !important;
+      color: #94a3b8 !important;
+      white-space: nowrap !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s !important;
+      border: none !important;
+    }
+    
+    .admin-tab:hover { 
+      background: rgba(148,163,184,0.1) !important; 
+      color: #fff !important; 
+    }
+    
+    .admin-tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="admin-sticky-header">
+  <div class="topbar">
+    <h1>🛡️ مدیریت اتحادها</h1></div>
+
+  <div class="admin-tabs">
+    <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
+    <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
+    <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
+    <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
+    <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
+    <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
+    <a href="/panel-admin/support/" class="admin-tab {% if '/panel-admin/support' in request.path %}active{% endif %}">💬 پشتیبانی</a>
+  </div>
+  </div>
+
+  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
+
+  <form method="get" class="search-row">
+    <input type="text" name="q" value="{{ search }}" placeholder="جستجو با نام، tag یا کد دعوت...">
+    <button type="submit">🔍 جستجو</button>
+  </form>
+
+  {% if alliances %}
+    <div class="alliance-grid">
+      {% for a in alliances %}
+        <div class="alliance-card">
+          <div class="ac-header">
+            <div class="ac-emblem">{{ a.emblem }}</div>
+            <div class="ac-info">
+              <div class="ac-name">
+                {{ a.name }}
+                {% if a.tag %}<span class="ac-tag">{{ a.tag }}</span>{% endif %}
+                {% if a.has_password %}<span class="password-badge">🔒</span>{% endif %}
+              </div>
+              <div class="ac-meta">رهبر: {{ a.leader }} (@{{ a.leader_username }})</div>
+            </div>
+          </div>
+          <div class="ac-stats">
+            <div class="ac-stat"><div class="lbl">اعضا</div><div class="val">{{ a.member_count }} / {{ a.max_members }}</div></div>
+            <div class="ac-stat"><div class="lbl">کد دعوت</div><div class="val">{{ a.invite_code }}</div></div>
+          </div>
+          <div class="ac-actions">
+            <a href="{% url 'custom_admin:alliance_manage' a.id %}" class="btn-manage">⚙️ مدیریت</a>
+            <form method="post" action="{% url 'custom_admin:alliance_manage' a.id %}" style="flex:1;" onsubmit="return confirm('حذف اتحاد {{ a.name }}؟');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <button type="submit" class="btn-del" style="width:100%;">🗑️ حذف</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <span class="icon">🛡️</span>
+      {% if search %}اتحادی پیدا نشد.{% else %}هیچ اتحادی وجود ندارد.{% endif %}
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

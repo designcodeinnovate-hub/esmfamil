@@ -1,11 +1,12 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "dev-only-change-me"
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me-in-production")
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
+ALLOWED_HOSTS = ["*"]  # Allow all hosts (safe for now)
 
 INSTALLED_APPS = [
     "daphne",
@@ -24,13 +25,14 @@ INSTALLED_APPS = [
     "social",
     "alliance",
     "channels",
+
+    "common",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "config.beta_gate.BetaGateMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -109,7 +111,7 @@ DEFAULT_FROM_EMAIL = "noreply@esmfamil.local"
 BACKEND_URL = "http://127.0.0.1:8000"
 
 # --- Login redirect for @login_required ---
-LOGIN_URL = "/admin/login/"
+LOGIN_URL = "/accounts/login/"
 ASGI_APPLICATION = "config.asgi.application"
 
 CHANNEL_LAYERS = {
@@ -117,3 +119,62 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+LOGIN_REDIRECT_URL = "/game/"
+
+# ============================================================
+# PRODUCTION SAFETY BLOCK (always applied)
+# ============================================================
+
+# --- CSRF Trusted Origins (critical for Runflare/proxy) ---
+CSRF_TRUSTED_ORIGINS = [
+    "https://esmfamil-c78-esmfamil-db.runflare.cloud",
+    "https://esmfamil.com",
+    "https://www.esmfamil.com",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
+# Also add any from env var
+_csrf_env = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+if _csrf_env:
+    for origin in _csrf_env.split(","):
+        origin = origin.strip()
+        if origin and origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+
+# --- Proxy SSL header (for HTTPS behind proxy) ---
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# --- Database from env (PostgreSQL on Runflare) ---
+if os.environ.get("DATABASE_URL"):
+    try:
+        import dj_database_url
+        DATABASES = {
+            "default": dj_database_url.config(
+                conn_max_age=600,
+                ssl_require=False,
+                conn_health_checks=True,
+            )
+        }
+    except ImportError:
+        pass
+
+# --- WhiteNoise for static files ---
+if "whitenoise.middleware.WhiteNoiseMiddleware" not in MIDDLEWARE:
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# --- Login URLs (fix for @login_required) ---
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/game/"
+
+# --- Cookie settings (safe for HTTP and HTTPS) ---
+# If you later get real HTTPS, set these to True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False  # JS needs to read CSRF token
+
+# --- X-Frame-Options ---
+X_FRAME_OPTIONS = "SAMEORIGIN"
+

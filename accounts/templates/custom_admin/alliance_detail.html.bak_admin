@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مدیریت اتحاد {{ a.name }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(139,92,246,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; }
+    .topbar h1 { font-size: 19px; color: #c4b5fd; }
+    .topbar .actions { display: flex; gap: 8px; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold; }
+    .topbar .back { background: rgba(148,163,184,0.2); }
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+
+    .card { background: #12121f; border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+    .card h3 { color: #fdba74; font-size: 15px; margin-bottom: 16px; }
+
+    label { display: block; color: #94a3b8; font-size: 12px; margin: 12px 0 6px; }
+    input[type=text], input[type=password], input[type=number], textarea, select {
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(148,163,184,0.2); background: #0a0a15;
+      color: #fff; font-size: 14px; font-family: inherit;
+      box-sizing: border-box;
+    }
+    textarea { resize: vertical; min-height: 70px; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #facc15; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 500px) { .row { grid-template-columns: 1fr; } }
+
+    .emojis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .emoji-opt { padding: 12px; text-align: center; font-size: 24px; background: #1a1a2e; border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: 0.15s; }
+    .emoji-opt:hover { border-color: #facc15; }
+    .emoji-opt input { display: none; }
+    .emoji-opt:has(input:checked) { border-color: #facc15; background: linear-gradient(135deg, rgba(250,204,21,0.2), rgba(139,92,246,0.1)); box-shadow: 0 0 15px rgba(250,204,21,0.3); }
+
+    button.submit { width: 100%; margin-top: 18px; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; font-family: inherit; cursor: pointer; color: #fff; background: linear-gradient(135deg, #8b5cf6, #6b4eff); box-shadow: 0 8px 20px rgba(139,92,246,0.4); transition: 0.2s; }
+    button.submit:hover { transform: translateY(-2px); }
+
+    .danger-zone { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+    .danger-zone h3 { color: #fca5a5; }
+    .danger-zone p { font-size: 12px; color: #94a3b8; margin-bottom: 12px; line-height: 1.6; }
+    button.delete-btn { padding: 12px 24px; border: none; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 6px 18px rgba(239,68,68,0.4); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; text-align: right; font-size: 12px; border-bottom: 1px solid rgba(148,163,184,0.1); }
+    th { color: #94a3b8; font-size: 11px; font-weight: bold; }
+    tr:last-child td { border-bottom: none; }
+
+    .role-badge { padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+    .role-leader { background: rgba(250,204,21,0.2); color: #facc15; }
+    .role-officer { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .role-member { background: rgba(100,116,139,0.2); color: #cbd5e1; }
+
+    .kick-btn { padding: 5px 10px; background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; cursor: pointer; font-size: 10px; font-family: inherit; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <h1>🛡️ {{ a.emblem }} {{ a.name }}</h1>
+    <div class="actions">
+      <a href="{% url 'custom_admin:alliances_list' %}" class="back">← بازگشت</a>
+      <a href="{% url 'custom_admin:logout' %}">خروج</a>
+    </div>
+  </div>
+
+  {% if message %}
+    <div class="msg msg-{{ message.type }}">{{ message.text }}</div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="update">
+
+    <div class="card">
+      <h3>✏️ اطلاعات پایه</h3>
+
+      <label>نماد</label>
+      <div class="emojis">
+        {% for e in emojis %}
+          <label class="emoji-opt">
+            <input type="radio" name="emblem" value="{{ e }}" {% if e == a.emblem %}checked{% endif %}>
+            {{ e }}
+          </label>
+        {% endfor %}
+      </div>
+
+      <label>نام اتحاد</label>
+      <input type="text" name="name" value="{{ a.name }}" required maxlength="40">
+
+      <div class="row">
+        <div>
+          <label>تگ</label>
+          <input type="text" name="tag" value="{{ a.tag }}" maxlength="8">
+        </div>
+        <div>
+          <label>ظرفیت (۵-۱۰۰)</label>
+          <input type="number" name="max_members" value="{{ a.max_members }}" min="5" max="100">
+        </div>
+      </div>
+
+      <label>توضیح</label>
+      <textarea name="description" maxlength="200">{{ a.description }}</textarea>
+
+      <label>رمز (خالی = بدون رمز)</label>
+      <input type="password" name="password" value="{{ a.password }}" maxlength="32">
+
+      <label>رهبر</label>
+      <select name="leader_id">
+        {% for m in members %}
+          <option value="{{ m.user_id }}" {% if m.role == "leader" %}selected{% endif %}>{{ m.alias }} (@{{ m.username }})</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="submit">💾 ذخیره تغییرات</button>
+    </div>
+  </form>
+
+  <div class="card">
+    <h3>👥 اعضای اتحاد ({{ members|length }})</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>نام نمایشی</th>
+          <th>username</th>
+          <th>نقش</th>
+          <th>عضویت</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in members %}
+          <tr>
+            <td>{{ m.alias }}</td>
+            <td style="font-family:monospace; color:#94a3b8;">@{{ m.username }}</td>
+            <td><span class="role-badge role-{{ m.role }}">{{ m.role_display }}</span></td>
+            <td style="font-size:11px; color:#64748b;">{{ m.joined_at|date:"Y/m/d" }}</td>
+            <td>
+              {% if m.role != "leader" %}
+                <form method="post" action="{% url 'custom_admin:alliance_manage' a.id %}" style="display:inline;" onsubmit="return confirm('اخراج شود؟');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="kick_member">
+                  <input type="hidden" name="user_id" value="{{ m.user_id }}">
+                  <button type="submit" class="kick-btn">اخراج</button>
+                </form>
+              {% else %}
+                <span style="font-size:11px; color:#64748b;">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="danger-zone">
+    <h3>⚠️ منطقه خطر</h3>
+    <p>حذف اتحاد غیرقابل بازگشت است. تمام اعضا و پیام‌های چت حذف می‌شوند.</p>
+    <form method="post" onsubmit="return confirm('آیا مطمئنید؟ حذف اتحاد {{ a.name }}؟');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete">
+      <button type="submit" class="delete-btn">🗑️ حذف اتحاد</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

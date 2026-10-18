@@ -1,0 +1,429 @@
+{% load jalali_tags %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اتاق‌ها — پنل ادمین</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(239,68,68,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .topbar h1 { font-size: 20px; color: #fca5a5; }
+    .topbar a { padding: 9px 16px; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold; }
+
+    
+    
+    
+    
+    
+    
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+
+    /* Stats overview */
+    .stats-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+    @media (max-width: 700px) { .stats-overview { grid-template-columns: 1fr 1fr; } }
+    .stat-card { padding: 16px; border-radius: 14px; text-align: center; }
+    .stat-card.live { background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(34,197,94,0.4); }
+    .stat-card.waiting { background: linear-gradient(135deg, rgba(234,179,8,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(234,179,8,0.4); }
+    .stat-card.result { background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(59,130,246,0.4); }
+    .stat-card.finished { background: linear-gradient(135deg, rgba(100,116,139,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(100,116,139,0.4); }
+    .stat-val { font-size: 28px; font-weight: 900; font-family: monospace; color: #fff; margin-bottom: 4px; }
+    .stat-lbl { font-size: 11px; color: #94a3b8; font-weight: bold; }
+
+    /* Section */
+    .section { margin-bottom: 28px; }
+    .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid rgba(148,163,184,0.1); }
+    .section-head h2 { font-size: 16px; font-weight: 900; color: #fff; }
+    .section-head .badge-count { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; font-family: monospace; }
+    .section-head.live .badge-count { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .section-head.waiting .badge-count { background: rgba(234,179,8,0.2); color: #fde68a; }
+    .section-head.result .badge-count { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .section-head.finished .badge-count { background: rgba(100,116,139,0.2); color: #cbd5e1; }
+    .live-pulse { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } }
+
+    /* Room card */
+    .room-card {
+      background: #12121f; border: 1.5px solid rgba(148,163,184,0.15);
+      border-radius: 14px; padding: 16px; margin-bottom: 10px;
+      transition: 0.2s;
+    }
+    .room-card.live { border-color: rgba(34,197,94,0.4); background: linear-gradient(135deg, rgba(34,197,94,0.05), #12121f); }
+    .room-card.waiting { border-color: rgba(234,179,8,0.4); background: linear-gradient(135deg, rgba(234,179,8,0.05), #12121f); }
+    .room-card.result { border-color: rgba(59,130,246,0.4); }
+    .room-card.finished {
+      opacity: 0.4;
+      background: #0a0a15;
+      border-color: rgba(100,116,139,0.2);
+    }
+    .room-card.finished:hover { opacity: 0.6; }
+
+    .room-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .room-name { font-size: 15px; font-weight: bold; color: #fff; }
+    .room-mode { padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; background: rgba(139,92,246,0.15); color: #c4b5fd; font-family: monospace; }
+    .room-status { padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+    .status-live { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .status-waiting { background: rgba(234,179,8,0.2); color: #fde68a; }
+    .status-result { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .status-finished { background: rgba(100,116,139,0.2); color: #cbd5e1; }
+
+    .room-match { padding: 10px 14px; background: rgba(15,23,42,0.6); border-radius: 10px; margin-bottom: 10px; font-size: 13px; color: #e2e8f0; font-weight: bold; }
+
+    .room-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; }
+    .info-item { padding: 8px 10px; background: rgba(15,23,42,0.4); border-radius: 8px; font-size: 11px; }
+    .info-item .lbl { color: #64748b; font-size: 10px; margin-bottom: 2px; }
+    .info-item .val { color: #fff; font-weight: bold; font-family: monospace; }
+
+    .room-players { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .player-chip { padding: 6px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; font-size: 11px; color: #c4b5fd; font-weight: bold; }
+    .player-chip.host { background: rgba(250,204,21,0.15); border-color: rgba(250,204,21,0.4); color: #facc15; }
+    .player-chip.ready { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #4ade80; }
+    .player-chip.team-a { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
+    .player-chip.team-b { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+    .room-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-del { padding: 8px 16px; background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-del:hover { background: rgba(239,68,68,0.3); }
+
+    .empty-state { text-align: center; padding: 30px 20px; color: #64748b; font-size: 13px; }
+    .empty-state .icon { font-size: 40px; display: block; margin-bottom: 8px; opacity: 0.4; }
+
+    /* ============================================================
+       ULTIMATE STABLE ADMIN LAYOUT
+       All heights, widths, paddings are FIXED
+       No page-specific overrides can change them
+       ============================================================ */
+    
+    /* Force consistent body */
+    body { 
+      padding: 16px 16px 40px !important;
+      margin: 0 !important;
+    }
+    
+    /* Force consistent container */
+    .container { 
+      max-width: 1400px !important; 
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+    
+    /* Sticky wrapper - fixed position */
+    .admin-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 500 !important;
+      background: #0a0a15 !important;
+      padding: 4px 0 8px !important;
+      margin: 0 0 20px 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Topbar - FIXED HEIGHT */
+    .admin-sticky-header .topbar,
+    .admin-sticky-header > .topbar { 
+      height: 60px !important;
+      min-height: 60px !important;
+      max-height: 60px !important;
+      padding: 0 22px !important;
+      margin: 0 0 8px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Topbar h1 - fixed font */
+    .admin-sticky-header .topbar h1 { 
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    /* Topbar links/buttons - fixed size */
+    .admin-sticky-header .topbar a,
+    .admin-sticky-header .topbar button { 
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      padding: 0 16px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+    
+    /* ===== TABS - FIXED HEIGHT ===== */
+    .admin-tabs {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      white-space: nowrap !important;
+      padding: 4px !important;
+      margin: 0 !important;
+      background: #12121f !important;
+      border: 1px solid rgba(148,163,184,0.15) !important;
+      border-radius: 14px !important;
+      box-sizing: border-box !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    .admin-tabs::-webkit-scrollbar { 
+      display: none !important;
+      height: 0 !important;
+    }
+    
+    /* Each tab - FIXED HEIGHT */
+    .admin-tab {
+      flex: 0 0 auto !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      font-weight: bold !important;
+      color: #94a3b8 !important;
+      white-space: nowrap !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s !important;
+      border: none !important;
+    }
+    
+    .admin-tab:hover { 
+      background: rgba(148,163,184,0.1) !important; 
+      color: #fff !important; 
+    }
+    
+    .admin-tab.active {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: #fff !important;
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="admin-sticky-header">
+  <div class="topbar">
+    <h1>🚪 مدیریت اتاق‌ها و بازی‌های فعال</h1>
+  </div>
+
+  <div class="admin-tabs">
+    <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
+    <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
+    <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
+    <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
+    <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
+    <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
+    <a href="/panel-admin/support/" class="admin-tab {% if '/panel-admin/support' in request.path %}active{% endif %}">💬 پشتیبانی</a>
+  </div>
+  </div>
+
+  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
+
+  <div class="stats-overview">
+    <div class="stat-card live">
+      <div class="stat-val">{{ count_in_round }}</div>
+      <div class="stat-lbl"><span class="live-pulse"></span> در حال بازی</div>
+    </div>
+    <div class="stat-card waiting">
+      <div class="stat-val">{{ count_waiting }}</div>
+      <div class="stat-lbl">در انتظار</div>
+    </div>
+    <div class="stat-card result">
+      <div class="stat-val">{{ count_round_result }}</div>
+      <div class="stat-lbl">نتیجه راند</div>
+    </div>
+    <div class="stat-card finished">
+      <div class="stat-val">{{ count_finished }}</div>
+      <div class="stat-lbl">تمام‌شده</div>
+    </div>
+  </div>
+
+  <!-- ==================== LIVE GAMES ==================== -->
+  <div class="section">
+    <div class="section-head live">
+      <span class="live-pulse"></span>
+      <h2>🔴 در حال بازی (Live)</h2>
+      <span class="badge-count">{{ count_in_round }}</span>
+    </div>
+    {% if in_round %}
+      {% for r in in_round %}
+      <div class="room-card live">
+        <div class="room-top">
+          <span class="room-name">{{ r.room_name }}</span>
+          <span class="room-mode">{{ r.mode }}</span>
+          <span class="room-status status-live">● در حال بازی</span>
+        </div>
+        {% if r.match_desc %}
+        <div class="room-match">🎮 {{ r.match_desc }}</div>
+        {% endif %}
+        <div class="room-info">
+          <div class="info-item"><div class="lbl">میزبان</div><div class="val">{{ r.host }}</div></div>
+          <div class="info-item"><div class="lbl">بازیکنان</div><div class="val">{{ r.player_count }} / {{ r.max_players }}</div></div>
+          <div class="info-item"><div class="lbl">راند</div><div class="val">{{ r.current_round }}</div></div>
+          <div class="info-item"><div class="lbl">حرف</div><div class="val" style="color:#facc15; font-size:16px;">{{ r.current_letter }}</div></div>
+          <div class="info-item"><div class="lbl">شروع</div><div class="val" style="font-size:10px;">{{ r.created_at|jdate:"H:i" }}</div></div>
+        </div>
+        <div class="room-players">
+          {% for p in r.players %}
+            <span class="player-chip {% if p.alias == r.host %}host{% endif %} {% if p.team == 'A' %}team-a{% elif p.team == 'B' %}team-b{% endif %} {% if p.ready %}ready{% endif %}">
+              {% if p.alias == r.host %}👑 {% endif %}{{ p.alias }} ({{ p.score }})
+            </span>
+          {% endfor %}
+        </div>
+        <div class="room-actions">
+          <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق حذف شود؟');">
+            {% csrf_token %}
+            <button type="submit" class="btn-del">🗑️ حذف اتاق</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state"><span class="icon">🎮</span>هیچ بازی در حال اجرا نیست.</div>
+    {% endif %}
+  </div>
+
+  <!-- ==================== WAITING ROOMS ==================== -->
+  <div class="section">
+    <div class="section-head waiting">
+      <h2>⏳ اتاق‌های در انتظار</h2>
+      <span class="badge-count">{{ count_waiting }}</span>
+    </div>
+    {% if waiting %}
+      {% for r in waiting %}
+      <div class="room-card waiting">
+        <div class="room-top">
+          <span class="room-name">{{ r.room_name }}</span>
+          <span class="room-mode">{{ r.mode }}</span>
+          <span class="room-status status-waiting">در انتظار بازیکنان</span>
+        </div>
+        {% if r.match_desc %}
+        <div class="room-match">{{ r.match_desc }}</div>
+        {% endif %}
+        <div class="room-info">
+          <div class="info-item"><div class="lbl">میزبان</div><div class="val">{{ r.host }}</div></div>
+          <div class="info-item"><div class="lbl">بازیکنان</div><div class="val">{{ r.player_count }} / {{ r.max_players }}</div></div>
+          <div class="info-item"><div class="lbl">شروع</div><div class="val" style="font-size:10px;">{{ r.created_at|jdate:"H:i" }}</div></div>
+        </div>
+        <div class="room-players">
+          {% for p in r.players %}
+            <span class="player-chip {% if p.alias == r.host %}host{% endif %} {% if p.ready %}ready{% endif %}">
+              {% if p.alias == r.host %}👑 {% endif %}{{ p.alias }}{% if p.ready %} ✓{% endif %}
+            </span>
+          {% empty %}
+            <span style="color:#64748b; font-size:11px;">هیچ بازیکنی داخل نیست</span>
+          {% endfor %}
+        </div>
+        <div class="room-actions">
+          <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق حذف شود؟');">
+            {% csrf_token %}
+            <button type="submit" class="btn-del">🗑️ حذف اتاق</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state"><span class="icon">⏳</span>هیچ اتاقی در انتظار نیست.</div>
+    {% endif %}
+  </div>
+
+  <!-- ==================== ROUND RESULT ==================== -->
+  {% if count_round_result > 0 %}
+  <div class="section">
+    <div class="section-head result">
+      <h2>📊 در حال نمایش نتیجه</h2>
+      <span class="badge-count">{{ count_round_result }}</span>
+    </div>
+    {% for r in round_result %}
+    <div class="room-card result">
+      <div class="room-top">
+        <span class="room-name">{{ r.room_name }}</span>
+        <span class="room-status status-result">نتیجه راند {{ r.current_round }}</span>
+      </div>
+      {% if r.match_desc %}<div class="room-match">{{ r.match_desc }}</div>{% endif %}
+      <div class="room-players">
+        {% for p in r.players %}
+          <span class="player-chip {% if p.alias == r.host %}host{% endif %}">{{ p.alias }} ({{ p.score }})</span>
+        {% endfor %}
+      </div>
+      <div class="room-actions">
+        <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق حذف شود؟');">
+          {% csrf_token %}
+          <button type="submit" class="btn-del">🗑️ حذف اتاق</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ==================== FINISHED (GRAYED) ==================== -->
+  <div class="section">
+    <div class="section-head finished">
+      <h2>🏁 اتاق‌های بسته شده</h2>
+      <span class="badge-count">{{ count_finished }}</span>
+    </div>
+    {% if finished %}
+      {% for r in finished %}
+      <div class="room-card finished">
+        <div class="room-top">
+          <span class="room-name">{{ r.room_name }}</span>
+          <span class="room-mode">{{ r.mode }}</span>
+          <span class="room-status status-finished">🏁 تمام‌شده</span>
+        </div>
+        {% if r.match_desc %}<div class="room-match">{{ r.match_desc }}</div>{% endif %}
+        <div class="room-info">
+          <div class="info-item"><div class="lbl">میزبان</div><div class="val">{{ r.host }}</div></div>
+          <div class="info-item"><div class="lbl">بازیکنان</div><div class="val">{{ r.player_count }}</div></div>
+          <div class="info-item"><div class="lbl">تاریخ</div><div class="val" style="font-size:10px;">{{ r.created_at|jdate:"Y/m/d H:i" }}</div></div>
+        </div>
+        <div class="room-players">
+          {% for p in r.players %}
+            <span class="player-chip" style="opacity:0.7;">{{ p.alias }} ({{ p.score }})</span>
+          {% endfor %}
+        </div>
+        <div class="room-actions">
+          <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق برای همیشه حذف شود؟');">
+            {% csrf_token %}
+            <button type="submit" class="btn-del">🗑️ حذف دائمی</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state"><span class="icon">🏁</span>هیچ اتاق بسته‌ای وجود ندارد.</div>
+    {% endif %}
+  </div>
+
+</div>
+</body>
+</html>

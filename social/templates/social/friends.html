@@ -7,6 +7,77 @@
   .page-head h1 { font-size: 22px; font-weight: bold; }
   .page-head h1 span { color: var(--gold); }
   
+  /* ===== کارت اتحاد ===== */
+  .alliance-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px;
+    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.25), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: 18px;
+    text-decoration: none;
+    color: #fff;
+    margin-bottom: 16px;
+    transition: all 0.22s;
+    box-shadow: 0 8px 25px rgba(139,92,246,0.15);
+  }
+  .alliance-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(139,92,246,0.8);
+    box-shadow: 0 15px 35px rgba(139,92,246,0.3);
+  }
+  .ac-icon {
+    font-size: 32px;
+    width: 54px; height: 54px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.15));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .ac-body { flex: 1; }
+  .ac-title { font-size: 16px; font-weight: bold; margin-bottom: 3px; color: #c4b5fd; }
+  .ac-desc { font-size: 12px; color: var(--muted); }
+  .ac-arrow { font-size: 20px; color: #c4b5fd; }
+
+  .alliance-card.member {
+    background: radial-gradient(circle at 100% 0%, rgba(34,197,94,0.3), transparent 60%),
+                linear-gradient(135deg, #0a1f0f, #0f1e15);
+    border-color: rgba(34,197,94,0.55);
+    box-shadow: 0 8px 25px rgba(34,197,94,0.2);
+  }
+  .alliance-card.member:hover {
+    border-color: rgba(34,197,94,0.9);
+    box-shadow: 0 15px 35px rgba(34,197,94,0.4);
+  }
+  .alliance-card.member .ac-title { color: #86efac; }
+  .alliance-card.member .ac-arrow { color: #86efac; }
+  .alliance-card.member .ac-icon {
+    background: linear-gradient(135deg, rgba(34,197,94,0.35), rgba(6,182,212,0.15));
+    border-color: rgba(34,197,94,0.4);
+  }
+  .ac-tag {
+    font-size: 10px;
+    color: #1a1a1a;
+    background: var(--gold);
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-right: 6px;
+    font-family: monospace;
+    font-weight: bold;
+    vertical-align: middle;
+  }
+  .ac-last {
+    color: #86efac;
+    font-size: 11px;
+    margin-top: 3px;
+    display: block;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
   .search-card { background: rgba(30,41,59,0.6); border: 1px solid var(--border); border-radius: 20px; padding: 18px; margin-bottom: 24px; }
   .search-form { display: flex; gap: 10px; }
   .search-form input { flex: 1; padding: 14px 18px; border-radius: 14px; border: 1.5px solid var(--border); background: rgba(15,23,42,0.8); color: #fff; font-size: 15px; font-family: inherit; }
@@ -111,12 +182,36 @@
   .btn-send.offline { background: #475569; box-shadow: none; }
   .btn-send.offline:hover { transform: none; }
 </style>
-{% endblock %}
+
+
+  {% endblock %}
 
 {% block content %}
-  <div class="page-head">
-    <h1>👥 <span>دوستان</span></h1>
-  </div>
+    <!-- کارت اتحاد -->
+  {% if my_alliance %}
+    <a href="/alliance/{{ my_alliance.id }}/" class="alliance-card member">
+      <div class="ac-icon">{{ my_alliance.emblem }}</div>
+      <div class="ac-body">
+        <div class="ac-title">
+          {{ my_alliance.name }}
+          {% if my_alliance.tag %}<span class="ac-tag">{{ my_alliance.tag }}</span>{% endif %}
+        </div>
+        <div class="ac-desc">
+          {{ my_alliance.member_count }} / {{ my_alliance.max_members }} عضو · {{ my_alliance.role_display }}
+        </div>
+      </div>
+      <div class="ac-arrow">←</div>
+    </a>
+  {% else %}
+    <a href="/alliance/" class="alliance-card">
+      <div class="ac-icon">🛡️</div>
+      <div class="ac-body">
+        <div class="ac-title">اتحاد</div>
+        <div class="ac-desc">لیست اتحادها رو ببین یا خودت بساز</div>
+      </div>
+      <div class="ac-arrow">←</div>
+    </a>
+  {% endif %}
 
   <!-- بنر دعوت‌های دریافتی -->
   {% for inv in pending_invites %}
@@ -209,6 +304,8 @@
       <button class="btn-send" onclick="sendInviteRequest()" id="btnSendInvite">ارسال درخواست بازی</button>
     </div>
   </div>
+
+
 {% endblock %}
 
 {% block extra_js %}
@@ -337,4 +434,7 @@ function rejectInvite(inviteId) {
   .then(() => window.location.reload());
 }
 </script>
+
+
+
 {% endblock %}

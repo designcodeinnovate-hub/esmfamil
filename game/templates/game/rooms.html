@@ -1,63 +1,67 @@
 {% extends "base.html" %}
 {% block title %}بازی‌ها{% endblock %}
-
 {% block extra_css %}
 <style>
-  .page-head { margin-bottom: 20px; }
-  .page-head h1 { font-size: 22px; font-weight: bold; }
-  .page-head h1 span { color: var(--gold); }
-
-  .big-card {
-    border-radius: 20px; padding: 24px 22px; margin-bottom: 14px;
-    text-decoration: none; color: #fff;
-    display: flex; align-items: center; gap: 16px;
-    position: relative; overflow: hidden;
-    border: 1.5px solid; transition: all 0.22s; cursor: pointer;
-  }
-  .big-card:hover { transform: translateY(-3px); }
-  .big-card:active { transform: scale(0.98); }
-  .big-card.bot {
-    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.25), transparent 60%),
-                linear-gradient(135deg, #2a1a0e, #1a0f1a);
-    border-color: rgba(244,197,66,0.4);
-  }
-  .big-card.room {
-    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.3), transparent 60%),
-                linear-gradient(135deg, #1a0f2e, #0f0f1e);
-    border-color: rgba(139,92,246,0.4);
-  }
-  .big-card .bc-icon {
-    font-size: 42px; width: 68px; height: 68px;
-    border-radius: 18px; background: rgba(255,255,255,0.08);
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .big-card .bc-body { flex: 1; }
-  .big-card .bc-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #fff; }
-  .big-card .bc-desc { font-size: 12.5px; color: #cbd5e1; line-height: 1.5; }
-  .big-card .bc-arrow { font-size: 22px; color: #94a3b8; }
+.head{margin-bottom:20px}
+.head h1{font-size:22px;font-weight:bold}
+.head h1 span{color:var(--gold)}
+.big{display:flex;align-items:center;gap:14px;padding:20px;border-radius:20px;text-decoration:none;color:#fff;margin-bottom:12px;border:1.5px solid;transition:.2s;position:relative;overflow:hidden}
+.big:hover{transform:translateY(-3px)}
+.big:active{transform:scale(.98)}
+.big.soon{cursor:default;opacity:.75}
+.big.bot{background:radial-gradient(circle at 100% 0%,rgba(244,197,66,.25),transparent 60%),linear-gradient(135deg,#2a1a0e,#1a0f1a);border-color:rgba(244,197,66,.4)}
+.big.player{background:radial-gradient(circle at 100% 0%,rgba(59,130,246,.25),transparent 60%),linear-gradient(135deg,#0a1a2a,#0f0f1e);border-color:rgba(59,130,246,.4)}
+.big.group{background:radial-gradient(circle at 100% 0%,rgba(139,92,246,.3),transparent 60%),linear-gradient(135deg,#1a0f2e,#0f0f1e);border-color:rgba(139,92,246,.4)}
+.big.challenge{background:radial-gradient(circle at 100% 0%,rgba(239,68,68,.3),transparent 60%),linear-gradient(135deg,#2a0a0a,#0f0f1e);border-color:rgba(239,68,68,.5)}
+.big.speed{background:radial-gradient(circle at 100% 0%,rgba(6,182,212,.25),transparent 60%),linear-gradient(135deg,#0a1e2a,#0f0f1e);border-color:rgba(6,182,212,.4)}
+.big.puzzle{background:radial-gradient(circle at 100% 0%,rgba(34,197,94,.25),transparent 60%),linear-gradient(135deg,#0a2a1a,#0f0f1e);border-color:rgba(34,197,94,.4)}
+.bic{font-size:34px;width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bbody{flex:1}
+.btitle{font-size:17px;font-weight:bold;margin-bottom:4px;color:#fff}
+.bdesc{font-size:12px;color:#cbd5e1;line-height:1.5}
+.barrow{font-size:20px;color:#94a3b8}
+.soon-badge{position:absolute;top:10px;left:10px;background:rgba(234,179,8,.95);color:#1a1a1a;font-size:10px;font-weight:900;padding:3px 8px;border-radius:6px;z-index:2}
 </style>
 {% endblock %}
-
 {% block content %}
-  <div class="page-head">
-    <h1>🎮 <span>بازی‌ها</span></h1>
-  </div>
+<div class="head"><h1>🎮 <span>بازی‌ها</span></h1></div>
 
-  <a href="/game/quick/" class="big-card bot">
-    <div class="bc-icon">⚡</div>
-    <div class="bc-body">
-      <div class="bc-title">بازی با بات</div>
-      <div class="bc-desc">رقیب هوشمند، سه سطح سختی</div>
-    </div>
-    <div class="bc-arrow">←</div>
-  </a>
+<a href="/game/quick/" class="big bot">
+  <div class="bic">⚡</div>
+  <div class="bbody"><div class="btitle">بازی با بات</div><div class="bdesc">رقیب هوشمند، سه سطح سختی</div></div>
+  <div class="barrow">←</div>
+</a>
 
-  <a href="/game/rooms/manage/" class="big-card room">
-    <div class="bc-icon">🚪</div>
-    <div class="bc-body">
-      <div class="bc-title">اتاق‌های بازی</div>
-      <div class="bc-desc">ساخت اتاق جدید یا پیوستن به دوستان</div>
-    </div>
-    <div class="bc-arrow">←</div>
-  </a>
+<a href="/game/match/" class="big player">
+  <div class="bic">🌐</div>
+  <div class="bbody"><div class="btitle">بازی با پلیر</div><div class="bdesc">رقابت آنی با یک حریف تصادفی</div></div>
+  <div class="barrow">←</div>
+</a>
+
+<a href="/game/team/start/" class="big group">
+  <div class="bic">👥</div>
+  <div class="bbody"><div class="btitle">بازی گروهی</div><div class="bdesc">۴ نفره · دو تیم ۲ نفره · ۳ راند</div></div>
+  <div class="barrow">←</div>
+</a>
+
+<a href="/game/challenge/" class="big challenge">
+  <div class="bic">⚔️</div>
+  <div class="bbody"><div class="btitle">چالش</div><div class="bdesc">تورنمنت هفتگی، مسابقه روزانه و ساعتی</div></div>
+  <div class="barrow">←</div>
+</a>
+
+<a href="/game/quick/bot/?mode=speed" class="big speed">
+  <div class="bic">⏱️</div>
+  <div class="bbody"><div class="btitle">بازی سرعتی</div><div class="bdesc">مستقیم با حرف رندوم، فقط ۲۰ ثانیه!</div></div>
+  <div class="barrow">←</div>
+</a>
+
+<a href="/game/puzzle/" class="big puzzle" style="background:radial-gradient(circle at 100% 0%,rgba(34,197,94,.3),transparent 60%),linear-gradient(135deg,#0a2a1a,#0f0f1e);border-color:rgba(34,197,94,.5);">
+  <div class="bic">🎯</div>
+  <div class="bbody"><div class="btitle">بازی معما</div><div class="bdesc">حروف به هم ریخته رو مرتب کن</div></div>
+  <div class="barrow">←</div>
+</a>
+<div class="bbody"><div class="btitle">بازی معما</div><div class="bdesc">حدس کلمه از روی سرنخ</div></div>
+  <div class="barrow">←</div>
+</div>
 {% endblock %}

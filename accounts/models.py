@@ -3,6 +3,7 @@ import secrets
 from datetime import timedelta
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -59,6 +60,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(default=timezone.now)
+    coins = models.IntegerField(default=0)
+    gems = models.IntegerField(default=0)
 
     objects = UserManager()
 
@@ -107,3 +110,103 @@ class EmailVerificationToken(models.Model):
         if self.used_at:
             return False
         return timezone.now() < self.created_at + timedelta(hours=24)
+
+
+class ShopItem(models.Model):
+    CATEGORY_CHOICES = [
+        ("box", "جعبه شانس"),
+        ("boost", "بوست"),
+        ("theme", "تم"),
+        ("bundle", "بسته ارز"),
+        ("cosmetic", "آیتم ظاهری"),
+    ]
+    name = models.CharField(max_length=60)
+    description = models.CharField(max_length=200, blank=True)
+    icon = models.CharField(max_length=8, default="🎁")
+    category = models.CharField(max_length=12, choices=CATEGORY_CHOICES, default="cosmetic")
+    price_coins = models.PositiveIntegerField(default=0)
+    price_gems = models.PositiveIntegerField(default=0)
+    stock = models.PositiveIntegerField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    reward_type = models.CharField(max_length=20, blank=True)
+    reward_value = models.IntegerField(default=0)
+    reward_min = models.IntegerField(default=0)
+    reward_max = models.IntegerField(default=0)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("sort_order", "-created_at")
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+class Purchase(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="purchases")
+    item = models.ForeignKey(ShopItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="purchases")
+    item_name = models.CharField(max_length=60)
+    item_icon = models.CharField(max_length=8, default="🎁")
+    price_paid_coins = models.PositiveIntegerField(default=0)
+    price_paid_gems = models.PositiveIntegerField(default=0)
+    reward_given = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.user.alias} - {self.item_name}"
+
+class GuestDeletionLog(models.Model):
+    """Log of deleted guest accounts (kept after guest is removed)."""
+    username = models.CharField(max_length=32)
+    alias = models.CharField(max_length=32, blank=True)
+    public_id = models.PositiveBigIntegerField(null=True, blank=True)
+    avatar_id = models.PositiveSmallIntegerField(null=True, blank=True)
+    total_games = models.IntegerField(default=0)
+    total_score = models.IntegerField(default=0)
+    joined_at = models.DateTimeField(auto_now_add=True)  # when guest was created
+    deleted_at = models.DateTimeField(auto_now_add=True)  # when deleted
+
+    class Meta:
+        ordering = ("-deleted_at",)
+
+    def __str__(self):
+        return f"Guest {self.username} deleted at {self.deleted_at}"
+
+
+class SupportTicket(models.Model):
+    STATUS = [
+        ("open", "باز"),
+        ("answered", "پاسخ داده شده"),
+        ("closed", "بسته شده"),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="support_tickets")
+    subject = models.CharField(max_length=100)
+    status = models.CharField(max_length=10, choices=STATUS, default="open")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-updated_at",)
+
+    def __str__(self):
+        return f"#{self.id} {self.subject} - {self.user.alias}"
+
+    def message_count(self):
+        return self.messages.count()
+
+
+class SupportMessage(models.Model):
+    ticket = models.ForeignKey(SupportTicket, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    body = models.TextField(max_length=2000)
+    is_staff = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created_at",)
+
+    def __str__(self):
+        return f"Ticket #{self.ticket_id} - {self.body[:30]}"

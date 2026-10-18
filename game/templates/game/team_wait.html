@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}در انتظار بازیکنان{% endblock %}
+
+{% block extra_css %}
+<style>
+  .wait-wrap {
+    text-align: center;
+    padding: 36px 20px 28px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(139,92,246,0.4), transparent 55%),
+      radial-gradient(circle at 50% 100%, rgba(236,72,153,0.2), transparent 55%),
+      linear-gradient(135deg, #1a0f2e, #170a24, #0f0f1e);
+    border: 2px solid rgba(139,92,246,0.6);
+    border-radius: 28px;
+    margin-top: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(139,92,246,0.3);
+  }
+  .wait-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(167,139,250,0.12) 90deg,
+      transparent 180deg,
+      rgba(236,72,153,0.12) 270deg,
+      transparent 360deg
+    );
+    animation: teamRotate 10s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+  }
+  @keyframes teamRotate { to { transform: rotate(360deg); } }
+  .wait-wrap > * { position: relative; z-index: 1; }
+
+  .team-title {
+    font-size: 22px; font-weight: 900; margin-bottom: 6px;
+    background: linear-gradient(135deg, #e9d5ff, #a78bfa, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .team-sub {
+    color: var(--muted); font-size: 12.5px; line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  /* 4 slots grid */
+  .slots {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 0 8px;
+  }
+  .slot {
+    position: relative;
+    padding: 16px 12px;
+    border-radius: 18px;
+    border: 2px dashed rgba(167,139,250,0.35);
+    background: rgba(15,23,42,0.4);
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+  .slot.filled {
+    border-style: solid;
+    border-color: rgba(74,222,128,0.6);
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(15,23,42,0.6));
+    box-shadow: 0 8px 20px rgba(34,197,94,0.2);
+    animation: slotFill 0.4s ease-out;
+  }
+  @keyframes slotFill {
+    from { transform: scale(0.9); opacity: 0.7; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .slot.me {
+    border-color: var(--gold) !important;
+    background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(15,23,42,0.6)) !important;
+    box-shadow: 0 8px 20px rgba(244,197,66,0.3) !important;
+  }
+  .slot-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(139,92,246,0.4), rgba(6,182,212,0.2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    margin-bottom: 6px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background-size: cover; background-position: center;
+  }
+  .slot.filled .slot-avatar {
+    border-color: #4ade80;
+    box-shadow: 0 0 15px rgba(74,222,128,0.5);
+  }
+  .slot.me .slot-avatar {
+    border-color: var(--gold);
+    box-shadow: 0 0 15px rgba(244,197,66,0.6);
+  }
+  .slot-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .slot.me .slot-name { color: var(--gold); }
+  .slot-empty {
+    font-size: 32px;
+    color: rgba(167,139,250,0.4);
+    margin-bottom: 6px;
+    animation: emptyPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes emptyPulse {
+    0%,100% { opacity: 0.4; }
+    50%     { opacity: 0.9; }
+  }
+  .slot-empty-lbl {
+    font-size: 10.5px;
+    color: rgba(148,163,184,0.6);
+  }
+
+  .progress-box {
+    margin-bottom: 20px;
+  }
+  .progress-text {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 999px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(236,72,153,0.15));
+    border: 1.5px solid rgba(167,139,250,0.5);
+    color: #e9d5ff; font-size: 13px; font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .progress-text b { color: #fff; font-family: monospace; font-size: 16px; }
+  .progress-bar {
+    width: 90%; max-width: 300px;
+    height: 8px;
+    background: rgba(148,163,184,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899, #8b5cf6);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    transition: width 0.5s ease-out;
+    box-shadow: 0 0 15px rgba(167,139,250,0.6);
+    animation: progressShine 2s linear infinite;
+  }
+  @keyframes progressShine {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .cancel-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 13px 32px; border-radius: 14px;
+    background: rgba(239,68,68,0.15); color: #fca5a5;
+    border: 1.5px solid rgba(239,68,68,0.4);
+    text-decoration: none; font-weight: bold; font-size: 14px;
+    transition: all 0.2s;
+  }
+  .cancel-btn:hover {
+    background: rgba(239,68,68,0.3);
+    border-color: #ef4444;
+    color: #fff;
+    transform: translateY(-2px);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="wait-wrap">
+    <div class="team-title">دنبال هم‌تیمی‌ها...</div>
+    <div class="team-sub">برای بازی تیمی ۴ نفره لازمه<br>وقتی همه جمع شدن، تیم انتخاب می‌کنی</div>
+
+    <div class="slots" id="slotsGrid">
+      <div class="slot me" data-slot="0">
+        <div class="slot-avatar">
+          {% if user.avatar_type == "image" and user.avatar_id %}
+            <div style="width:100%;height:100%;border-radius:50%;background-image:url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');background-size:cover;"></div>
+          {% else %}
+            {{ user.avatar_emoji|default:"👤" }}
+          {% endif %}
+        </div>
+        <div class="slot-name">{{ user.alias }} (شما)</div>
+      </div>
+      <div class="slot" data-slot="1">
+        <div class="slot-empty">?</div>
+        <div class="slot-empty-lbl">در انتظار...</div>
+      </div>
+      <div class="slot" data-slot="2">
+        <div class="slot-empty">?</div>
+        <div class="slot-empty-lbl">در انتظار...</div>
+      </div>
+      <div class="slot" data-slot="3">
+        <div class="slot-empty">?</div>
+        <div class="slot-empty-lbl">در انتظار...</div>
+      </div>
+    </div>
+
+    <div class="progress-box">
+      <div class="progress-text">
+        <span>در صف:</span>
+        <b id="countBox">...</b>
+        <span>/ 4 نفر</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 25%;"></div>
+      </div>
+    </div>
+
+    <a href="/game/team/cancel/" class="cancel-btn">✕ لغو</a>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let checks = 0;
+  const interval = setInterval(() => {
+    checks++;
+    if (checks > 60) {
+      clearInterval(interval);
+      alert('کسی پیدا نشد. دوباره تلاش کن.');
+      window.location.href = '/game/rooms/';
+      return;
+    }
+    fetch('/game/team/status/')
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'matched') {
+          clearInterval(interval);
+          window.location.href = d.url;
+        } else if (d.status === 'cancelled') {
+          clearInterval(interval);
+          window.location.href = '/game/rooms/';
+        } else if (d.count !== undefined) {
+          const count = Math.min(d.count, 4);
+          document.getElementById('countBox').textContent = count;
+          document.getElementById('progressFill').style.width = (count * 25) + '%';
+          // Update slots
+          for (let i = 1; i < count && i < 4; i++) {
+            const slot = document.querySelector(`.slot[data-slot="${i}"]`);
+            if (slot && !slot.classList.contains('filled')) {
+              slot.classList.add('filled');
+              slot.innerHTML = '<div class="slot-avatar">👤</div><div class="slot-name">بازیکن ' + (i + 1) + '</div>';
+            }
+          }
+        }
+      })
+      .catch(e => console.log(e));
+  }, 2000);
+</script>
+{% endblock %}

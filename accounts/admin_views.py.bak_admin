@@ -1,0 +1,624 @@
+"""پنل ادمین سفارشی — فقط برای مدیر سیستم."""
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Sum
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.views.decorators.cache import never_cache
+
+
+# ⚠️ فقط از اینجا قابل تغییر است — نه از دیتابیس
+ADMIN_USERNAME = "admin74"
+ADMIN_PASSWORD = "Amir2255ds"
+
+
+def _check_auth(request):
+    """آیا این نشست لاگین ادمین است؟"""
+    return request.session.get("custom_admin_logged_in") is True
+
+
+@never_cache
+def admin_login(request):
+    """صفحه ورود ادمین."""
+    if _check_auth(request):
+        return redirect("custom_admin:dashboard")
+
+    error = None
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        password = request.POST.get("password") or ""
+
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            request.session["custom_admin_logged_in"] = True
+            request.session.set_expiry(60 * 60 * 8)
+            return redirect("custom_admin:dashboard")
+        else:
+            error = "نام کاربری یا رمز عبور اشتباه است."
+
+    return render(request, "custom_admin/login.html", {"error": error})
+
+
+@never_cache
+def admin_logout(request):
+    request.session.pop("custom_admin_logged_in", None)
+    return redirect("custom_admin:login")
+
+
+@never_cache
+def dashboard(request):
+    """داشبورد ادمین: لیست کاربران."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    User = get_user_model()
+    from game.models import Player
+
+    search = (request.GET.get("q") or "").strip()
+
+    users_qs = User.objects.all().order_by("-date_joined")
+
+    if search:
+        from django.db.models import Q
+        users_qs = users_qs.filter(
+            Q(username__icontains=search) |
+            Q(alias__icontains=search) |
+            Q(public_id__icontains=search)
+        )
+
+    players_stats = (
+        Player.objects
+        .values("user_id")
+        .annotate(total_score=Sum("score"), games=Count("id"))
+    )
+    stats_map = {s["user_id"]: s for s in players_stats}
+
+    users_data = []
+    for u in users_qs[:500]:
+        st = stats_map.get(u.id, {})
+        total = st.get("total_score", 0) or 0
+        level = 1 + total // 100
+
+        # الگوریتم هش پسورد
+        algo = "—"
+        if u.password:
+            parts = u.password.split("$")
+            if parts:
+                algo = parts[0]  # argon2 / pbkdf2 / bcrypt
+
+        users_data.append({
+            "id": u.id,
+            "username": u.username,
+            "alias": u.alias,
+            "public_id": u.public_id,
+            "avatar": u.avatar_id,
+            "avatar_type": getattr(u, "avatar_type", "emoji"),
+            "level": level,
+            "total_score": total,
+            "games": st.get("games", 0),
+            "is_active": u.is_active,
+            "is_staff": u.is_staff,
+            "is_guest": getattr(u, "is_guest", False),
+            "has_completed": u.has_completed_registration,
+            "phone": u.phone or "—",
+            "date_joined": u.date_joined,
+            "last_login": u.last_login,
+            "password_algo": algo,
+        })
+
+    total_users = User.objects.count()
+    total_players = Player.objects.count()
+    total_scores = Player.objects.aggregate(t=Sum("score"))["t"] or 0
+
+    return render(request, "custom_admin/dashboard.html", {
+        "users": users_data,
+        "search": search,
+        "stats": {
+            "total_users": total_users,
+            "total_games": total_players,
+            "total_scores": total_scores,
+        },
+    })
+
+
+@never_cache
+def user_detail(request, user_id):
+    """جزئیات یک کاربر."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect("custom_admin:dashboard")
+
+    from game.models import Player
+    players = Player.objects.filter(user=u).select_related("game").order_by("-id")[:20]
+
+    games_data = []
+    for p in players:
+        games_data.append({
+            "game_id": p.game.id,
+            "mode": p.game.mode,
+            "score": p.score,
+            "created_at": p.game.created_at,
+            "status": p.game.status,
+        })
+
+    message = request.session.pop("admin_message", None)
+
+    return render(request, "custom_admin/user_detail.html", {
+        "u": u,
+        "games": games_data,
+        "message": message,
+    })
+
+
+@never_cache
+def user_toggle_active(request, user_id):
+    """فعال/غیرفعال کردن کاربر."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    if request.method != "POST":
+        return redirect("custom_admin:dashboard")
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+        u.is_active = not u.is_active
+        u.save(update_fields=["is_active"])
+    except User.DoesNotExist:
+        pass
+
+    return redirect("custom_admin:dashboard")
+
+
+@never_cache
+def user_delete(request, user_id):
+    """حذف کاربر."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    if request.method != "POST":
+        return redirect("custom_admin:dashboard")
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+        u.delete()
+    except User.DoesNotExist:
+        pass
+
+    return redirect("custom_admin:dashboard")
+
+
+@never_cache
+def user_reset_password(request, user_id):
+    """تغییر پسورد کاربر توسط ادمین."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    if request.method != "POST":
+        return redirect("custom_admin:dashboard")
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect("custom_admin:dashboard")
+
+    new_password = (request.POST.get("new_password") or "").strip()
+
+    if len(new_password) < 6:
+        request.session["admin_message"] = {
+            "type": "error",
+            "text": "رمز جدید باید حداقل ۶ کاراکتر باشد."
+        }
+    else:
+        u.set_password(new_password)
+        u.save()
+        request.session["admin_message"] = {
+            "type": "success",
+            "text": f"رمز کاربر {u.username} با موفقیت تغییر کرد."
+        }
+
+    return redirect("custom_admin:user_detail", user_id=u.id)
+
+
+@never_cache
+def user_change_alias(request, user_id):
+    """تغییر نام نمایشی کاربر توسط ادمین."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    if request.method != "POST":
+        return redirect("custom_admin:dashboard")
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect("custom_admin:dashboard")
+
+    new_alias = (request.POST.get("new_alias") or "").strip()[:32]
+
+    if len(new_alias) < 2:
+        request.session["admin_message"] = {
+            "type": "error",
+            "text": "نام نمایشی باید حداقل ۲ کاراکتر باشد."
+        }
+    else:
+        u.alias = new_alias
+        u.save(update_fields=["alias"])
+        request.session["admin_message"] = {
+            "type": "success",
+            "text": f"نام نمایشی به «{new_alias}» تغییر کرد."
+        }
+
+    return redirect("custom_admin:user_detail", user_id=u.id)
+
+
+# ============================================================
+# Admin — Alliances
+# ============================================================
+@never_cache
+def alliances_list(request):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    from alliance.models import Alliance
+
+    search = (request.GET.get("q") or "").strip()
+    qs = Alliance.objects.all().order_by("-created_at")
+    if search:
+        from django.db.models import Q
+        qs = qs.filter(Q(name__icontains=search) | Q(tag__icontains=search) | Q(invite_code__icontains=search))
+
+    data = []
+    for a in qs:
+        data.append({
+            "id": a.id,
+            "name": a.name,
+            "tag": a.tag,
+            "emblem": a.emblem,
+            "leader": a.leader.alias,
+            "leader_username": a.leader.username,
+            "member_count": a.member_count(),
+            "max_members": a.max_members,
+            "has_password": bool(a.password),
+            "invite_code": a.invite_code,
+            "created_at": a.created_at,
+            "description": a.description,
+        })
+
+    message = request.session.pop("admin_message", None)
+
+    return render(request, "custom_admin/alliances.html", {
+        "alliances": data,
+        "search": search,
+        "message": message,
+    })
+
+
+@never_cache
+def alliance_manage(request, alliance_id):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    from alliance.models import Alliance, AllianceMember
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    try:
+        a = Alliance.objects.get(id=alliance_id)
+    except Alliance.DoesNotExist:
+        return redirect("custom_admin:alliances_list")
+
+    if request.method == "POST":
+        action = request.POST.get("action", "")
+        if action == "update":
+            name = (request.POST.get("name") or "").strip()[:40]
+            tag = (request.POST.get("tag") or "").strip().upper()[:8]
+            description = (request.POST.get("description") or "").strip()[:200]
+            emblem = (request.POST.get("emblem") or "🛡️").strip()[:4]
+            password = (request.POST.get("password") or "").strip()[:32]
+            try:
+                max_members = int(request.POST.get("max_members") or 30)
+            except (ValueError, TypeError):
+                max_members = 30
+            max_members = max(5, min(100, max_members))
+            new_leader_id = request.POST.get("leader_id") or ""
+
+            # Validate
+            if not name or len(name) < 3:
+                request.session["admin_message"] = {"type": "error", "text": "نام باید حداقل ۳ حرف باشد."}
+                return redirect("custom_admin:alliance_manage", alliance_id=a.id)
+
+            if Alliance.objects.filter(name=name).exclude(id=a.id).exists():
+                request.session["admin_message"] = {"type": "error", "text": "این نام قبلاً استفاده شده."}
+                return redirect("custom_admin:alliance_manage", alliance_id=a.id)
+
+            a.name = name
+            a.tag = tag
+            a.description = description
+            a.emblem = emblem
+            a.password = password
+            a.max_members = max_members
+
+            # Leader change
+            if new_leader_id and str(new_leader_id) != str(a.leader_id):
+                try:
+                    new_leader = User.objects.get(id=new_leader_id)
+                    if AllianceMember.objects.filter(alliance=a, user=new_leader).exists():
+                        # Old leader becomes member
+                        AllianceMember.objects.filter(alliance=a, user=a.leader).update(role="member")
+                        # New leader
+                        AllianceMember.objects.filter(alliance=a, user=new_leader).update(role="leader")
+                        a.leader = new_leader
+                except User.DoesNotExist:
+                    pass
+
+            a.save()
+            request.session["admin_message"] = {"type": "success", "text": "اتحاد با موفقیت به‌روزرسانی شد."}
+            return redirect("custom_admin:alliance_manage", alliance_id=a.id)
+
+        elif action == "delete":
+            a.delete()
+            request.session["admin_message"] = {"type": "success", "text": "اتحاد حذف شد."}
+            return redirect("custom_admin:alliances_list")
+
+        elif action == "kick_member":
+            user_id = request.POST.get("user_id")
+            AllianceMember.objects.filter(alliance=a, user_id=user_id).exclude(role="leader").delete()
+            return redirect("custom_admin:alliance_manage", alliance_id=a.id)
+
+    members = AllianceMember.objects.filter(alliance=a).select_related("user")
+    members_data = []
+    for m in members:
+        members_data.append({
+            "user_id": m.user.id,
+            "username": m.user.username,
+            "alias": m.user.alias,
+            "role": m.role,
+            "role_display": m.get_role_display(),
+            "joined_at": m.joined_at,
+        })
+
+    message = request.session.pop("admin_message", None)
+
+    emojis = ["🛡️", "⚔️", "🏰", "🐉", "🦅", "🐺", "🔥", "⚡", "👑", "💎", "🌟", "🦁"]
+
+    return render(request, "custom_admin/alliance_detail.html", {
+        "a": a,
+        "members": members_data,
+        "message": message,
+        "emojis": emojis,
+    })
+
+
+# ============================================================
+# Admin — Rooms (Games)
+# ============================================================
+@never_cache
+def rooms_list(request):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    from game.models import Game, Player
+
+    search = (request.GET.get("q") or "").strip()
+    status_filter = (request.GET.get("status") or "").strip()
+
+    qs = Game.objects.all().order_by("-created_at")
+
+    if search:
+        from django.db.models import Q
+        qs = qs.filter(
+            Q(room_name__icontains=search) |
+            Q(code__icontains=search) |
+            Q(host__alias__icontains=search) |
+            Q(host__username__icontains=search)
+        )
+
+    if status_filter in ("waiting", "in_round", "round_result", "finished"):
+        qs = qs.filter(status=status_filter)
+
+    data = []
+    for g in qs[:300]:
+        data.append({
+            "id": str(g.id),
+            "code": g.code,
+            "room_name": g.room_name or "—",
+            "mode": g.mode,
+            "status": g.status,
+            "host": g.host.alias,
+            "host_username": g.host.username,
+            "players_count": g.players.count(),
+            "max_players": g.max_players,
+            "created_at": g.created_at,
+            "has_password": bool(g.password),
+            "categories_count": len(g.categories or []),
+        })
+
+    message = request.session.pop("admin_message", None)
+
+    return render(request, "custom_admin/rooms.html", {
+        "rooms": data,
+        "search": search,
+        "status_filter": status_filter,
+        "message": message,
+    })
+
+
+@never_cache
+def rooms_active(request):
+    """اتاق‌های در حال بازی (in_round)."""
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    from game.models import Game
+
+    qs = Game.objects.filter(status="in_round").order_by("-created_at")
+
+    data = []
+    for g in qs:
+        active_round = g.rounds.order_by("-number").first()
+        data.append({
+            "id": str(g.id),
+            "code": g.code,
+            "room_name": g.room_name or "—",
+            "mode": g.mode,
+            "host": g.host.alias,
+            "host_username": g.host.username,
+            "players_count": g.players.count(),
+            "max_players": g.max_players,
+            "created_at": g.created_at,
+            "current_round": active_round.number if active_round else 0,
+            "current_letter": active_round.letter if active_round else "—",
+        })
+
+    return render(request, "custom_admin/rooms.html", {
+        "rooms": data,
+        "search": "",
+        "status_filter": "in_round",
+        "message": None,
+    })
+
+
+@never_cache
+def room_delete(request, game_id):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+    if request.method != "POST":
+        return redirect("custom_admin:rooms_list")
+
+    from game.models import Game
+    try:
+        g = Game.objects.get(id=game_id)
+        g.delete()
+        request.session["admin_message"] = {"type": "success", "text": "اتاق حذف شد."}
+    except Game.DoesNotExist:
+        pass
+
+    return redirect("custom_admin:rooms_list")
+
+
+# ============================================================
+# Admin — Full User Edit
+# ============================================================
+@never_cache
+def user_edit(request, user_id):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect("custom_admin:dashboard")
+
+    message = request.session.pop("admin_message", None)
+
+    return render(request, "custom_admin/user_edit.html", {
+        "u": u,
+        "message": message,
+    })
+
+
+@never_cache
+def user_update(request, user_id):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+    if request.method != "POST":
+        return redirect("custom_admin:user_edit", user_id=user_id)
+
+    User = get_user_model()
+    try:
+        u = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect("custom_admin:dashboard")
+
+    action = request.POST.get("action", "update")
+    redirect_to = request.POST.get("redirect_to", "edit")
+
+    if action == "update":
+        # Username
+        new_username = (request.POST.get("username") or "").strip().lower()
+        if new_username and new_username != u.username:
+            if len(new_username) < 3 or len(new_username) > 32:
+                request.session["admin_message"] = {"type": "error", "text": "username باید ۳ تا ۳۲ حرف باشد."}
+                return redirect("custom_admin:user_edit", user_id=u.id)
+            if not all(c.isalnum() or c == "_" for c in new_username):
+                request.session["admin_message"] = {"type": "error", "text": "username فقط حروف/اعداد/_."}
+                return redirect("custom_admin:user_edit", user_id=u.id)
+            if User.objects.filter(username=new_username).exclude(id=u.id).exists():
+                request.session["admin_message"] = {"type": "error", "text": "این username قبلاً استفاده شده."}
+                return redirect("custom_admin:user_edit", user_id=u.id)
+            u.username = new_username
+
+        # Alias
+        new_alias = (request.POST.get("alias") or "").strip()[:32]
+        if new_alias:
+            u.alias = new_alias
+
+        # Email
+        u.email = (request.POST.get("email") or "").strip() or None
+
+        # Phone
+        phone_val = (request.POST.get("phone") or "").strip()[:20]
+        u.phone = phone_val if phone_val else None
+
+        # Booleans
+        u.is_active = request.POST.get("is_active") == "on"
+        u.is_staff = request.POST.get("is_staff") == "on"
+        u.is_guest = request.POST.get("is_guest") == "on"
+
+        # Coins/Gems
+        try:
+            u.coins = int(request.POST.get("coins") or 0)
+        except (ValueError, TypeError):
+            u.coins = 0
+        try:
+            u.gems = int(request.POST.get("gems") or 0)
+        except (ValueError, TypeError):
+            u.gems = 0
+
+        # Password
+        new_password = (request.POST.get("password") or "").strip()
+        if new_password:
+            if len(new_password) < 6:
+                request.session["admin_message"] = {"type": "error", "text": "پسورد باید حداقل ۶ کاراکتر."}
+                return redirect("custom_admin:user_edit", user_id=u.id)
+            u.set_password(new_password)
+
+        try:
+            u.save()
+            request.session["admin_message"] = {"type": "success", "text": "کاربر با موفقیت به‌روزرسانی شد."}
+        except Exception as e:
+            request.session["admin_message"] = {"type": "error", "text": f"خطا: {str(e)[:100]}"}
+
+    elif action == "quick_coins":
+        delta = request.POST.get("delta", "0")
+        try:
+            d = int(delta)
+            u.coins = max(0, (u.coins or 0) + d)
+            u.save(update_fields=["coins"])
+            request.session["admin_message"] = {"type": "success", "text": f"سکه {d:+d} شد."}
+        except (ValueError, TypeError):
+            pass
+
+    elif action == "quick_gems":
+        delta = request.POST.get("delta", "0")
+        try:
+            d = int(delta)
+            u.gems = max(0, (u.gems or 0) + d)
+            u.save(update_fields=["gems"])
+            request.session["admin_message"] = {"type": "success", "text": f"جم {d:+d} شد."}
+        except (ValueError, TypeError):
+            pass
+
+    if redirect_to == "detail":
+        return redirect("custom_admin:user_detail", user_id=u.id)
+    return redirect("custom_admin:user_edit", user_id=u.id)
+

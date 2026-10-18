@@ -23,11 +23,9 @@ def friends_home(request):
 
     now = timezone.now()
     online_threshold = now - timedelta(minutes=5)
-    
-    # آپدیت وضعیت آنلاین بودن کاربر فعلی
+
     User.objects.filter(id=request.user.id).update(last_seen=now)
 
-    # دوستان تایید شده
     accepted = Friendship.objects.filter(
         Q(from_user=request.user, status="accepted") |
         Q(to_user=request.user, status="accepted")
@@ -37,14 +35,12 @@ def friends_home(request):
     for f in accepted:
         other = f.to_user if f.from_user_id == request.user.id else f.from_user
         is_online = other.last_seen and other.last_seen >= online_threshold
-        
         stats = Player.objects.filter(user=other).aggregate(
             total_score=Sum('score'), games=Count('id')
         )
         total_score = stats['total_score'] or 0
         games = stats['games'] or 0
         level = 1 + total_score // 100
-
         friends.append({
             "user": other,
             "avatar": _avatar_of(other),
@@ -55,24 +51,59 @@ def friends_home(request):
             "games": games,
         })
 
-    # درخواست‌های دریافتی
     incoming = Friendship.objects.filter(to_user=request.user, status="pending").select_related("from_user")
     incoming_list = [{"req": f, "from": f.from_user, "avatar": _avatar_of(f.from_user)} for f in incoming]
 
-    # درخواست‌های ارسالی
     outgoing = Friendship.objects.filter(from_user=request.user, status="pending").select_related("to_user")
     outgoing_list = [{"req": f, "to": f.to_user, "avatar": _avatar_of(f.to_user)} for f in outgoing]
 
-    # دعوت‌نامه‌های بازی در انتظار
     pending_invites = GameInvite.objects.filter(to_user=request.user, status="pending").select_related("from_user", "game")
+
+    from alliance.models import Alliance, AllianceMember, AllianceMessage
+    my_alliance = None
+    membership = AllianceMember.objects.filter(user=request.user).select_related("alliance").first()
+    if membership:
+        a = membership.alliance
+        last_msg = AllianceMessage.objects.filter(alliance=a).select_related("sender").order_by("-sent_at").first()
+        my_alliance = {
+            "id": a.id,
+            "name": a.name,
+            "emblem": a.emblem,
+            "tag": a.tag,
+            "member_count": a.member_count(),
+            "max_members": a.max_members,
+            "role": membership.role,
+            "role_display": membership.get_role_display(),
+            "last_message": last_msg.body if last_msg else "",
+            "last_message_sender": last_msg.sender.alias if last_msg else "",
+        }
+
+    all_alliances = []
+    if not my_alliance:
+        for a in Alliance.objects.all().order_by("-created_at")[:30]:
+            count = a.member_count()
+            if count < a.max_members:
+                all_alliances.append({
+                    "id": a.id,
+                    "name": a.name,
+                    "emblem": a.emblem,
+                    "tag": a.tag,
+                    "member_count": count,
+                    "max_members": a.max_members,
+                    "has_password": bool(a.password),
+                    "leader_avatar": _avatar_of(a.leader),
+                })
 
     return render(request, "social/friends.html", {
         "friends": friends,
         "incoming": incoming_list,
         "outgoing": outgoing_list,
         "pending_invites": pending_invites,
+        "my_alliance": my_alliance,
+        "all_alliances": all_alliances,
         "active": "friends",
     })
+
 
 @login_required
 def search_user(request):
@@ -245,3 +276,31 @@ def reject_invite(request, invite_id):
         inv.save()
         return JsonResponse({"status": "ok"})
     return JsonResponse({"status": "error"}, status=400)
+
+@login_required
+def notifications_view(request):
+    from .models import Notification, NotificationRead
+
+    all_notifs = list(
+        Notification.objects.filter(user=request.user)
+        .select_related("sender")
+        .order_by("-created_at")
+    )
+    unread = sum(1 for n in all_notifs if not n.is_read)
+
+    # Record reads for broadcast notifications
+    broadcast_notifs = [n for n in all_notifs if n.type == "admin_broadcast" and not n.is_read]
+    for n in broadcast_notifs:
+        try:
+            NotificationRead.objects.get_or_create(notification=n, user=request.user)
+        except Exception:
+            pass
+
+    # Mark all as read
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+
+    return render(request, "social/notifications.html", {
+        "notifications": all_notifs,
+        "unread_total": unread,
+        "active": "home",
+    })

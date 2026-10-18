@@ -3,44 +3,69 @@
 
 {% block extra_css %}
 <style>
-  .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px;
+    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.2), transparent 60%),
+                linear-gradient(135deg, #1a1a2e, #0f0f1e);
+    border: 1.5px solid rgba(244,197,66,0.4); border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(244,197,66,0.15); }
+
   .letter-box {
-    background: radial-gradient(circle, rgba(244,197,66,0.2), transparent);
-    width: 80px; height: 80px; border-radius: 50%;
+    width: 84px; height: 84px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(244,197,66,0.35), rgba(244,197,66,0.05));
     display: flex; align-items: center; justify-content: center;
-    font-size: 45px; font-weight: 900; color: var(--gold);
-    text-shadow: 0 0 20px rgba(244,197,66,0.6);
-    border: 2px solid rgba(244,197,66,0.4);
+    font-size: 48px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 0 30px rgba(244,197,66,0.9), 0 0 60px rgba(244,197,66,0.5);
+    border: 3px solid rgba(244,197,66,0.6);
+    animation: letterPulse 2s ease-in-out infinite;
   }
-  .timer-wrapper { position: relative; width: 80px; height: 80px; }
-  .timer-svg { transform: rotate(-90deg); width: 80px; height: 80px; }
+  @keyframes letterPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(244,197,66,0.7); }
+    50%     { box-shadow: 0 0 0 12px rgba(244,197,66,0); }
+  }
+
+  .timer-wrapper { position: relative; width: 84px; height: 84px; }
+  .timer-svg { transform: rotate(-90deg); width: 84px; height: 84px; }
   .timer-circle-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 6; }
-  .timer-circle-progress { fill: none; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 219; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
-  .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; font-weight: bold; font-family: monospace; color: #fff; }
+  .timer-circle-progress { fill: none; stroke: #22c55e; stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 232; stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s; filter: drop-shadow(0 0 6px currentColor); }
+  .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 22px; font-weight: 900; font-family: monospace; color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.4); }
 
-  .answers-grid { display: flex; flex-direction: column; gap: 8px; padding-bottom: 70px; }
+  .answers-grid { display: flex; flex-direction: column; gap: 10px; padding-bottom: 90px; }
   .answer-row {
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(30,41,59,0.5); padding: 4px 10px; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(15,23,42,0.5));
+    padding: 8px 14px; border-radius: 14px;
+    border: 1.5px solid rgba(148,163,184,0.15);
+    transition: 0.2s;
   }
-  .answer-row .label { width: 80px; color: var(--muted); font-size: 13px; font-weight: bold; }
+  .answer-row:focus-within {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(244,197,66,0.2);
+    transform: translateY(-1px);
+  }
+  .answer-row .label {
+    width: 82px; color: var(--gold); font-size: 13px; font-weight: bold;
+    padding: 6px 0;
+  }
   .answer-row input {
-    flex: 1; background: transparent; border: none; border-bottom: 1.5px solid var(--border);
-    color: #fff; font-size: 15px; padding: 6px 4px; font-family: inherit;
+    flex: 1; background: transparent; border: none;
+    color: #fff; font-size: 16px; padding: 8px 4px;
+    font-family: inherit; font-weight: 500;
   }
-  .answer-row input:focus { outline: none; border-bottom-color: var(--gold); }
+  .answer-row input:focus { outline: none; }
+  .answer-row input::placeholder { color: rgba(148,163,184,0.4); }
 
-  /* دکمه استپ کوچیک‌تر */
-  .stop-wrapper {
-    position: fixed; bottom: 80px; left: 16px; right: 16px; max-width: 520px; margin: 0 auto; z-index: 50;
-  }
-  button.stop {
-    width: 100%; padding: 14px; border: none; border-radius: 12px;
-    font-size: 16px; font-weight: 900; font-family: inherit; cursor: pointer;
+  .stop-wrapper { position: fixed; left: 16px; right: 16px; max-width: 520px; margin: 0 auto; z-index: 50;
+    bottom: 80px; bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 8px); }
+  button.stop { width: 100%; padding: 16px; border: none; border-radius: 16px;
+    font-size: 17px; font-weight: 900; font-family: inherit; cursor: pointer;
     color: #fff; background: linear-gradient(135deg, #ef4444, #b91c1c);
-    box-shadow: 0 8px 20px rgba(239,68,68,0.4); transition: 0.2s;
-  }
+    box-shadow: 0 10px 30px rgba(239,68,68,0.5);
+    transition: 0.2s; }
+  button.stop:hover { transform: translateY(-2px); }
 </style>
 {% endblock %}
 
@@ -48,7 +73,7 @@
   <div class="game-header">
     <div class="letter-box">{{ round.letter }}</div>
     <div class="timer-wrapper">
-      <svg class="timer-svg"><circle class="timer-circle-bg" cx="40" cy="40" r="36"></circle><circle class="timer-circle-progress" id="timerProgress" cx="40" cy="40" r="36"></circle></svg>
+      <svg class="timer-svg"><circle class="timer-circle-bg" cx="42" cy="42" r="37"></circle><circle class="timer-circle-progress" id="timerProgress" cx="42" cy="42" r="37"></circle></svg>
       <div class="timer-text" id="timerText">{{ duration }}</div>
     </div>
   </div>
@@ -59,7 +84,7 @@
       {% for c in categories %}
         <div class="answer-row">
           <div class="label">{{ c }}</div>
-          <input type="text" name="cat_{{ c }}" autocomplete="off" maxlength="64">
+          <input type="text" name="cat_{{ c }}" autocomplete="off" maxlength="64" placeholder="با {{ round.letter }} شروع شود...">
         </div>
       {% endfor %}
     </div>
@@ -74,16 +99,24 @@
   const textEl = document.getElementById('timerText');
   const circle = document.getElementById('timerProgress');
   const form = document.getElementById('form');
-  const circumference = 2 * Math.PI * 36;
+  const circumference = 2 * Math.PI * 37;
   circle.style.strokeDasharray = circumference;
 
   const timer = setInterval(() => {
     left--;
     textEl.textContent = left;
     circle.style.strokeDashoffset = circumference - (left / total) * circumference;
-    if (left <= 10) { circle.style.stroke = '#ef4444'; textEl.style.color = '#ef4444'; } 
+    if (left <= 5) { circle.style.stroke = '#ef4444'; textEl.style.color = '#ef4444'; }
     else if (left <= total / 2) { circle.style.stroke = '#eab308'; textEl.style.color = '#eab308'; }
     if (left <= 0) { clearInterval(timer); form.submit(); }
   }, 1000);
 </script>
 {% endblock %}
+
+<script>
+  // Pause background music during gameplay
+  if (window.__music) {
+    window.__music.isGameplay = true;
+    window.__music.pause();
+  }
+</script>
