@@ -6,7 +6,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me-in-production")
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
-ALLOWED_HOSTS = ["*"]  # Allow all hosts (safe for now)
+ALLOWED_HOSTS = [
+    "esmfamil-c78-esmfamil-db.runflare.cloud",
+    "esmfamil.com",
+    "www.esmfamil.com",
+    "127.0.0.1",
+    "localhost",
+]  # Allow all hosts (safe for now)
 
 INSTALLED_APPS = [
     "daphne",

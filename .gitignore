@@ -1,7 +1,40 @@
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtualenv
+venv/
+.venv/
+env/
+
+# Django
 db.sqlite3
-.env
+db.sqlite3.*
+*.sqlite3
+*.log
 staticfiles/
+media/
+
+# Env & secrets
+.env
+.env.*
+
+# Backup / dump
+*.bak
+*.backup
+PROJECT_DUMP.txt
+*.dump*
+*.swp
+*.save
+
+# IDE
 .vscode/
+.idea/
+!.vscode/settings.json
+!.vscode/launch.json
+
+# OS
+.DS_Store
+Thumbs.db
