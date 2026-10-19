@@ -41,11 +41,18 @@ self.addEventListener('fetch', (event) => {
   // Skip WebSocket and non-http(s)
   if (!url.protocol.startsWith('http')) return;
 
-  // Skip admin / panel-admin / api
+  // ⚠️ CRITICAL: Skip ALL non-GET requests (POST, PUT, DELETE)
+  if (event.request.method !== 'GET') return;
+
+  // ⚠️ Skip admin, auth, api, beta paths
   if (url.pathname.startsWith('/panel-admin/') ||
       url.pathname.startsWith('/django-admin/') ||
       url.pathname.startsWith('/api/') ||
-      url.pathname.startsWith('/beta-')) {
+      url.pathname.startsWith('/beta-') ||
+      url.pathname.startsWith('/accounts/') ||
+      url.pathname.startsWith('/social/') ||
+      url.pathname.startsWith('/alliance/') ||
+      url.pathname.startsWith('/game/')) {
     return;
   }
 
@@ -75,7 +82,13 @@ self.addEventListener('fetch', (event) => {
       }
       return resp;
     }).catch(() => {
-      return caches.match(event.request).then((cached) => cached || new Response('offline', { status: 503 }));
+      return caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return new Response(
+          '<!DOCTYPE html><html><body style="background:#0a0a15;color:#fff;font-family:Tahoma;text-align:center;padding:50px;direction:rtl;"><h1>📡 اتصال قطع است</h1><p>لطفاً اینترنت خود را بررسی کنید و صفحه را دوباره باز کنید.</p><a href="/" style="color:#f4c542;">بازگشت</a></body></html>',
+          { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+        );
+      });
     })
   );
 });
