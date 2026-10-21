@@ -1322,8 +1322,43 @@ def rooms_list(request):
 
 @never_cache
 def rooms_active(request):
-    """Redirect to main rooms page (everything is there)."""
-    return redirect("custom_admin:rooms_list")
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+    from game.models import Game
+    from accounts.avatars import get_emoji
+
+    qs = Game.objects.filter(status="in_round").order_by("-created_at")
+    data = []
+    for g in qs:
+        active_round = g.rounds.order_by("-number").first()
+        # Get players with their scores
+        players = []
+        for p in g.players.select_related("user").all():
+            players.append({
+                "alias": p.user.alias,
+                "avatar": get_emoji(p.user.avatar_id),
+                "score": p.score,
+                "username": p.user.username,
+            })
+        data.append({
+            "id": str(g.id),
+            "code": g.code,
+            "room_name": g.room_name or "—",
+            "mode": g.mode,
+            "status": g.status,
+            "host": g.host.alias,
+            "host_username": g.host.username,
+            "players_count": g.players.count(),
+            "max_players": g.max_players,
+            "created_at": g.created_at,
+            "has_password": bool(g.password),
+            "current_round": active_round.number if active_round else None,
+            "current_letter": active_round.letter if active_round else None,
+            "players": players,
+        })
+    return render(request, "custom_admin/rooms.html", {
+        "rooms": data, "search": "", "status_filter": "in_round", "message": None,
+    })
 
 @never_cache
 def user_notify_toggle_read(request, user_id, notif_id):
@@ -1571,3 +1606,113 @@ def support_ticket_admin(request, ticket_id):
         "ticket_messages": msgs_data,
         "message": message,
     })
+
+# ============================================================
+# Admin — Support Tickets
+# ============================================================
+@never_cache
+def support_list(request):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+    from support.models import SupportTicket
+
+    status_filter = request.GET.get("status", "")
+    q = (request.GET.get("q") or "").strip()
+
+    qs = SupportTicket.objects.all().select_related("user").order_by("-created_at")
+    if status_filter in ("open", "in_progress", "answered", "closed"):
+        qs = qs.filter(status=status_filter)
+    if q:
+        from django.db.models import Q
+        qs = qs.filter(Q(subject__icontains=q) | Q(user__alias__icontains=q) | Q(user__username__icontains=q))
+
+    tickets = qs[:100]
+    from accounts.avatars import get_emoji
+    data = []
+    for t in tickets:
+        data.append({
+            "id": t.id,
+            "subject": t.subject,
+            "user_alias": t.user.alias,
+            "user_username": t.user.username,
+            "avatar": get_emoji(t.user.avatar_id),
+            "category": t.category,
+            "status": t.status,
+            "status_display": t.status_display(),
+            "priority": t.priority,
+            "created_at": t.created_at,
+            "has_reply": bool(t.admin_reply),
+        })
+
+    # counts
+    from django.db.models import Count
+    counts = SupportTicket.objects.values("status").annotate(c=Count("id"))
+    status_counts = {x["status"]: x["c"] for x in counts}
+
+    message = request.session.pop("admin_message", None)
+    return render(request, "custom_admin/support_list.html", {
+        "tickets": data,
+        "status_filter": status_filter,
+        "search": q,
+        "status_counts": status_counts,
+        "message": message,
+    })
+
+
+@never_cache
+def support_detail(request, ticket_id):
+    if not _check_auth(request):
+        return redirect("custom_admin:login")
+    from support.models import SupportTicket
+    try:
+        t = SupportTicket.objects.get(id=ticket_id)
+    except SupportTicket.DoesNotExist:
+        return redirect("custom_admin:support_list")
+
+    if request.method == "POST":
+        action = request.POST.get("action", "")
+        if action == "reply":
+            reply = (request.POST.get("admin_reply") or "").strip()[:5000]
+            new_status = request.POST.get("new_status", "answered")
+            if new_status not in ("open", "in_progress", "answered", "closed"):
+                new_status = "answered"
+            if reply:
+                from django.utils import timezone
+                t.admin_reply = reply
+                t.replied_at = timezone.now()
+                t.status = new_status
+                t.save(update_fields=["admin_reply", "replied_at", "status"])
+                # Notify user
+                try:
+                    from social.notifications import notify
+                    notify(
+                        user=t.user,
+                        ntype="message",
+                        title=f"پاسخ به تیکت #{t.id}",
+                        body=f"تیکت «{t.subject[:40]}» پاسخ داده شد.",
+                        url=f"/support/{t.id}/",
+                    )
+                except Exception:
+                    pass
+                request.session["admin_message"] = {"type": "success", "text": "پاسخ ارسال شد."}
+            return redirect("custom_admin:support_detail", ticket_id=t.id)
+
+        elif action == "status":
+            ns = request.POST.get("new_status", "open")
+            if ns in ("open", "in_progress", "answered", "closed"):
+                t.status = ns
+                t.save(update_fields=["status"])
+                request.session["admin_message"] = {"type": "success", "text": f"وضعیت: {t.status_display()}"}
+            return redirect("custom_admin:support_detail", ticket_id=t.id)
+
+        elif action == "delete":
+            t.delete()
+            request.session["admin_message"] = {"type": "success", "text": "تیکت حذف شد."}
+            return redirect("custom_admin:support_list")
+
+    message = request.session.pop("admin_message", None)
+    return render(request, "custom_admin/support_detail.html", {
+        "t": t,
+        "message": message,
+    })
+

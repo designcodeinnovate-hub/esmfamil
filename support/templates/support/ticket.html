@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}تیکت #{{ ticket.id }}{% endblock %}
+{% block extra_css %}
+<style>
+  .page-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .page-head h1{font-size:20px;font-weight:900;color:var(--gold)}
+  .ticket-box{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px}
+  .t-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .t-icon{font-size:34px;flex-shrink:0}
+  .t-info{flex:1}
+  .t-title{font-size:17px;font-weight:900;margin-bottom:4px}
+  .t-meta{font-size:11px;color:var(--muted)}
+  .t-badge{font-size:10px;padding:4px 12px;border-radius:8px;font-weight:bold;flex-shrink:0}
+  .badge-open{background:rgba(234,179,8,0.2);color:#fde68a}
+  .badge-answered{background:rgba(34,197,94,0.2);color:#86efac}
+  .badge-closed{background:rgba(100,116,139,0.2);color:#cbd5e1}
+  .badge-in_progress{background:rgba(59,130,246,0.2);color:#93c5fd}
+  .t-body{padding:16px;background:rgba(15,23,42,0.5);border-radius:12px;font-size:14px;line-height:1.8;white-space:pre-wrap}
+  .reply-box{margin-top:18px;padding:18px;background:rgba(34,197,94,0.08);border:1.5px solid rgba(34,197,94,0.4);border-radius:14px}
+  .reply-box h3{font-size:14px;color:#86efac;margin-bottom:10px}
+  .reply-body{font-size:14px;line-height:1.8;color:#fff;white-space:pre-wrap;padding:12px;background:rgba(15,23,42,0.5);border-radius:10px}
+  .reply-time{font-size:10px;color:#94a3b8;margin-top:8px;font-family:monospace}
+  .no-reply{text-align:center;padding:20px;background:rgba(234,179,8,0.08);border:1px dashed rgba(234,179,8,0.3);border-radius:12px;color:#fde68a;font-size:13px;margin-top:16px}
+  .actions{display:flex;gap:10px;margin-top:20px}
+  .actions a,.actions button{flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-weight:900;font-size:14px;cursor:pointer;text-decoration:none;text-align:center}
+  .btn-back{background:rgba(148,163,184,0.2);color:#fff}
+  .btn-close{background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4) !important}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-head">
+  <a href="/support/" class="back-btn"><span class="arrow-icon">→</span></a>
+  <h1>تیکت #{{ ticket.id }}</h1>
+</div>
+
+<div class="ticket-box">
+  <div class="t-header">
+    <div class="t-icon">{% if ticket.category == 'bug' %}🐛{% elif ticket.category == 'idea' %}💡{% elif ticket.category == 'payment' %}💳{% else %}📝{% endif %}</div>
+    <div class="t-info">
+      <div class="t-title">{{ ticket.subject }}</div>
+      <div class="t-meta">{{ ticket.created_at|date:"Y/m/d H:i" }}</div>
+    </div>
+    <span class="t-badge badge-{{ ticket.status }}">{{ ticket.status_display }}</span>
+  </div>
+
+  <div class="t-body">{{ ticket.body }}</div>
+
+  {% if ticket.admin_reply %}
+    <div class="reply-box">
+      <h3>💬 پاسخ پشتیبانی</h3>
+      <div class="reply-body">{{ ticket.admin_reply }}</div>
+      <div class="reply-time">📅 {{ ticket.replied_at|date:"Y/m/d H:i" }}</div>
+    </div>
+  {% elif ticket.status != "closed" %}
+    <div class="no-reply">⏳ در انتظار پاسخ تیم پشتیبانی...</div>
+  {% endif %}
+
+  <div class="actions">
+    <a href="/support/" class="btn-back">← بازگشت</a>
+    {% if ticket.status != "closed" %}
+      <form method="post" action="/support/{{ ticket.id }}/close/" style="display:contents;" onsubmit="return confirm('بستن این تیکت؟');">
+        {% csrf_token %}
+        <button type="submit" class="btn-close">✕ بستن</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -3,436 +3,400 @@
 
 {% block extra_css %}
 <style>
-  .version-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(234, 179, 8, 0.15);
-    color: #facc15;
-    font-size: 10px;
-    padding: 5px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    font-weight: bold;
+  /* ============ ANIMATED DOTS BACKGROUND ============ */
+  .bg-pattern { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bg-pattern::before, .bg-pattern::after {
+    content: ""; position: absolute; inset: -50%;
+    background-image:
+      radial-gradient(circle, rgba(244,197,66,0.35) 1px, transparent 1.5px),
+      radial-gradient(circle, rgba(139,92,246,0.3) 1px, transparent 1.5px);
+    background-size: 60px 60px, 90px 90px;
+    background-position: 0 0, 30px 30px;
+    animation: dotsFloat 30s linear infinite;
+    opacity: 0.4;
   }
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
+  .bg-pattern::after { animation-duration: 45s; animation-direction: reverse; opacity: 0.5; }
+  @keyframes dotsFloat { from { transform: translate(0, 0); } to { transform: translate(60px, 90px); } }
+
+  .fly-dot {
+    position: fixed; width: 4px; height: 4px; border-radius: 50%;
+    background: #f4c542; box-shadow: 0 0 8px #f4c542;
+    opacity: 0.6; z-index: 0; pointer-events: none; animation: flyUp linear infinite;
   }
-  .settings-icon {
-    width: 42px; height: 42px;
-    border-radius: 14px;
-    background: var(--card);
-    border: 1.5px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    text-decoration: none;
-    font-size: 20px;
-    transition: all 0.2s;
-  }
-  .settings-icon:hover {
-    border-color: var(--gold);
-    transform: rotate(45deg);
+  @keyframes flyUp {
+    from { transform: translateY(100vh) scale(0.3); opacity: 0; }
+    20% { opacity: 0.7; }
+    80% { opacity: 0.5; }
+    to { transform: translateY(-50px) scale(1); opacity: 0; }
   }
 
-  /* ===== آواتار ===== */
-  .user-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-  .user-av-box {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    border: 2px solid #f4c542;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
-    box-shadow: 0 0 22px rgba(244, 197, 66, 0.3);
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .user-av-box.emoji-bg { background: linear-gradient(135deg, #2a2a4a, #1a1a2e); }
-  .user-av-box.image-bg { background-size: cover; background-position: center; }
-  .greet-text { flex: 1; min-width: 0; }
-  .greet-text .hi { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
-  .greet-text .name {
-    font-size: 16px; font-weight: bold; color: var(--text);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
+  /* ============ TOP BAR ============ */
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: relative; z-index: 2; }
+  .version-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(234,179,8,0.15); color: #facc15; font-size: 10px; padding: 5px 10px; border-radius: 10px; border: 1px solid rgba(234,179,8,0.3); font-weight: bold; }
+  .btn-settings-b { width: 42px; height: 42px; border-radius: 14px; background: rgba(30,41,59,0.9); border: 1.5px solid rgba(148,163,184,0.2); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; transition: all 0.2s; }
+  .btn-settings-b:hover { border-color: #f4c542; transform: rotate(45deg); }
 
-  /* ===== دو دکمه دایره‌ای کوچیک بالا ===== */
-  .round-row {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-bottom: 14px;
+  /* ============ PROFILE OVAL ============ */
+  .profile-wrap { position: relative; z-index: 5; margin-bottom: 18px; }
+  .profile-oval {
+    display: flex; align-items: center; gap: 0; padding: 6px;
+    width: 62px; height: 62px; border-radius: 31px;
+    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.35), transparent 60%),
+                radial-gradient(circle at 0% 100%, rgba(139,92,246,0.25), transparent 60%),
+                linear-gradient(135deg, #1a1a2e, #0f0f1e);
+    border: 2.5px solid rgba(244,197,66,0.6);
+    cursor: pointer; transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden; margin-right: auto;
+    box-shadow: 0 0 25px rgba(244,197,66,0.3);
   }
-  .round-btn {
-    position: relative;
-    width: 66px; height: 66px;
-    border-radius: 50%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-decoration: none;
-    border: 2px solid;
-    transition: all 0.22s;
-    flex-shrink: 0;
-    gap: 2px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
-    cursor: pointer;
-  }
-  .round-btn:hover {
-    transform: translateY(-3px) scale(1.06);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
-  }
-  .round-btn:active { transform: scale(0.94); }
-  .round-btn .rb-icon { font-size: 24px; line-height: 1; }
-  .round-btn .rb-label {
-    font-size: 9px;
-    font-weight: bold;
-    line-height: 1;
-  }
-  .round-top {
-    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(234,179,8,0.1));
-    border-color: rgba(244,197,66,0.55);
-  }
-  .round-top .rb-label { color: #fde68a; }
-  .round-shop {
-    background: linear-gradient(135deg, rgba(34,197,94,0.3), rgba(6,182,212,0.1));
-    border-color: rgba(34,197,94,0.55);
-  }
-  .round-shop .rb-label { color: #86efac; }
-
-  /* ===== دکمه بازی با بات ===== */
-  .bot-btn {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 22px;
-    background: radial-gradient(circle at 100% 0%, rgba(6,182,212,0.35), transparent 60%),
-                linear-gradient(135deg, #0f1a2e, #0f0f1e);
-    border: 2px solid rgba(6,182,212,0.5);
-    border-radius: 22px;
-    text-decoration: none;
-    color: #fff;
-    transition: all 0.22s;
-    margin-bottom: 16px;
-    box-shadow: 0 8px 30px rgba(6,182,212,0.2);
-  }
-  .bot-btn:hover {
-    transform: translateY(-3px);
-    border-color: rgba(6,182,212,0.9);
-    box-shadow: 0 15px 40px rgba(6,182,212,0.35);
-  }
-  .bot-btn:active { transform: scale(0.98); }
-  .bot-btn .bb-icon {
-    font-size: 46px;
-    width: 70px; height: 70px;
-    border-radius: 20px;
-    background: rgba(6,182,212,0.2);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .bot-btn .bb-body { flex: 1; }
-  .bot-btn .bb-title { font-size: 19px; font-weight: 900; margin-bottom: 5px; }
-  .bot-btn .bb-desc { font-size: 12.5px; color: #cbd5e1; }
-  .bot-btn .bb-arrow { font-size: 24px; color: #94a3b8; }
-
-  /* ===== اعلان‌ها ===== */
-  .notif-btn {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 20px 22px;
-    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.35), transparent 60%),
-                linear-gradient(135deg, #1a0f2e, #0f0f1e);
-    border: 2px solid rgba(139,92,246,0.5);
-    border-radius: 22px;
-    text-decoration: none;
-    color: #fff;
-    transition: all 0.22s;
-    margin-bottom: 16px;
-    box-shadow: 0 8px 30px rgba(139,92,246,0.2);
-  }
-  .notif-btn:hover {
-    transform: translateY(-3px);
-    border-color: rgba(139,92,246,0.9);
-    box-shadow: 0 15px 40px rgba(139,92,246,0.35);
-  }
-  .notif-btn:active { transform: scale(0.98); }
-  .notif-btn .nb-icon {
-    font-size: 46px;
-    width: 70px; height: 70px;
-    border-radius: 20px;
-    background: rgba(139,92,246,0.2);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .notif-btn .nb-body { flex: 1; }
-  .notif-btn .nb-title { font-size: 19px; font-weight: 900; margin-bottom: 5px; }
-  .notif-btn .nb-desc { font-size: 12.5px; color: #cbd5e1; }
-  .notif-btn .nb-arrow { font-size: 24px; color: #94a3b8; }
-
-  .bell-badge {
-    position: absolute;
-    top: -6px; right: -6px;
-    min-width: 22px; height: 22px;
-    background: #ef4444;
-    color: white;
-    border-radius: 50%;
-    font-size: 11px;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold;
-    padding: 0 6px;
-    box-shadow: 0 0 0 3px var(--bg);
-    animation: pulseBadge 2s infinite;
-  }
-  @keyframes pulseBadge {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.15); }
-  }
-
-  /* ===== چالش ===== */
-  .challenge-btn {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 22px;
-    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.4), transparent 60%),
-                radial-gradient(circle at 0% 100%, rgba(139,92,246,0.3), transparent 60%),
-                linear-gradient(135deg, #2a1a0e, #1a0f2e);
-    border: 2.5px solid rgba(244,197,66,0.55);
-    border-radius: 22px;
-    text-decoration: none;
-    color: #fff;
-    transition: all 0.22s;
-    box-shadow: 0 8px 30px rgba(244,197,66,0.25);
-    cursor: pointer;
-    position: relative;
-  }
-  .challenge-btn:hover {
-    transform: translateY(-3px);
-    border-color: rgba(244,197,66,0.9);
+  .profile-oval:hover { border-color: #fde68a; box-shadow: 0 0 40px rgba(244,197,66,0.6); }
+  .profile-oval.expanded {
+    width: 100%; height: 90px; border-radius: 45px;
+    padding: 14px 18px; gap: 14px;
     box-shadow: 0 15px 45px rgba(244,197,66,0.4);
   }
-  .challenge-btn:active { transform: scale(0.98); }
-  .challenge-btn .ch-icon {
-    font-size: 52px;
-    width: 74px; height: 74px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(244,197,66,0.3), rgba(139,92,246,0.2));
+  .po-av {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
     display: flex; align-items: center; justify-content: center;
+    font-size: 24px; border: 2px solid #f4c542;
+    box-shadow: 0 0 15px rgba(244,197,66,0.5);
+    overflow: hidden; background-size: cover; background-position: center;
+    flex-shrink: 0; transition: all 0.4s;
+  }
+  .profile-oval.expanded .po-av { width: 62px; height: 62px; font-size: 30px; box-shadow: 0 0 25px rgba(244,197,66,0.8); }
+  .po-details {
+    flex: 1; min-width: 0; max-width: 0; opacity: 0; overflow: hidden;
+    transition: all 0.4s; text-align: right; white-space: nowrap;
+  }
+  .profile-oval.expanded .po-details { max-width: 400px; opacity: 1; }
+  .po-name { font-size: 16px; font-weight: 900; color: #fde68a; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; }
+  .po-meta { display: flex; gap: 8px; font-size: 11px; color: #94a3b8; align-items: center; }
+  .po-meta .lvl { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; padding: 2px 8px; border-radius: 8px; font-family: monospace; font-weight: 900; font-size: 10px; }
+  .po-chevron { color: #f4c542; font-size: 14px; transition: transform 0.4s; flex-shrink: 0; }
+  .profile-oval.expanded .po-chevron { transform: rotate(180deg); }
+
+  /* ============ CIRCLE BUTTONS (top players + shop) ============ */
+  /* ============ CIRCLE BUTTONS (small, vertical) ============ */
+  .circle-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 2;
+  }
+  .circle-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+    transition: transform 0.2s;
+  }
+  .circle-btn:hover { transform: translateX(-3px); }
+  .circle-btn:active { transform: scale(0.95); }
+  .cb-circle {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; border: 2px solid;
+    position: relative; overflow: hidden;
+    transition: all 0.3s;
     flex-shrink: 0;
   }
-  .challenge-btn .ch-body { flex: 1; }
-  .challenge-btn .ch-title {
-    font-size: 21px; font-weight: 900; margin-bottom: 5px;
-    background: linear-gradient(180deg, #fde68a, #f4c542, #ca8a04);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .cb-circle::before {
+    content: ""; position: absolute; inset: -100%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: rotate360 8s linear infinite;
+    opacity: 0.6;
   }
-  .challenge-btn .ch-desc { font-size: 12.5px; color: #cbd5e1; }
-  .challenge-btn .soon-badge {
-    position: absolute;
-    top: 12px; left: 12px;
-    background: rgba(234,179,8,0.95);
-    color: #1a1a1a;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 3px 9px;
-    border-radius: 8px;
-  }
+  .cb-circle > * { position: relative; z-index: 1; }
+  @keyframes rotate360 { to { transform: rotate(360deg); } }
 
-  .guest-logout {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border: 1.5px solid rgba(239, 68, 68, 0.4);
-    padding: 8px 14px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: bold;
-    text-decoration: none;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s;
+  .cb-top {
+    background: radial-gradient(circle at 30% 30%, rgba(244,197,66,0.4), rgba(234,179,8,0.15));
+    border-color: rgba(244,197,66,0.7);
+    box-shadow: 0 0 15px rgba(244,197,66,0.4), inset 0 0 10px rgba(244,197,66,0.2);
   }
-  .guest-logout:hover {
-    background: rgba(239, 68, 68, 0.3);
-    border-color: #ef4444;
-    color: #fff;
-    transform: translateY(-2px);
+  .circle-btn:hover .cb-top {
+    box-shadow: 0 0 28px rgba(244,197,66,0.9), inset 0 0 15px rgba(244,197,66,0.4);
+    border-color: #fde68a;
   }
-  .guest-logout:active { transform: scale(0.95); }
+  .cb-shop {
+    background: radial-gradient(circle at 30% 30%, rgba(6,182,212,0.4), rgba(34,197,94,0.15));
+    border-color: rgba(6,182,212,0.7);
+    box-shadow: 0 0 15px rgba(6,182,212,0.4), inset 0 0 10px rgba(6,182,212,0.2);
+  }
+  .circle-btn:hover .cb-shop {
+    box-shadow: 0 0 28px rgba(6,182,212,0.9), inset 0 0 15px rgba(6,182,212,0.4);
+    border-color: #67e8f9;
+  }
+  .cb-label { font-size: 13px; font-weight: 900; letter-spacing: 0.3px; }
+  .cb-top-label { color: #fde68a; }
+  .cb-shop-label { color: #67e8f9; }
 
-  /* جعبه هشدار مهمان */
+  /* ============ 3 SQUARE TILES ============ */
+  .section-label {
+    font-size: 11px; color: #94a3b8; font-weight: 900; letter-spacing: 2px;
+    margin: 20px 4px 12px; display: flex; align-items: center; gap: 8px;
+    text-transform: uppercase; position: relative; z-index: 2;
+  }
+  .section-label::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(148,163,184,0.3), transparent); }
+
+  .sq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; position: relative; z-index: 2; }
+  .sq-tile {
+    aspect-ratio: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 8px; border-radius: 20px; text-decoration: none; color: #fff;
+    position: relative; overflow: hidden; border: 2px solid;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer; font-family: inherit; background: transparent;
+  }
+  .sq-tile::before {
+    content: ""; position: absolute; inset: -100%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.15), transparent);
+    animation: rotate360 10s linear infinite; z-index: 0; opacity: 0.5;
+  }
+  .sq-tile::after {
+    content: ""; position: absolute; top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-20deg); animation: shine 4s infinite;
+    z-index: 2; pointer-events: none;
+  }
+  @keyframes shine { 0% { left: -100%; } 50%,100% { left: 200%; } }
+  .sq-tile > * { position: relative; z-index: 1; }
+  .sq-tile:hover { transform: translateY(-5px) scale(1.04); }
+  .sq-tile:active { transform: scale(0.97); }
+
+  .sq-icon {
+    font-size: 38px; line-height: 1;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    animation: float 3s ease-in-out infinite;
+  }
+  .sq-tile:nth-child(1) .sq-icon { animation-delay: 0s; }
+  .sq-tile:nth-child(2) .sq-icon { animation-delay: 0.4s; }
+  .sq-tile:nth-child(3) .sq-icon { animation-delay: 0.8s; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  .sq-tile:hover .sq-icon { transform: scale(1.2) rotate(-8deg); animation: none; }
+
+  .sq-title { font-size: 12px; font-weight: 900; letter-spacing: 0.2px; }
+  .sq-sub { font-size: 9px; opacity: 0.75; }
+
+  /* Notif — purple */
+  .sq-notif {
+    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.4), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border-color: rgba(139,92,246,0.6);
+    box-shadow: 0 10px 30px rgba(139,92,246,0.2);
+  }
+  .sq-notif:hover { border-color: rgba(167,139,250,0.95); box-shadow: 0 18px 45px rgba(139,92,246,0.45); }
+  .sq-notif .sq-title { color: #c4b5fd; }
+
+  /* Games — pink */
+  .sq-games {
+    background: radial-gradient(circle at 100% 0%, rgba(236,72,153,0.4), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #120824);
+    border-color: rgba(236,72,153,0.6);
+    box-shadow: 0 10px 30px rgba(236,72,153,0.2);
+  }
+  .sq-games:hover { border-color: rgba(236,72,153,0.95); box-shadow: 0 18px 45px rgba(236,72,153,0.45); }
+  .sq-games .sq-title { color: #f9a8d4; }
+
+  /* Challenge — red/gold */
+  .sq-challenge {
+    background: radial-gradient(circle at 100% 0%, rgba(239,68,68,0.4), transparent 60%),
+                linear-gradient(135deg, #2a0a0a, #1a0606);
+    border-color: rgba(239,68,68,0.6);
+    box-shadow: 0 10px 30px rgba(239,68,68,0.2);
+  }
+  .sq-challenge:hover { border-color: rgba(248,113,113,0.95); box-shadow: 0 18px 45px rgba(239,68,68,0.45); }
+  .sq-challenge .sq-title { color: #fca5a5; }
+
+  .sq-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: #ef4444; color: #fff;
+    font-size: 10px; font-weight: 900;
+    padding: 2px 8px; border-radius: 999px;
+    box-shadow: 0 3px 10px rgba(239,68,68,0.6);
+    animation: pulseBadge 2s infinite; z-index: 3;
+  }
+  @keyframes pulseBadge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+
+  /* ============ SUPPORT BUTTON ============ */
+  .support-btn {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px;
+    background: radial-gradient(circle at 100% 0%, rgba(6,182,212,0.4), transparent 60%),
+                linear-gradient(135deg, #0a1e2a, #05141a);
+    border: 2px solid rgba(6,182,212,0.6);
+    border-radius: 20px;
+    text-decoration: none; color: #fff;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(6,182,212,0.2);
+    position: relative; z-index: 2;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .support-btn::after {
+    content: ""; position: absolute; top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-20deg); animation: shine 5s infinite;
+    pointer-events: none;
+  }
+  .support-btn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(34,211,238,0.95);
+    box-shadow: 0 18px 45px rgba(6,182,212,0.5);
+  }
+  .support-btn .si { font-size: 36px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+  .support-btn .sb { flex: 1; text-align: right; }
+  .support-btn .st { font-size: 16px; font-weight: 900; color: #a5f3fc; margin-bottom: 3px; }
+  .support-btn .sd { font-size: 11px; color: #94a3b8; }
+  .support-btn .sa { font-size: 22px; color: #67e8f9; }
+
+  /* Guest warning */
   .guest-warning {
     background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(249,115,22,0.08));
     border: 1.5px solid rgba(234,179,8,0.35);
-    border-radius: 16px;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .guest-warning .gw-icon {
-    font-size: 32px;
-    flex-shrink: 0;
-  }
-  .guest-warning .gw-body { flex: 1; }
-  .guest-warning .gw-title {
-    font-size: 13.5px;
-    font-weight: bold;
-    color: #fde68a;
-    margin-bottom: 3px;
-  }
-  .guest-warning .gw-desc {
-    font-size: 11.5px;
-    color: #fbbf24;
-    line-height: 1.6;
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 12px;
+    position: relative; z-index: 2;
+    font-size: 12px; color: #fde68a;
   }
   .guest-warning .gw-logout {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: bold;
-    text-decoration: none;
-    font-family: inherit;
-    white-space: nowrap;
-    transition: all 0.2s;
-    flex-shrink: 0;
-  }
-  .guest-warning .gw-logout:hover {
-    background: rgba(239, 68, 68, 0.4);
-    color: #fff;
+    background: rgba(244,197,66,0.9); color: #1a1a1a;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 11px; font-weight: 900; text-decoration: none;
   }
 
-  .wallet-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 12px; text-decoration: none; font-size: 12px; font-weight: bold; font-family: monospace; transition: 0.2s; }
-  .wallet-coins { background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(234,179,8,0.1)); border: 1.5px solid rgba(244,197,66,0.5); color: #fde68a; }
-  .wallet-gems { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1)); border: 1.5px solid rgba(139,92,246,0.5); color: #c4b5fd; }
-  .wallet-chip:hover { transform: scale(1.05); }
-  .wallet-chip .wc-icon { font-size: 14px; }
-  .wallet-chip .wc-num { color: #fff; font-size: 13px; font-weight: 900; }
 
-  .beta-badge-animated {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, #eab308, #f59e0b);
-    color: #1a1a1a;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 900;
-    box-shadow: 0 4px 12px rgba(234,179,8,0.4);
-    animation: betaPulse 2.2s ease-in-out infinite;
+  /* FORCE VERTICAL — top players & shop */
+  .circle-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    margin-bottom: 18px !important;
   }
-  @keyframes betaPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(234,179,8,0.4); }
-    50%      { transform: scale(1.08); box-shadow: 0 6px 20px rgba(234,179,8,0.7); }
+  .circle-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
   }
+  .cb-circle {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 22px !important;
+    border-width: 2px !important;
+  }
+  .cb-label { font-size: 13px !important; }
 </style>
-
-
 {% endblock %}
 
 {% block content %}
+  <!-- Animated background -->
+  <div class="bg-pattern"></div>
+  <div class="fly-dot" style="left: 10%; animation-duration: 12s;"></div>
+  <div class="fly-dot" style="left: 25%; animation-duration: 15s; animation-delay: 2s; background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6;"></div>
+  <div class="fly-dot" style="left: 45%; animation-duration: 18s; animation-delay: 4s;"></div>
+  <div class="fly-dot" style="left: 60%; animation-duration: 14s; animation-delay: 1s; background: #06b6d4; box-shadow: 0 0 8px #06b6d4;"></div>
+  <div class="fly-dot" style="left: 78%; animation-duration: 16s; animation-delay: 3s;"></div>
+  <div class="fly-dot" style="left: 92%; animation-duration: 13s; animation-delay: 5s; background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6;"></div>
 
-  <div class="top-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-  <div class="beta-badge-animated">
-    <span style="font-size:14px;">🧪</span>
-    <span>نسخه آزمایشی</span>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="version-badge"><span>🧪</span><span>نسخه آزمایشی</span></div>
+    <a href="/accounts/settings/" class="btn-settings-b">⚙️</a>
   </div>
-  <div style="display:flex; align-items:center; gap:8px;">
-    <a href="/accounts/settings/" class="settings-icon" title="تنظیمات">⚙️</a>
-  </div>
-</div>
 
-<div class="user-row">
-    {% if user.avatar_type == "image" and user.avatar_id %}
-      <div class="user-av-box image-bg" style="background-image: url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');"></div>
-    {% else %}
-      <div class="user-av-box emoji-bg">{{ avatar_emoji }}</div>
-    {% endif %}
-    <div class="greet-text">
-      <div class="hi">سلام 👋</div>
-      <div class="name">{{ user.alias }}</div>
+  <!-- Profile (circle → oval) -->
+  <div class="profile-wrap">
+    <div class="profile-oval" id="profileOval" onclick="toggleProfile()">
+      {% if user.avatar_type == "image" and user.avatar_id %}
+        <div class="po-av" style="background-image: url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');"></div>
+      {% else %}
+        <div class="po-av">{{ avatar_emoji }}</div>
+      {% endif %}
+      <div class="po-details">
+        <div class="po-name">{{ user.alias }}</div>
+        <div class="po-meta">
+          <span class="lvl">Lv {{ level|default:1 }}</span>
+          <span>🪙 {{ user.coins|default:0 }}</span>
+          <span>💎 {{ user.gems|default:0 }}</span>
+        </div>
+      </div>
+      <div class="po-chevron">▼</div>
     </div>
-    {% if user.is_guest %}
-      <a href="/accounts/logout/" class="guest-logout" title="خروج از حساب مهمان"
-         onclick="return confirm('از حساب مهمان خارج می\u200cشوی؟');">
-        <span>🚪</span>
-        <span>خروج</span>
-      </a>
-    {% endif %}
   </div>
 
   {% if user.is_guest %}
     <div class="guest-warning">
-      <span class="gw-icon">🎲</span>
-      <div class="gw-body">
-        <div class="gw-title">حساب مهمان</div>
-        <div class="gw-desc">
-          با خروج، تمام امتیازها از بین می‌رود.
-          برای ذخیره‌ی دائمی، حساب کاربری بساز.
-        </div>
-      </div>
-      <a href="/accounts/logout/" class="gw-logout"
-         onclick="return confirm('از حساب مهمان خارج می\u200cشوی؟');">
-        🚪 خروج
-      </a>
+      <span style="font-size: 22px;">🎲</span>
+      <div style="flex: 1;">حساب مهمان — برای ذخیره دائمی ثبت‌نام کن</div>
+      <a href="/accounts/register/" class="gw-logout">ثبت‌نام</a>
     </div>
   {% endif %}
 
-  <!-- دو دکمه دایره‌ای کوچیک بالا -->
-  <div class="round-row" style="display:flex; gap:10px; justify-content:flex-end; margin-bottom:14px; flex-wrap:wrap;">
-  <a href="/game/top-players/" class="round-btn round-top" title="بازیکنان برتر">
-    <span class="rb-icon">⭐</span>
-    <span class="rb-label">برتر</span>
-  </a>
-  <div class="round-btn round-shop-disabled" title="به زودی" style="opacity:0.45; cursor:not-allowed; background:rgba(148,163,184,0.15); border:1.5px solid rgba(148,163,184,0.25);">
-    <span class="rb-icon" style="filter:grayscale(1);">🛒</span>
-    <span class="rb-label" style="color:#94a3b8;">به زودی</span>
+  <!-- 2 Circle buttons: Top players + Shop -->
+  <div class="circle-row">
+    <a href="/game/top-players/" class="circle-btn">
+      <div class="cb-circle cb-top">⭐</div>
+      <div class="cb-label cb-top-label">بازیکنان برتر</div>
+    </a>
+    <a href="/accounts/shop/" class="circle-btn">
+      <div class="cb-circle cb-shop">🛒</div>
+      <div class="cb-label cb-shop-label">فروشگاه</div>
+    </a>
   </div>
-  <a href="/accounts/support/" class="round-btn round-top" title="پشتیبانی" style="background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(6,182,212,0.15)); border-color: rgba(59,130,246,0.55);">
-    <span class="rb-icon">💬</span>
-    <span class="rb-label">پشتیبانی</span>
-  </a>
-</div>
 
-<!-- اعلان‌ها -->
-  <a href="/notifications/" class="notif-btn">
-    <div class="nb-icon">
-      🔔
-      {% if unread_notifications %}
-        <span class="bell-badge">{{ unread_notifications }}</span>
-      {% endif %}
+  <!-- Section: main menu -->
+  <div class="section-label">📋 منو اصلی</div>
+
+  <div class="sq-grid">
+    <a href="/social/notifications/" class="sq-tile sq-notif">
+      {% if unread_notifications %}<span class="sq-badge">{{ unread_notifications }}</span>{% endif %}
+      <div class="sq-icon">🔔</div>
+      <div class="sq-title">اعلان‌ها</div>
+      <div class="sq-sub">{% if unread_notifications %}{{ unread_notifications }} جدید{% else %}پیام‌ها{% endif %}</div>
+    </a>
+
+    <a href="/game/rooms/" class="sq-tile sq-games">
+      <div class="sq-icon">🎮</div>
+      <div class="sq-title">بازی‌ها</div>
+      <div class="sq-sub">۷ حالت</div>
+    </a>
+
+    <a href="/game/challenge/" class="sq-tile sq-challenge">
+      <div class="sq-icon">🏆</div>
+      <div class="sq-title">چالش</div>
+      <div class="sq-sub">تورنمنت</div>
+    </a>
+  </div>
+
+  <!-- Support -->
+  <div class="section-label">💬 ارتباط با ما</div>
+
+  <a href="/support/" class="support-btn">
+    <span class="si">💬</span>
+    <div class="sb">
+      <div class="st">پشتیبانی</div>
+      <div class="sd">سوال داری؟ با ما در تماس باش</div>
     </div>
-    <div class="nb-body">
-      <div class="nb-title">اعلان‌ها</div>
-      <div class="nb-desc">
-        {% if unread_notifications %}{{ unread_notifications }} پیام جدید داری{% else %}پیام‌ها و درخواست‌ها{% endif %}
-      </div>
-    </div>
-    <div class="nb-arrow">←</div>
+    <span class="sa">←</span>
   </a>
 
-  <!-- چالش -->
-  <a href="/game/challenge/" class="challenge-btn" style="text-decoration:none;">
-    <div class="ch-icon">⚔️</div>
-    <div class="ch-body">
-      <div class="ch-title">چالش</div>
-      <div class="ch-desc">تورنمنت، مسابقه روزانه و ساعتی</div>
-    </div>
-  </a>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+  function toggleProfile() {
+    document.getElementById('profileOval').classList.toggle('expanded');
+    if (window.vibrate) window.vibrate(8);
+    if (window.soundClick) window.soundClick();
+  }
+</script>
 {% endblock %}

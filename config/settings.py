@@ -6,13 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me-in-production")
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
-ALLOWED_HOSTS = [
-    "esmfamil-c78-esmfamil-db.runflare.cloud",
-    "esmfamil.com",
-    "www.esmfamil.com",
-    "127.0.0.1",
-    "localhost",
-]  # Allow all hosts (safe for now)
+ALLOWED_HOSTS = ["*"]  # Allow all hosts (safe for now)
 
 INSTALLED_APPS = [
     "daphne",
@@ -29,6 +23,7 @@ INSTALLED_APPS = [
     "accounts",
     "game",
     "social",
+    "support",
     "alliance",
     "channels",
 
@@ -57,6 +52,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "accounts.context_processors.force_guest_mode",
             ],
         },
     },
@@ -203,3 +199,9 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
 
+# ============================================================
+# AUTH MODE TOGGLE
+# ============================================================
+# True  = auto-guest, no login/register UI (direct to game)
+# False = normal auth flow (login/register visible)
+FORCE_GUEST_MODE = True

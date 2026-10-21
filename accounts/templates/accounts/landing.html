@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fa" dir="rtl" data-theme="dark">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -7,163 +7,184 @@
   <title>اسم فامیل آنلاین</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
+    html, body { height: 100%; overflow-y: auto; overflow-x: hidden; }
+    body { font-family: Tahoma, sans-serif; background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%); color: #e2e8f0; min-height: 100vh; }
+    .glow { position: fixed; width: 400px; height: 400px; border-radius: 50%; filter: blur(130px); z-index: 0; pointer-events: none; }
+    .glow-1 { top: -100px; right: -100px; background: #8b5cf6; opacity: 0.28; }
+    .glow-2 { bottom: -100px; left: -100px; background: #f4c542; opacity: 0.18; }
+    .glow-3 { top: 40%; left: -100px; background: #06b6d4; opacity: 0.15; }
+
+    .content { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; padding: 30px 20px; min-height: 100vh; }
+
+    .logo-wrap { text-align: center; margin-top: 10px; margin-bottom: 6px; }
+    .logo-name { font-size: 44px; font-weight: 900; background: linear-gradient(180deg, #fde68a 0%, #f4c542 50%, #ca8a04 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .logo-crown { font-size: 40px; display: inline-block; transform: translateY(-10px) rotate(-8deg); filter: drop-shadow(0 6px 20px rgba(244,197,66,0.6)); }
+    .tagline { color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 22px; letter-spacing: 1.5px; }
+
+    /* ============================================================
+       👤 SAMPLE PROFILE CARD
+       ============================================================ */
+    .sample-profile {
+      position: relative;
+      width: 340px;
+      max-width: 92vw;
+      padding: 24px 20px 20px;
+      background: linear-gradient(135deg, rgba(30,41,59,0.85), rgba(15,23,42,0.95));
+      border: 1.5px solid rgba(244,197,66,0.4);
+      border-radius: 24px;
+      margin-bottom: 26px;
+      text-align: center;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(244,197,66,0.1);
+      animation: cardFloat 4s ease-in-out infinite;
     }
-    body {
-      font-family: Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at 20% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
-      color: #e2e8f0;
-      min-height: 100vh;
-      min-height: 100dvh;
+    @keyframes cardFloat {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
-    .glow {
-      position: fixed;
-      width: 400px; height: 400px;
-      border-radius: 50%;
-      filter: blur(130px);
+    .sample-profile::before {
+      content: "";
+      position: absolute;
+      inset: -50%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(244,197,66,0.15) 90deg, transparent 180deg, rgba(139,92,246,0.15) 270deg, transparent 360deg);
+      animation: spin 12s linear infinite;
       z-index: 0;
       pointer-events: none;
     }
-    .glow-1 { top: -100px; right: -100px; background: #8b5cf6; opacity: 0.28; }
-    .glow-2 { bottom: -100px; left: -100px; background: #f4c542; opacity: 0.18; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .sample-profile > * { position: relative; z-index: 1; }
 
-    .content {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px 20px;
-      min-height: 100vh;
-      min-height: 100dvh;
-    }
-
-    .logo-wrap {
-      text-align: center;
-      margin-top: 20px;
-      margin-bottom: 10px;
-    }
-    .logo-crown {
-      font-size: 46px;
+    .sample-label {
       display: inline-block;
-      transform: translateY(-10px) rotate(-8deg);
-      filter: drop-shadow(0 6px 20px rgba(244,197,66,0.6));
-    }
-    .logo-name {
-      font-size: 48px;
+      background: rgba(244,197,66,0.15);
+      color: #fde68a;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 10px;
       font-weight: 900;
-      background: linear-gradient(180deg, #fde68a 0%, #f4c542 50%, #ca8a04 100%);
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .sample-avatar {
+      width: 88px; height: 88px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.2));
+      border: 3px solid #f4c542;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px;
+      box-shadow: 0 0 30px rgba(244,197,66,0.5), inset 0 0 20px rgba(0,0,0,0.3);
+      animation: avatarPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes avatarPulse {
+      0%,100% { box-shadow: 0 0 30px rgba(244,197,66,0.5), inset 0 0 20px rgba(0,0,0,0.3); }
+      50% { box-shadow: 0 0 50px rgba(244,197,66,0.8), 0 0 20px rgba(139,92,246,0.5), inset 0 0 20px rgba(0,0,0,0.3); }
+    }
+
+    .sample-name {
+      font-size: 20px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #fde68a, #f4c542, #fdba74);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      display: inline-block;
-      margin: 0 8px;
-      line-height: 1.05;
+      margin-bottom: 4px;
     }
-    .tagline {
-      color: #94a3b8;
-      font-size: 14px;
-      text-align: center;
-      margin-bottom: 40px;
-      letter-spacing: 1.5px;
+    .sample-username {
+      font-size: 11px;
+      color: #64748b;
+      font-family: monospace;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
     }
-    .options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      width: 340px;
-      max-width: 90vw;
-    }
-    .btn-opt {
+
+    .sample-level-bar {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 16px 20px;
-      border-radius: 18px;
-      font-size: 16px;
-      font-weight: bold;
-      text-decoration: none;
-      border: 1.5px solid;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      color: #e2e8f0;
-    }
-    .btn-opt:hover { transform: translateY(-3px); }
-    .btn-opt .icon {
-      font-size: 26px;
-      width: 44px; height: 44px;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(15, 23, 42, 0.6);
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(15,23,42,0.7);
       border-radius: 12px;
+      margin-top: 12px;
+    }
+    .sample-level-badge {
+      background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-family: monospace;
       flex-shrink: 0;
     }
-    .btn-opt .label { flex: 1; text-align: right; }
-    .btn-opt .arrow { color: inherit; opacity: 0.5; font-size: 18px; }
-
-    .btn-register {
-      background: linear-gradient(135deg, #f4c542, #eab308);
-      color: #1a1a1a;
-      border-color: transparent;
-      padding: 20px 22px;
-      font-size: 18px;
-      box-shadow: 0 14px 40px rgba(244,197,66,0.45);
-    }
-    .btn-register .icon { background: rgba(0,0,0,0.15); font-size: 28px; width: 48px; height: 48px; }
-
-    .btn-account {
-      background: rgba(30, 41, 59, 0.75);
-      border-color: rgba(6, 182, 212, 0.3);
-    }
-    .btn-account:hover { border-color: #06b6d4; background: rgba(30, 41, 59, 0.95); }
-
-    .btn-guest {
-      background: rgba(30, 41, 59, 0.6);
-      color: #cbd5e1;
-      border-color: rgba(148, 163, 184, 0.2);
-    }
-    .btn-guest:hover { border-color: #94a3b8; background: rgba(30, 41, 59, 0.85); }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 6px 0;
-      color: #475569;
-      font-size: 11px;
-    }
-    .divider::before,
-    .divider::after {
-      content: "";
+    .sample-progress {
       flex: 1;
-      height: 1px;
-      background: rgba(148, 163, 184, 0.15);
+      height: 6px;
+      background: rgba(148,163,184,0.2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .sample-progress-fill {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(90deg, #8b5cf6, #f4c542);
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(139,92,246,0.6);
+      animation: progressShine 2s ease-in-out infinite;
+    }
+    @keyframes progressShine {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.75; }
     }
 
-    .footer {
-      margin-top: 40px;
-      margin-bottom: 30px;
-      text-align: center;
-      color: #475569;
-      font-size: 11px;
-      line-height: 1.8;
+    .sample-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 12px;
     }
-    .footer .version { color: #64748b; font-family: monospace; }
+    .sample-stat {
+      padding: 8px 4px;
+      background: rgba(15,23,42,0.5);
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.1);
+    }
+    .sample-stat .v {
+      font-size: 14px;
+      font-weight: 900;
+      color: #fde68a;
+      font-family: monospace;
+      margin-bottom: 2px;
+    }
+    .sample-stat .l {
+      font-size: 9px;
+      color: #64748b;
+    }
 
-    @media (max-width: 400px) {
-      .logo-name { font-size: 40px; }
-      .logo-crown { font-size: 36px; }
-      .options { width: 100%; }
-    }
+    /* ============================================================
+       Options
+       ============================================================ */
+    .options { display: flex; flex-direction: column; gap: 12px; width: 340px; max-width: 92vw; }
+    .btn-opt { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 18px; font-size: 16px; font-weight: bold; text-decoration: none; border: 1.5px solid; transition: all 0.2s; color: #e2e8f0; }
+    .btn-opt:hover { transform: translateY(-3px); }
+    .btn-opt .icon { font-size: 26px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.6); border-radius: 12px; flex-shrink: 0; }
+    .btn-opt .label { flex: 1; text-align: right; }
+    .btn-register { background: linear-gradient(135deg, #f4c542, #eab308); color: #1a1a1a; border-color: transparent; padding: 20px 22px; font-size: 18px; box-shadow: 0 14px 40px rgba(244,197,66,0.45); }
+    .btn-register .icon { background: rgba(0,0,0,0.15); font-size: 28px; width: 48px; height: 48px; }
+    .btn-account { background: rgba(30, 41, 59, 0.75); border-color: rgba(6, 182, 212, 0.3); }
+    .btn-account:hover { border-color: #06b6d4; background: rgba(30, 41, 59, 0.95); }
+    .btn-guest { background: rgba(30, 41, 59, 0.6); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.2); }
+    .btn-guest:hover { border-color: #94a3b8; background: rgba(30, 41, 59, 0.85); }
+    .divider { display: flex; align-items: center; gap: 10px; margin: 6px 0; color: #475569; font-size: 11px; }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(148, 163, 184, 0.15); }
+    .footer { margin-top: 30px; margin-bottom: 20px; text-align: center; color: #475569; font-size: 11px; line-height: 1.8; }
   </style>
 </head>
 <body>
   <div class="glow glow-1"></div>
   <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
 
   <div class="content">
     <div class="logo-wrap">
@@ -172,31 +193,60 @@
     </div>
     <div class="tagline">بازی نوستالژیک، حال و آنلاین</div>
 
+    <!-- ============================================================
+         Sample Profile Card
+         ============================================================ -->
+    <div class="sample-profile">
+      <div class="sample-label">✨ نمونه پروفایل</div>
+      <div class="sample-avatar">🦁</div>
+      <div class="sample-name">آرش</div>
+      <div class="sample-username">@arash_1403</div>
+
+      <div class="sample-level-bar">
+        <span class="sample-level-badge">Lv 5</span>
+        <div class="sample-progress">
+          <div class="sample-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="sample-stats">
+        <div class="sample-stat">
+          <div class="v">12</div>
+          <div class="l">بازی</div>
+        </div>
+        <div class="sample-stat">
+          <div class="v">480</div>
+          <div class="l">امتیاز</div>
+        </div>
+        <div class="sample-stat">
+          <div class="v">3</div>
+          <div class="l">پیروزی</div>
+        </div>
+      </div>
+    </div>
+
     <div class="options">
       <a class="btn-opt btn-register" href="/accounts/register/">
         <span class="icon">✨</span>
         <span class="label">ساخت حساب جدید</span>
-        <span class="arrow">←</span>
+        <span>←</span>
       </a>
-
       <div class="divider">یا</div>
-
       <a class="btn-opt btn-account" href="/accounts/login/">
         <span class="icon">🔐</span>
         <span class="label">ورود با حساب کاربری</span>
-        <span class="arrow">←</span>
+        <span>←</span>
       </a>
-
       <a class="btn-opt btn-guest" href="/accounts/guest/">
         <span class="icon">🎲</span>
         <span class="label">ورود مهمان</span>
-        <span class="arrow">←</span>
+        <span>←</span>
       </a>
     </div>
 
     <div class="footer">
       <div>اسم فامیل آنلاین</div>
-      <div class="version">v3.0</div>
+      <div>v3.0</div>
     </div>
   </div>
 </body>

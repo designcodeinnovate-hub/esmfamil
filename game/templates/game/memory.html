@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}بازی حافظه{% endblock %}
+{% block extra_css %}
+<style>
+  .head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .head h1{font-size:22px;font-weight:900;background:linear-gradient(135deg,#a78bfa,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .intro{background:linear-gradient(135deg,#1a0f2e,#0f0f1e);border:2px solid rgba(139,92,246,0.5);border-radius:20px;padding:16px 20px;margin-bottom:18px;text-align:center}
+  .intro h2{font-size:16px;color:#e9d5ff;margin-bottom:4px;font-weight:900}
+  .intro p{font-size:12px;color:#94a3b8;line-height:1.6}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+  .card{aspect-ratio:1;position:relative;perspective:600px;cursor:pointer}
+  .card-inner{position:relative;width:100%;height:100%;transition:transform 0.5s;transform-style:preserve-3d}
+  .card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}
+  .card-face{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .card-back{background:linear-gradient(135deg,rgba(139,92,246,0.4),rgba(6,182,212,0.3));border:2px solid rgba(139,92,246,0.6);font-size:32px;color:rgba(255,255,255,0.3)}
+  .card-front{background:linear-gradient(135deg,rgba(244,197,66,0.35),rgba(139,92,246,0.25));border:2px solid rgba(244,197,66,0.6);font-size:36px;transform:rotateY(180deg)}
+  .card.matched .card-front{background:linear-gradient(135deg,rgba(34,197,94,0.35),rgba(6,182,212,0.25));border-color:rgba(34,197,94,0.7)}
+  .btn-new{display:block;width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#f4c542,#eab308);color:#1a1a1a;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;text-align:center;box-shadow:0 10px 30px rgba(244,197,66,0.4);margin-top:8px}
+  .stats-bar{display:flex;gap:8px;margin-bottom:16px}
+  .stat-chip{flex:1;background:rgba(139,92,246,0.15);border:1.5px solid rgba(139,92,246,0.4);border-radius:12px;padding:10px;text-align:center}
+  .stat-chip .lbl{font-size:10px;color:#94a3b8;margin-bottom:2px}
+  .stat-chip .val{font-size:16px;font-weight:900;color:#c4b5fd;font-family:monospace}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head">
+  <a href="/game/rooms/" class="back-btn"><span class="arrow-icon">→</span></a>
+  <h1>🧠 بازی حافظه</h1>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-chip"><div class="lbl">جفت‌ها</div><div class="val" id="matchedCount">0 / {{ total_pairs }}</div></div>
+  <div class="stat-chip"><div class="lbl">حرکت</div><div class="val" id="movesCount">0</div></div>
+</div>
+
+<div class="intro">
+  <h2>🧠 حافظه‌ت رو بسنج!</h2>
+  <p>کارت‌ها رو باز کن، جفت‌های یکسان رو پیدا کن</p>
+</div>
+
+<div class="grid" id="memoryGrid">
+  {% for c in cards %}
+    <div class="card" data-emoji="{{ c.emoji }}" onclick="flipCard(this)">
+      <div class="card-inner">
+        <div class="card-face card-back">❓</div>
+        <div class="card-face card-front">{{ c.emoji }}</div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="new">
+  <button type="submit" class="btn-new">🔄 بازی جدید</button>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+  let firstCard = null, secondCard = null, lock = false, matched = 0, moves = 0;
+  let totalPairs = {{ total_pairs }};
+  function flipCard(card) {
+    if (lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+    card.classList.add('flipped');
+    if (!firstCard) { firstCard = card; return; }
+    secondCard = card;
+    lock = true;
+    moves++;
+    document.getElementById('movesCount').textContent = moves;
+    if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+      setTimeout(() => {
+        firstCard.classList.add('matched');
+        secondCard.classList.add('matched');
+        matched++;
+        document.getElementById('matchedCount').textContent = matched + " / " + totalPairs;
+        reset();
+        if (matched >= totalPairs) setTimeout(() => alert('🎉 بردی! در ' + moves + ' حرکت'), 300);
+      }, 500);
+    } else {
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+        reset();
+      }, 800);
+    }
+  }
+  function reset() { firstCard = null; secondCard = null; lock = false; }
+</script>
+{% endblock %}

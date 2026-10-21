@@ -1,67 +1,219 @@
 {% extends "base.html" %}
 {% block title %}بازی‌ها{% endblock %}
+
 {% block extra_css %}
 <style>
-.head{margin-bottom:20px}
-.head h1{font-size:22px;font-weight:bold}
-.head h1 span{color:var(--gold)}
-.big{display:flex;align-items:center;gap:14px;padding:20px;border-radius:20px;text-decoration:none;color:#fff;margin-bottom:12px;border:1.5px solid;transition:.2s;position:relative;overflow:hidden}
-.big:hover{transform:translateY(-3px)}
-.big:active{transform:scale(.98)}
-.big.soon{cursor:default;opacity:.75}
-.big.bot{background:radial-gradient(circle at 100% 0%,rgba(244,197,66,.25),transparent 60%),linear-gradient(135deg,#2a1a0e,#1a0f1a);border-color:rgba(244,197,66,.4)}
-.big.player{background:radial-gradient(circle at 100% 0%,rgba(59,130,246,.25),transparent 60%),linear-gradient(135deg,#0a1a2a,#0f0f1e);border-color:rgba(59,130,246,.4)}
-.big.group{background:radial-gradient(circle at 100% 0%,rgba(139,92,246,.3),transparent 60%),linear-gradient(135deg,#1a0f2e,#0f0f1e);border-color:rgba(139,92,246,.4)}
-.big.challenge{background:radial-gradient(circle at 100% 0%,rgba(239,68,68,.3),transparent 60%),linear-gradient(135deg,#2a0a0a,#0f0f1e);border-color:rgba(239,68,68,.5)}
-.big.speed{background:radial-gradient(circle at 100% 0%,rgba(6,182,212,.25),transparent 60%),linear-gradient(135deg,#0a1e2a,#0f0f1e);border-color:rgba(6,182,212,.4)}
-.big.puzzle{background:radial-gradient(circle at 100% 0%,rgba(34,197,94,.25),transparent 60%),linear-gradient(135deg,#0a2a1a,#0f0f1e);border-color:rgba(34,197,94,.4)}
-.bic{font-size:34px;width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.bbody{flex:1}
-.btitle{font-size:17px;font-weight:bold;margin-bottom:4px;color:#fff}
-.bdesc{font-size:12px;color:#cbd5e1;line-height:1.5}
-.barrow{font-size:20px;color:#94a3b8}
-.soon-badge{position:absolute;top:10px;left:10px;background:rgba(234,179,8,.95);color:#1a1a1a;font-size:10px;font-weight:900;padding:3px 8px;border-radius:6px;z-index:2}
+  .bg-pattern { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bg-pattern::before, .bg-pattern::after {
+    content: ""; position: absolute; inset: -50%;
+    background-image:
+      radial-gradient(circle, rgba(244,197,66,0.35) 1px, transparent 1.5px),
+      radial-gradient(circle, rgba(139,92,246,0.3) 1px, transparent 1.5px);
+    background-size: 60px 60px, 90px 90px;
+    background-position: 0 0, 30px 30px;
+    animation: dotsFloat 30s linear infinite;
+    opacity: 0.4;
+  }
+  .bg-pattern::after { animation-duration: 45s; animation-direction: reverse; opacity: 0.5; }
+  @keyframes dotsFloat { from { transform: translate(0, 0); } to { transform: translate(60px, 90px); } }
+
+  .page-head { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
+  .page-head h1 { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #f4c542, #fdba74); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .page-head .count { font-size: 11px; padding: 3px 10px; background: rgba(244,197,66,0.15); color: #fde68a; border-radius: 8px; font-family: monospace; }
+
+  .intro-text { color: #94a3b8; font-size: 13px; margin-bottom: 20px; line-height: 1.6; position: relative; z-index: 2; }
+
+  .big {
+    display: flex; align-items: center; gap: 16px;
+    padding: 22px 20px; border-radius: 24px;
+    text-decoration: none; color: #fff;
+    margin-bottom: 14px;
+    position: relative; overflow: hidden;
+    border: 2px solid;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    isolation: isolate;
+    z-index: 2;
+  }
+  .big:hover { transform: translateY(-4px) scale(1.01); }
+  .big:active { transform: scale(0.98); }
+  .big.soon { cursor: default; opacity: 0.7; }
+  .big.soon:hover { transform: none; }
+
+  .big::before {
+    content: ""; position: absolute; inset: -150%;
+    z-index: -1; animation: spin 10s linear infinite; opacity: 0.6;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .big.bot { background: linear-gradient(135deg, #2a1a0e, #1a0f08); border-color: rgba(244,197,66,0.55); box-shadow: 0 15px 40px rgba(244,197,66,0.2); }
+  .big.bot::before { background: conic-gradient(from 0deg, transparent, rgba(244,197,66,0.25), transparent, rgba(249,115,22,0.25), transparent); }
+  .big.bot:hover { border-color: rgba(251,211,77,0.95); box-shadow: 0 20px 60px rgba(244,197,66,0.4); }
+
+  .big.player { background: linear-gradient(135deg, #0a1a2a, #080f18); border-color: rgba(59,130,246,0.55); box-shadow: 0 15px 40px rgba(59,130,246,0.2); }
+  .big.player::before { background: conic-gradient(from 0deg, transparent, rgba(96,165,250,0.3), transparent, rgba(139,92,246,0.25), transparent); }
+  .big.player:hover { border-color: rgba(96,165,250,0.95); box-shadow: 0 20px 60px rgba(59,130,246,0.4); }
+
+  .big.group { background: linear-gradient(135deg, #1a0f2e, #120824); border-color: rgba(139,92,246,0.6); box-shadow: 0 15px 40px rgba(139,92,246,0.25); }
+  .big.group::before { background: conic-gradient(from 0deg, transparent, rgba(167,139,250,0.3), transparent, rgba(236,72,153,0.25), transparent); }
+  .big.group:hover { border-color: rgba(167,139,250,0.95); box-shadow: 0 20px 60px rgba(139,92,246,0.45); }
+
+  .big.speed { background: linear-gradient(135deg, #0a1e2a, #05141a); border-color: rgba(6,182,212,0.6); box-shadow: 0 15px 40px rgba(6,182,212,0.25); }
+  .big.speed::before { background: conic-gradient(from 0deg, transparent, rgba(34,211,238,0.3), transparent, rgba(6,182,212,0.25), transparent); animation-duration: 5s; }
+  .big.speed:hover { border-color: rgba(34,211,238,0.95); box-shadow: 0 20px 60px rgba(6,182,212,0.45); }
+
+  .big.puzzle { background: linear-gradient(135deg, #0a2a1a, #051a0f); border-color: rgba(34,197,94,0.6); box-shadow: 0 15px 40px rgba(34,197,94,0.25); }
+  .big.puzzle::before { background: conic-gradient(from 0deg, transparent, rgba(74,222,128,0.3), transparent, rgba(16,185,129,0.25), transparent); animation-duration: 8s; }
+  .big.puzzle:hover { border-color: rgba(74,222,128,0.95); box-shadow: 0 20px 60px rgba(34,197,94,0.45); }
+
+  .big.guess { background: linear-gradient(135deg, #0a1e2a, #05141a); border-color: rgba(6,182,212,0.6); box-shadow: 0 15px 40px rgba(6,182,212,0.25); }
+  .big.guess::before { background: conic-gradient(from 0deg, transparent, rgba(34,211,238,0.3), transparent, rgba(59,130,246,0.25), transparent); animation-duration: 6s; }
+  .big.guess:hover { border-color: rgba(34,211,238,0.95); box-shadow: 0 20px 60px rgba(6,182,212,0.45); }
+
+  .big.memory { background: linear-gradient(135deg, #1a0f2e, #0f0f1e); border-color: rgba(167,139,250,0.6); box-shadow: 0 15px 40px rgba(139,92,246,0.25); }
+  .big.memory::before { background: conic-gradient(from 0deg, transparent, rgba(167,139,250,0.3), transparent, rgba(139,92,246,0.25), transparent); animation-duration: 7s; }
+  .big.memory:hover { border-color: rgba(196,181,253,0.95); box-shadow: 0 20px 60px rgba(139,92,246,0.45); }
+
+  .big > * { position: relative; z-index: 1; }
+
+  .bic {
+    font-size: 42px; width: 72px; height: 72px;
+    border-radius: 20px; background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: transform 0.3s;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .big:hover .bic { transform: scale(1.1) rotate(-6deg); }
+
+  .bbody { flex: 1; }
+  .btitle { font-size: 19px; font-weight: 900; margin-bottom: 4px; letter-spacing: -0.2px; }
+  .big.bot .btitle { color: #fde68a; }
+  .big.player .btitle { color: #bfdbfe; }
+  .big.group .btitle { color: #e9d5ff; }
+  .big.speed .btitle { color: #a5f3fc; }
+  .big.puzzle .btitle { color: #bbf7d0; }
+  .big.guess .btitle { color: #a5f3fc; }
+  .big.memory .btitle { color: #c4b5fd; }
+  .bdesc { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+
+  .btags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+  .btag { font-size: 9.5px; font-weight: bold; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
+
+  .barrow { font-size: 22px; color: rgba(255,255,255,0.5); transition: 0.3s; }
+  .big:hover .barrow { transform: translateX(-4px); color: rgba(255,255,255,0.9); }
+
+  .badge-live { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 999px; z-index: 2; box-shadow: 0 4px 12px rgba(34,197,94,0.5); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+  .badge-team { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #ec4899, #8b5cf6); color: #fff; font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 999px; z-index: 2; }
+  .badge-new { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #f4c542, #eab308); color: #1a1a1a; font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 999px; z-index: 2; animation: pulse 2s infinite; }
 </style>
 {% endblock %}
 {% block content %}
-<div class="head"><h1>🎮 <span>بازی‌ها</span></h1></div>
+  <div class="bg-pattern"></div>
 
-<a href="/game/quick/" class="big bot">
-  <div class="bic">⚡</div>
-  <div class="bbody"><div class="btitle">بازی با بات</div><div class="bdesc">رقیب هوشمند، سه سطح سختی</div></div>
-  <div class="barrow">←</div>
-</a>
+  <div class="page-head">
+    <h1>🎮 بازی‌ها</h1>
+    <span class="count">۷ حالت</span>
+  </div>
 
-<a href="/game/match/" class="big player">
-  <div class="bic">🌐</div>
-  <div class="bbody"><div class="btitle">بازی با پلیر</div><div class="bdesc">رقابت آنی با یک حریف تصادفی</div></div>
-  <div class="barrow">←</div>
-</a>
+  <p class="intro-text">یه حالت رو انتخاب کن و شروع کن! هر بازی یه تجربه‌ی خاص داره.</p>
 
-<a href="/game/team/start/" class="big group">
-  <div class="bic">👥</div>
-  <div class="bbody"><div class="btitle">بازی گروهی</div><div class="bdesc">۴ نفره · دو تیم ۲ نفره · ۳ راند</div></div>
-  <div class="barrow">←</div>
-</a>
+  <a href="/game/quick/" class="big bot">
+    <div class="badge-live">⚡ آنی</div>
+    <div class="bic">⚡</div>
+    <div class="bbody">
+      <div class="btitle">بازی با بات</div>
+      <div class="bdesc">رقیب هوشمند، سه سطح سختی</div>
+      <div class="btags">
+        <span class="btag">🎯 ۳ سطح</span>
+        <span class="btag">🚀 بدون انتظار</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
 
-<a href="/game/challenge/" class="big challenge">
-  <div class="bic">⚔️</div>
-  <div class="bbody"><div class="btitle">چالش</div><div class="bdesc">تورنمنت هفتگی، مسابقه روزانه و ساعتی</div></div>
-  <div class="barrow">←</div>
-</a>
+  <a href="/game/match/" class="big player">
+    <div class="badge-live">🌐 آنلاین</div>
+    <div class="bic">⚔️</div>
+    <div class="bbody">
+      <div class="btitle">بازی با پلیر</div>
+      <div class="bdesc">رقابت آنی با یک حریف واقعی</div>
+      <div class="btags">
+        <span class="btag">🎯 1v1</span>
+        <span class="btag">🌍 سراسر ایران</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
 
-<a href="/game/quick/bot/?mode=speed" class="big speed">
-  <div class="bic">⏱️</div>
-  <div class="bbody"><div class="btitle">بازی سرعتی</div><div class="bdesc">مستقیم با حرف رندوم، فقط ۲۰ ثانیه!</div></div>
-  <div class="barrow">←</div>
-</a>
+  <a href="/game/team/start/" class="big group">
+    <div class="badge-team">👥 ۴ نفره</div>
+    <div class="bic">🛡️</div>
+    <div class="bbody">
+      <div class="btitle">بازی گروهی</div>
+      <div class="bdesc">۴ نفره · دو تیم ۲ نفره · ۳ راند</div>
+      <div class="btags">
+        <span class="btag">👥 2v2</span>
+        <span class="btag">🏆 جایزه برنده</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
 
-<a href="/game/puzzle/" class="big puzzle" style="background:radial-gradient(circle at 100% 0%,rgba(34,197,94,.3),transparent 60%),linear-gradient(135deg,#0a2a1a,#0f0f1e);border-color:rgba(34,197,94,.5);">
-  <div class="bic">🎯</div>
-  <div class="bbody"><div class="btitle">بازی معما</div><div class="bdesc">حروف به هم ریخته رو مرتب کن</div></div>
-  <div class="barrow">←</div>
-</a>
-<div class="bbody"><div class="btitle">بازی معما</div><div class="bdesc">حدس کلمه از روی سرنخ</div></div>
-  <div class="barrow">←</div>
-</div>
+  <a href="/game/quick/bot/?mode=speed" class="big speed">
+    <div class="bic">⏱️</div>
+    <div class="bbody">
+      <div class="btitle">بازی سرعتی</div>
+      <div class="bdesc">فقط ۲۰ ثانیه فرصت داری!</div>
+      <div class="btags">
+        <span class="btag">⚡ سریع</span>
+        <span class="btag">🎲 حرف رندوم</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
+
+  <a href="/game/puzzle/" class="big puzzle">
+    <div class="badge-new">🆕 جدید</div>
+    <div class="bic">🎯</div>
+    <div class="bbody">
+      <div class="btitle">بازی معما</div>
+      <div class="bdesc">حروف رو مرتب کن، کلمه رو بساز</div>
+      <div class="btags">
+        <span class="btag">🧩 ۵ کلمه</span>
+        <span class="btag">⏱ زمان محدود</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
+
+  <a href="/game/guess/" class="big guess">
+    <div class="badge-new">🆕 جدید</div>
+    <div class="bic">🎲</div>
+    <div class="bbody">
+      <div class="btitle">بازی ۰ تا ۱۰۰</div>
+      <div class="bdesc">عدد پنهان رو حدس بزن</div>
+      <div class="btags">
+        <span class="btag">🔢 اعداد</span>
+        <span class="btag">🎯 ۷ تلاش</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
+
+  <a href="/game/memory/" class="big memory">
+    <div class="badge-new">🆕 جدید</div>
+    <div class="bic">🧠</div>
+    <div class="bbody">
+      <div class="btitle">بازی حافظه</div>
+      <div class="bdesc">جفت کارت‌های یکسان رو پیدا کن</div>
+      <div class="btags">
+        <span class="btag">🧠 ۸ جفت</span>
+        <span class="btag">🎯 سرعت + حافظه</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
+
 {% endblock %}

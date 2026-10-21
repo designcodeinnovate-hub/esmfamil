@@ -176,37 +176,20 @@ class GuestDeletionLog(models.Model):
         return f"Guest {self.username} deleted at {self.deleted_at}"
 
 
-class SupportTicket(models.Model):
-    STATUS = [
-        ("open", "باز"),
-        ("answered", "پاسخ داده شده"),
-        ("closed", "بسته شده"),
-    ]
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="support_tickets")
-    subject = models.CharField(max_length=100)
-    status = models.CharField(max_length=10, choices=STATUS, default="open")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class UserUnlockedAvatar(models.Model):
+    """آواتارهای تصویری بازشده (50 سکه برای هر آواتار)"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="unlocked_avatars",
+    )
+    avatar_type = models.CharField(max_length=10, default="image")
+    avatar_id = models.PositiveSmallIntegerField()
+    unlocked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ("-updated_at",)
+        unique_together = ("user", "avatar_type", "avatar_id")
+        ordering = ("-unlocked_at",)
 
     def __str__(self):
-        return f"#{self.id} {self.subject} - {self.user.alias}"
-
-    def message_count(self):
-        return self.messages.count()
-
-
-class SupportMessage(models.Model):
-    ticket = models.ForeignKey(SupportTicket, on_delete=models.CASCADE, related_name="messages")
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    body = models.TextField(max_length=2000)
-    is_staff = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ("created_at",)
-
-    def __str__(self):
-        return f"Ticket #{self.ticket_id} - {self.body[:30]}"
+        return f"{self.user.alias} - {self.avatar_type}#{self.avatar_id}"

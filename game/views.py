@@ -42,10 +42,26 @@ def home(request):
     if not request.user.has_chosen_avatar:
         return redirect("accounts:avatar_select")
     from social.notifications import unread_count
+    from django.db.models import Sum, Count
+
+    # Get player stats
+    from .models import Player
+    my_players = Player.objects.filter(user=request.user)
+    total_games = my_players.count()
+    total_score = my_players.aggregate(t=Sum("score"))["t"] or 0
+    level = 1 + total_score // 100
+    level_progress = total_score % 100
+
     return render(request, "game/menu.html", {
         "avatar_emoji": _avatar(request.user),
         "active": "home",
         "unread_notifications": unread_count(request.user),
+        "level": level,
+        "level_progress": level_progress,
+        "stats": {
+            "total_games": total_games,
+            "total_score": total_score,
+        },
     })
 
 
@@ -1483,4 +1499,326 @@ def puzzle_submit(request):
         "base_points": base_points,
         "active": "games",
     })
+
+# ============================================================
+# PUZZLE GAME
+# ============================================================
+@login_required
+def puzzle_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    from game.puzzle_words import get_puzzle_words
+    import time
+
+    if request.method == "POST" and request.POST.get("action") == "new":
+        request.session.pop("puzzle_items", None)
+
+    if "puzzle_items" not in request.session or request.session.get("puzzle_finished"):
+        pool = get_puzzle_words()
+        picks = _rand.sample(pool, min(5, len(pool)))
+        items = []
+        total_time = 0
+        for i, w in enumerate(picks):
+            sec = len(w) * 5
+            total_time += sec
+            letters = list(w)
+            for _ in range(30):
+                _rand.shuffle(letters)
+                if "".join(letters) != w:
+                    break
+            items.append({"idx": i, "word": w, "scrambled": " ".join(letters), "length": len(w), "seconds": sec})
+        request.session["puzzle_items"] = items
+        request.session["puzzle_start_ts"] = int(time.time())
+        request.session["puzzle_total_time"] = total_time
+        request.session["puzzle_finished"] = False
+        request.session["puzzle_score"] = 0
+
+    items = request.session.get("puzzle_items", [])
+    start_ts = request.session.get("puzzle_start_ts", 0)
+    total_time = request.session.get("puzzle_total_time", 60)
+    elapsed = int(time.time() - start_ts) if start_ts else 0
+    remaining = max(0, total_time - elapsed)
+
+    if remaining <= 0 and not request.session.get("puzzle_finished"):
+        request.session["puzzle_finished"] = True
+
+    if request.session.get("puzzle_finished"):
+        return render(request, "game/puzzle.html", {"finished": True, "score": request.session.get("puzzle_score", 0), "total": len(items), "active": "games"})
+
+    return render(request, "game/puzzle.html", {"items": items, "total": len(items), "remaining": remaining, "total_time": total_time, "finished": False, "active": "games"})
+
+
+@login_required
+def puzzle_submit(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method != "POST":
+        return redirect("game:puzzle")
+    if request.POST.get("action") == "new":
+        request.session.pop("puzzle_items", None)
+        return redirect("game:puzzle")
+    items = request.session.get("puzzle_items", [])
+    correct = 0
+    for it in items:
+        ans = (request.POST.get(f"ans_{it['idx']}") or "").strip().replace("ي","ی").replace("ك","ک").replace(" ","").replace("\u200c","")
+        target = it["word"].replace("ي","ی").replace("ك","ک").replace(" ","").replace("\u200c","")
+        if ans == target:
+            correct += 1
+    request.session["puzzle_score"] = correct * 10
+    request.session["puzzle_finished"] = True
+    messages.success(request, f"🎯 {correct} از {len(items)} درست!")
+    return redirect("game:puzzle")
+
+
+# ============================================================
+# MEMORY GAME
+# ============================================================
+_MEMORY_EMOJIS = ["🐶","🐱","🦁","🐯","🐻","🐼","🐨","🐸","🦊","🐵","🦄","🐲"]
+
+@login_required
+def memory_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method == "POST" and request.POST.get("action") == "new":
+        request.session.pop("memory_cards", None)
+    if "memory_cards" not in request.session:
+        emojis = _rand.sample(_MEMORY_EMOJIS, 8)
+        cards_raw = emojis * 2
+        _rand.shuffle(cards_raw)
+        cards = [{"id": i, "emoji": em, "flipped": False, "matched": False} for i, em in enumerate(cards_raw)]
+        request.session["memory_cards"] = cards
+    cards = request.session.get("memory_cards", [])
+    return render(request, "game/memory.html", {"cards": cards, "total_pairs": len(cards) // 2, "active": "games"})
+
+
+# ============================================================
+# GUESS GAME (0-100)
+# ============================================================
+@login_required
+def guess_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method == "POST" and request.POST.get("action") == "new":
+        request.session.pop("guess_number", None)
+    if "guess_number" not in request.session:
+        request.session["guess_number"] = _rand.randint(0, 100)
+        request.session["guess_tries"] = 0
+        request.session["guess_max"] = 7
+        request.session["guess_finished"] = False
+        request.session["guess_won"] = False
+        request.session["guess_history"] = []
+    return render(request, "game/guess.html", {
+        "tries": request.session.get("guess_tries", 0),
+        "max_tries": request.session.get("guess_max", 7),
+        "finished": request.session.get("guess_finished", False),
+        "won": request.session.get("guess_won", False),
+        "number": request.session.get("guess_number") if request.session.get("guess_finished") else None,
+        "history": request.session.get("guess_history", []),
+        "active": "games",
+    })
+
+
+@login_required
+def guess_attempt(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method != "POST":
+        return redirect("game:guess")
+    try:
+        guess = int(request.POST.get("guess", -1))
+    except (ValueError, TypeError):
+        return redirect("game:guess")
+    if not (0 <= guess <= 100):
+        messages.error(request, "عدد بین ۰ تا ۱۰۰ باشه.")
+        return redirect("game:guess")
+    number = request.session.get("guess_number", 50)
+    tries = request.session.get("guess_tries", 0) + 1
+    max_tries = request.session.get("guess_max", 7)
+    history = request.session.get("guess_history", [])
+    if guess == number:
+        request.session["guess_won"] = True
+        request.session["guess_finished"] = True
+        history.append({"guess": guess, "result": "win"})
+        messages.success(request, f"🎉 آفرین! عدد {number} بود.")
+    elif tries >= max_tries:
+        request.session["guess_won"] = False
+        request.session["guess_finished"] = True
+        history.append({"guess": guess, "result": "low" if guess < number else "high"})
+        messages.error(request, f"❌ باختی! عدد {number} بود.")
+    else:
+        result = "low" if guess < number else "high"
+        history.append({"guess": guess, "result": result})
+        if result == "low":
+            messages.info(request, f"⬆️ بزرگ‌تره! ({max_tries - tries} تلاش دیگه)")
+        else:
+            messages.info(request, f"⬇️ کوچیک‌تره! ({max_tries - tries} تلاش دیگه)")
+    request.session["guess_tries"] = tries
+    request.session["guess_history"] = history
+    return redirect("game:guess")
+
+# ============================================================
+# PUZZLE GAME
+# ============================================================
+@login_required
+def puzzle_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    from game.puzzle_words import get_puzzle_words
+    import time
+
+    if request.method == "POST" and request.POST.get("action") == "new":
+        request.session.pop("puzzle_items", None)
+
+    if "puzzle_items" not in request.session or request.session.get("puzzle_finished"):
+        pool = get_puzzle_words()
+        picks = _rand.sample(pool, min(5, len(pool)))
+        items = []
+        total_time = 0
+        for i, w in enumerate(picks):
+            sec = len(w) * 5
+            total_time += sec
+            letters = list(w)
+            for _ in range(30):
+                _rand.shuffle(letters)
+                if "".join(letters) != w:
+                    break
+            items.append({"idx": i, "word": w, "scrambled": " ".join(letters), "length": len(w), "seconds": sec})
+        request.session["puzzle_items"] = items
+        request.session["puzzle_start_ts"] = int(time.time())
+        request.session["puzzle_total_time"] = total_time
+        request.session["puzzle_finished"] = False
+        request.session["puzzle_score"] = 0
+
+    items = request.session.get("puzzle_items", [])
+    start_ts = request.session.get("puzzle_start_ts", 0)
+    total_time = request.session.get("puzzle_total_time", 60)
+    elapsed = int(time.time() - start_ts) if start_ts else 0
+    remaining = max(0, total_time - elapsed)
+
+    if remaining <= 0 and not request.session.get("puzzle_finished"):
+        request.session["puzzle_finished"] = True
+
+    if request.session.get("puzzle_finished"):
+        return render(request, "game/puzzle.html", {"finished": True, "score": request.session.get("puzzle_score", 0), "total": len(items), "active": "games"})
+
+    return render(request, "game/puzzle.html", {"items": items, "total": len(items), "remaining": remaining, "total_time": total_time, "finished": False, "active": "games"})
+
+
+@login_required
+def puzzle_submit(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method != "POST":
+        return redirect("game:puzzle")
+    if request.POST.get("action") == "new":
+        request.session.pop("puzzle_items", None)
+        return redirect("game:puzzle")
+    items = request.session.get("puzzle_items", [])
+    correct = 0
+    for it in items:
+        ans = (request.POST.get(f"ans_{it['idx']}") or "").strip().replace("ي","ی").replace("ك","ک").replace(" ","").replace("\u200c","")
+        target = it["word"].replace("ي","ی").replace("ك","ک").replace(" ","").replace("\u200c","")
+        if ans == target:
+            correct += 1
+    request.session["puzzle_score"] = correct * 10
+    request.session["puzzle_finished"] = True
+    messages.success(request, f"🎯 {correct} از {len(items)} درست!")
+    return redirect("game:puzzle")
+
+
+# ============================================================
+# MEMORY GAME
+# ============================================================
+_MEMORY_EMOJIS = ["🐶","🐱","🦁","🐯","🐻","🐼","🐨","🐸","🦊","🐵","🦄","🐲"]
+
+@login_required
+def memory_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method == "POST" and request.POST.get("action") == "new":
+        request.session.pop("memory_cards", None)
+    if "memory_cards" not in request.session:
+        emojis = _rand.sample(_MEMORY_EMOJIS, 8)
+        cards_raw = emojis * 2
+        _rand.shuffle(cards_raw)
+        cards = [{"id": i, "emoji": em, "flipped": False, "matched": False} for i, em in enumerate(cards_raw)]
+        request.session["memory_cards"] = cards
+    cards = request.session.get("memory_cards", [])
+    return render(request, "game/memory.html", {"cards": cards, "total_pairs": len(cards) // 2, "active": "games"})
+
+
+# ============================================================
+# GUESS GAME (0-100)
+# ============================================================
+@login_required
+def guess_home(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method == "POST" and request.POST.get("action") == "new":
+        request.session.pop("guess_number", None)
+    if "guess_number" not in request.session:
+        request.session["guess_number"] = _rand.randint(0, 100)
+        request.session["guess_tries"] = 0
+        request.session["guess_max"] = 7
+        request.session["guess_finished"] = False
+        request.session["guess_won"] = False
+        request.session["guess_history"] = []
+    return render(request, "game/guess.html", {
+        "tries": request.session.get("guess_tries", 0),
+        "max_tries": request.session.get("guess_max", 7),
+        "finished": request.session.get("guess_finished", False),
+        "won": request.session.get("guess_won", False),
+        "number": request.session.get("guess_number") if request.session.get("guess_finished") else None,
+        "history": request.session.get("guess_history", []),
+        "active": "games",
+    })
+
+
+@login_required
+def guess_attempt(request):
+    check = _require_complete(request.user)
+    if check:
+        return check
+    if request.method != "POST":
+        return redirect("game:guess")
+    try:
+        guess = int(request.POST.get("guess", -1))
+    except (ValueError, TypeError):
+        return redirect("game:guess")
+    if not (0 <= guess <= 100):
+        messages.error(request, "عدد بین ۰ تا ۱۰۰ باشه.")
+        return redirect("game:guess")
+    number = request.session.get("guess_number", 50)
+    tries = request.session.get("guess_tries", 0) + 1
+    max_tries = request.session.get("guess_max", 7)
+    history = request.session.get("guess_history", [])
+    if guess == number:
+        request.session["guess_won"] = True
+        request.session["guess_finished"] = True
+        history.append({"guess": guess, "result": "win"})
+        messages.success(request, f"🎉 آفرین! عدد {number} بود.")
+    elif tries >= max_tries:
+        request.session["guess_won"] = False
+        request.session["guess_finished"] = True
+        history.append({"guess": guess, "result": "low" if guess < number else "high"})
+        messages.error(request, f"❌ باختی! عدد {number} بود.")
+    else:
+        result = "low" if guess < number else "high"
+        history.append({"guess": guess, "result": result})
+        if result == "low":
+            messages.info(request, f"⬆️ بزرگ‌تره! ({max_tries - tries} تلاش دیگه)")
+        else:
+            messages.info(request, f"⬇️ کوچیک‌تره! ({max_tries - tries} تلاش دیگه)")
+    request.session["guess_tries"] = tries
+    request.session["guess_history"] = history
+    return redirect("game:guess")
 

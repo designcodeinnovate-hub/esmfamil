@@ -8,422 +8,356 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Tahoma, sans-serif; min-height: 100vh; background: #0a0a15; color: #e2e8f0; padding: 20px 16px 40px; }
     .container { max-width: 1400px; margin: 0 auto; }
-
-    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(239,68,68,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f0f1e); border: 1px solid rgba(239,68,68,0.3); padding: 16px 22px; border-radius: 16px; margin-bottom: 20px; }
     .topbar h1 { font-size: 20px; color: #fca5a5; }
     .topbar a { padding: 9px 16px; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; text-decoration: none; font-size: 13px; font-weight: bold; }
 
-    
-    
-    
-    
-    
-    
+    .admin-tabs { display: flex; gap: 6px; margin-bottom: 20px; background: #12121f; border: 1px solid rgba(148,163,184,0.15); padding: 6px; border-radius: 14px; overflow-x: auto; }
+    .admin-tab { flex: 1; min-width: 100px; padding: 12px 14px; border-radius: 10px; text-align: center; text-decoration: none; font-size: 12px; font-weight: bold; color: #94a3b8; transition: 0.2s; white-space: nowrap; }
+    .admin-tab:hover { background: rgba(148,163,184,0.1); color: #fff; }
+    .admin-tab.active { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 6px 20px rgba(34,197,94,0.4); }
+
+    /* LIVE HEADER */
+    .live-header {
+      background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(6,182,212,0.1));
+      border: 2px solid rgba(34,197,94,0.4);
+      border-radius: 20px;
+      padding: 22px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .live-header::before {
+      content: "";
+      position: absolute;
+      top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(34,197,94,0.15), transparent);
+      animation: sweep 3s infinite;
+    }
+    @keyframes sweep { 0% { left: -100%; } 100% { left: 100%; } }
+    .live-header > * { position: relative; z-index: 1; }
+    .live-dot-pulse {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 15px #22c55e;
+      animation: pulse 1.5s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+    .live-title { font-size: 18px; font-weight: 900; color: #4ade80; margin-bottom: 3px; }
+    .live-sub { font-size: 12px; color: #86efac; }
+    .live-count { margin-right: auto; font-size: 28px; font-weight: 900; color: #4ade80; font-family: monospace; }
+
+    /* LIVE CARDS */
+    .live-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+    .live-card {
+      background: linear-gradient(135deg, #12121f, #1a1a2e);
+      border: 1.5px solid rgba(34,197,94,0.35);
+      border-radius: 18px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: 0.2s;
+    }
+    .live-card:hover {
+      border-color: rgba(34,197,94,0.8);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(34,197,94,0.2);
+    }
+    .live-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #22c55e, #4ade80, #22c55e);
+      animation: glow 2s infinite;
+    }
+    @keyframes glow { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .lc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .lc-icon { width: 50px; height: 50px; border-radius: 14px; background: linear-gradient(135deg, rgba(34,197,94,0.3), rgba(6,182,212,0.2)); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; border: 1px solid rgba(34,197,94,0.3); }
+    .lc-info { flex: 1; min-width: 0; }
+    .lc-title { font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 3px; }
+    .lc-meta { font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .lc-code { font-family: monospace; background: rgba(34,197,94,0.15); color: #4ade80; padding: 2px 8px; border-radius: 6px; font-weight: bold; }
+
+    /* Players in live game */
+    .players-live {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: rgba(15,23,42,0.6);
+      border-radius: 12px;
+    }
+    .player-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .player-chip .pc-av {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(15,23,42,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background-size: cover;
+      background-position: center;
+    }
+    .player-chip .pc-name { color: #fff; }
+    .player-chip .pc-score { color: #4ade80; font-family: monospace; font-weight: 900; }
+
+    /* Game stats */
+    .live-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .ls-item {
+      padding: 8px 6px;
+      background: rgba(15,23,42,0.5);
+      border-radius: 10px;
+      text-align: center;
+    }
+    .ls-item .l { font-size: 9px; color: #64748b; margin-bottom: 2px; }
+    .ls-item .v { font-size: 14px; font-weight: 900; color: #facc15; font-family: monospace; }
+    .ls-item .v.green { color: #4ade80; }
+    .ls-item .v.red { color: #f87171; }
+
+    /* Letter + Timer */
+    .letter-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(244,197,66,0.15), rgba(234,179,8,0.08));
+      border: 1px solid rgba(244,197,66,0.3);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .letter-box .lr-letter {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: radial-gradient(circle, rgba(244,197,66,0.4), rgba(234,179,8,0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: #fde68a;
+      font-family: monospace;
+      box-shadow: 0 0 15px rgba(244,197,66,0.4);
+    }
+    .letter-box .lr-info { flex: 1; }
+    .letter-box .lr-title { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
+    .letter-box .lr-round { font-size: 14px; font-weight: 900; color: #fde68a; }
+
+    /* Actions */
+    .lc-actions { display: flex; gap: 8px; }
+    .lc-actions a, .lc-actions button { flex: 1; padding: 9px; border-radius: 9px; border: none; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; text-decoration: none; }
+    .btn-kill { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3) !important; }
+    .btn-kill:hover { background: rgba(239,68,68,0.3); }
+
+    /* EMPTY STATE */
+    .empty-live {
+      text-align: center;
+      padding: 80px 20px;
+      background: linear-gradient(135deg, #12121f, #1a1a2e);
+      border: 2px dashed rgba(148,163,184,0.2);
+      border-radius: 20px;
+    }
+    .empty-live .icon { font-size: 80px; margin-bottom: 16px; display: block; opacity: 0.5; }
+    .empty-live h3 { font-size: 20px; color: #94a3b8; margin-bottom: 8px; }
+    .empty-live p { font-size: 13px; color: #64748b; line-height: 1.6; }
 
     .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
     .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
-    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
 
-    /* Stats overview */
-    .stats-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-    @media (max-width: 700px) { .stats-overview { grid-template-columns: 1fr 1fr; } }
-    .stat-card { padding: 16px; border-radius: 14px; text-align: center; }
-    .stat-card.live { background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(34,197,94,0.4); }
-    .stat-card.waiting { background: linear-gradient(135deg, rgba(234,179,8,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(234,179,8,0.4); }
-    .stat-card.result { background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(59,130,246,0.4); }
-    .stat-card.finished { background: linear-gradient(135deg, rgba(100,116,139,0.2), rgba(15,23,42,0.6)); border: 1.5px solid rgba(100,116,139,0.4); }
-    .stat-val { font-size: 28px; font-weight: 900; font-family: monospace; color: #fff; margin-bottom: 4px; }
-    .stat-lbl { font-size: 11px; color: #94a3b8; font-weight: bold; }
-
-    /* Section */
-    .section { margin-bottom: 28px; }
-    .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid rgba(148,163,184,0.1); }
-    .section-head h2 { font-size: 16px; font-weight: 900; color: #fff; }
-    .section-head .badge-count { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; font-family: monospace; }
-    .section-head.live .badge-count { background: rgba(34,197,94,0.2); color: #4ade80; }
-    .section-head.waiting .badge-count { background: rgba(234,179,8,0.2); color: #fde68a; }
-    .section-head.result .badge-count { background: rgba(59,130,246,0.2); color: #93c5fd; }
-    .section-head.finished .badge-count { background: rgba(100,116,139,0.2); color: #cbd5e1; }
-    .live-pulse { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } }
-
-    /* Room card */
-    .room-card {
-      background: #12121f; border: 1.5px solid rgba(148,163,184,0.15);
-      border-radius: 14px; padding: 16px; margin-bottom: 10px;
-      transition: 0.2s;
-    }
-    .room-card.live { border-color: rgba(34,197,94,0.4); background: linear-gradient(135deg, rgba(34,197,94,0.05), #12121f); }
-    .room-card.waiting { border-color: rgba(234,179,8,0.4); background: linear-gradient(135deg, rgba(234,179,8,0.05), #12121f); }
-    .room-card.result { border-color: rgba(59,130,246,0.4); }
-    .room-card.finished {
-      opacity: 0.4;
-      background: #0a0a15;
-      border-color: rgba(100,116,139,0.2);
-    }
-    .room-card.finished:hover { opacity: 0.6; }
-
-    .room-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-    .room-name { font-size: 15px; font-weight: bold; color: #fff; }
-    .room-mode { padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; background: rgba(139,92,246,0.15); color: #c4b5fd; font-family: monospace; }
-    .room-status { padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-    .status-live { background: rgba(34,197,94,0.2); color: #4ade80; }
-    .status-waiting { background: rgba(234,179,8,0.2); color: #fde68a; }
-    .status-result { background: rgba(59,130,246,0.2); color: #93c5fd; }
-    .status-finished { background: rgba(100,116,139,0.2); color: #cbd5e1; }
-
-    .room-match { padding: 10px 14px; background: rgba(15,23,42,0.6); border-radius: 10px; margin-bottom: 10px; font-size: 13px; color: #e2e8f0; font-weight: bold; }
-
-    .room-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; }
-    .info-item { padding: 8px 10px; background: rgba(15,23,42,0.4); border-radius: 8px; font-size: 11px; }
-    .info-item .lbl { color: #64748b; font-size: 10px; margin-bottom: 2px; }
-    .info-item .val { color: #fff; font-weight: bold; font-family: monospace; }
-
-    .room-players { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .player-chip { padding: 6px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; font-size: 11px; color: #c4b5fd; font-weight: bold; }
-    .player-chip.host { background: rgba(250,204,21,0.15); border-color: rgba(250,204,21,0.4); color: #facc15; }
-    .player-chip.ready { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #4ade80; }
-    .player-chip.team-a { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
-    .player-chip.team-b { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
-
-    .room-actions { display: flex; gap: 8px; margin-top: 10px; }
-    .btn-del { padding: 8px 16px; background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; }
-    .btn-del:hover { background: rgba(239,68,68,0.3); }
-
-    .empty-state { text-align: center; padding: 30px 20px; color: #64748b; font-size: 13px; }
-    .empty-state .icon { font-size: 40px; display: block; margin-bottom: 8px; opacity: 0.4; }
-
-    /* ============================================================
-       ULTIMATE STABLE ADMIN LAYOUT
-       All heights, widths, paddings are FIXED
-       No page-specific overrides can change them
-       ============================================================ */
-    
-    /* Force consistent body */
-    body { 
-      padding: 16px 16px 40px !important;
-      margin: 0 !important;
-    }
-    
-    /* Force consistent container */
-    .container { 
-      max-width: 1400px !important; 
-      margin: 0 auto !important;
-      padding: 0 !important;
-    }
-    
-    /* Sticky wrapper - fixed position */
-    .admin-sticky-header {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 500 !important;
-      background: #0a0a15 !important;
-      padding: 4px 0 8px !important;
-      margin: 0 0 20px 0 !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
-      box-sizing: border-box !important;
-    }
-    
-    /* Topbar - FIXED HEIGHT */
-    .admin-sticky-header .topbar,
-    .admin-sticky-header > .topbar { 
-      height: 60px !important;
-      min-height: 60px !important;
-      max-height: 60px !important;
-      padding: 0 22px !important;
-      margin: 0 0 8px 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      flex-wrap: nowrap !important;
-      overflow: hidden !important;
-      box-sizing: border-box !important;
-      border-radius: 16px !important;
-    }
-    
-    /* Topbar h1 - fixed font */
-    .admin-sticky-header .topbar h1 { 
-      font-size: 20px !important;
-      line-height: 1 !important;
-      margin: 0 !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-    
-    /* Topbar links/buttons - fixed size */
-    .admin-sticky-header .topbar a,
-    .admin-sticky-header .topbar button { 
-      height: 36px !important;
-      min-height: 36px !important;
-      max-height: 36px !important;
-      padding: 0 16px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-size: 13px !important;
-      line-height: 1 !important;
-      box-sizing: border-box !important;
-      white-space: nowrap !important;
-    }
-    
-    /* ===== TABS - FIXED HEIGHT ===== */
-    .admin-tabs {
-      display: flex !important;
-      flex-wrap: nowrap !important;
-      gap: 6px !important;
-      height: 48px !important;
-      min-height: 48px !important;
-      max-height: 48px !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      white-space: nowrap !important;
-      padding: 4px !important;
-      margin: 0 !important;
-      background: #12121f !important;
-      border: 1px solid rgba(148,163,184,0.15) !important;
-      border-radius: 14px !important;
-      box-sizing: border-box !important;
-      scrollbar-width: none !important;
-      -ms-overflow-style: none !important;
-    }
-    
-    .admin-tabs::-webkit-scrollbar { 
-      display: none !important;
-      height: 0 !important;
-    }
-    
-    /* Each tab - FIXED HEIGHT */
-    .admin-tab {
-      flex: 0 0 auto !important;
-      height: 40px !important;
-      min-height: 40px !important;
-      max-height: 40px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      padding: 0 14px !important;
-      border-radius: 10px !important;
-      text-decoration: none !important;
-      font-size: 12px !important;
-      line-height: 1 !important;
-      font-weight: bold !important;
-      color: #94a3b8 !important;
-      white-space: nowrap !important;
-      box-sizing: border-box !important;
-      transition: background 0.15s !important;
-      border: none !important;
-    }
-    
-    .admin-tab:hover { 
-      background: rgba(148,163,184,0.1) !important; 
-      color: #fff !important; 
-    }
-    
-    .admin-tab.active {
-      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-      color: #fff !important;
-      box-shadow: 0 6px 20px rgba(239,68,68,0.4) !important;
-    }
-
+    /* OTHER ROOMS (when not live tab) */
+    .table-wrap { background: #12121f; border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 950px; }
+    th { background: rgba(30,41,59,0.7); padding: 14px 12px; text-align: right; font-size: 12px; color: #94a3b8; font-weight: bold; white-space: nowrap; border-bottom: 1px solid rgba(148,163,184,0.15); }
+    td { padding: 12px; text-align: right; font-size: 13px; border-bottom: 1px solid rgba(148,163,184,0.08); white-space: nowrap; }
+    tr:hover td { background: rgba(244,197,66,0.03); }
+    .code-txt { font-family: monospace; font-weight: bold; color: #facc15; }
+    .username { font-family: monospace; color: #94a3b8; }
+    .status-badge { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+    .st-waiting { background: rgba(234,179,8,0.15); color: #fde68a; }
+    .st-in_round { background: rgba(34,197,94,0.15); color: #4ade80; animation: pulse 2s infinite; }
+    .st-finished { background: rgba(100,116,139,0.15); color: #cbd5e1; }
+    .btn-del-small { padding: 6px 10px; border-radius: 6px; background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .filter-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-row input, .filter-row select { padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.2); background: #1a1a2e; color: #fff; font-size: 14px; font-family: inherit; }
+    .filter-row input { flex: 1; min-width: 200px; }
+    .filter-row button { padding: 12px 22px; border-radius: 12px; border: none; background: linear-gradient(135deg, #facc15, #eab308); color: #1a1a1a; font-weight: bold; font-size: 14px; font-family: inherit; cursor: pointer; }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="admin-sticky-header">
   <div class="topbar">
-    <h1>🚪 مدیریت اتاق‌ها و بازی‌های فعال</h1>
+    <h1>🚪 مدیریت اتاق‌ها</h1>
+    <a href="{% url 'custom_admin:logout' %}">خروج</a>
   </div>
 
   <div class="admin-tabs">
-    <a href="/panel-admin/dashboard/" class="admin-tab {% if '/panel-admin/dashboard/' in request.path or request.path == '/panel-admin/' %}active{% endif %}">👥 کاربران</a>
-    <a href="/panel-admin/alliances/" class="admin-tab {% if '/panel-admin/alliance' in request.path %}active{% endif %}">🛡️ اتحادها</a>
-    <a href="/panel-admin/rooms/" class="admin-tab {% if '/panel-admin/room' in request.path %}active{% endif %}">🚪 اتاق‌ها</a>
-    <a href="/panel-admin/announcements/" class="admin-tab {% if '/panel-admin/announcement' in request.path %}active{% endif %}">📢 اعلان‌ها</a>
-    <a href="/panel-admin/tournaments/" class="admin-tab {% if '/panel-admin/tournament' in request.path %}active{% endif %}">🏆 تورنمنت</a>
-    <a href="/panel-admin/shop/" class="admin-tab {% if '/panel-admin/shop/' in request.path %}active{% endif %}">🛒 فروشگاه</a>
-    <a href="/panel-admin/support/" class="admin-tab {% if '/panel-admin/support' in request.path %}active{% endif %}">💬 پشتیبانی</a>
-  </div>
-  </div>
-
-  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
-
-  <div class="stats-overview">
-    <div class="stat-card live">
-      <div class="stat-val">{{ count_in_round }}</div>
-      <div class="stat-lbl"><span class="live-pulse"></span> در حال بازی</div>
-    </div>
-    <div class="stat-card waiting">
-      <div class="stat-val">{{ count_waiting }}</div>
-      <div class="stat-lbl">در انتظار</div>
-    </div>
-    <div class="stat-card result">
-      <div class="stat-val">{{ count_round_result }}</div>
-      <div class="stat-lbl">نتیجه راند</div>
-    </div>
-    <div class="stat-card finished">
-      <div class="stat-val">{{ count_finished }}</div>
-      <div class="stat-lbl">تمام‌شده</div>
-    </div>
+    <a href="/panel-admin/dashboard/" class="admin-tab">👥 کاربران</a>
+    <a href="/panel-admin/alliances/" class="admin-tab">🛡️ اتحادها</a>
+    <a href="/panel-admin/rooms/" class="admin-tab {% if status_filter != 'in_round' %}active{% endif %}">🚪 اتاق‌ها</a>
+    <a href="/panel-admin/rooms/active/" class="admin-tab {% if status_filter == 'in_round' %}active{% endif %}">🎮 در حال بازی</a>
+    <a href="/panel-admin/announcements/" class="admin-tab">📢 اعلان‌ها</a>
+    <a href="/panel-admin/tournaments/" class="admin-tab">🏆 تورنمنت‌ها</a>
+    <a href="/panel-admin/shop/" class="admin-tab">🛒 فروشگاه</a>
   </div>
 
-  <!-- ==================== LIVE GAMES ==================== -->
-  <div class="section">
-    <div class="section-head live">
-      <span class="live-pulse"></span>
-      <h2>🔴 در حال بازی (Live)</h2>
-      <span class="badge-count">{{ count_in_round }}</span>
-    </div>
-    {% if in_round %}
-      {% for r in in_round %}
-      <div class="room-card live">
-        <div class="room-top">
-          <span class="room-name">{{ r.room_name }}</span>
-          <span class="room-mode">{{ r.mode }}</span>
-          <span class="room-status status-live">● در حال بازی</span>
-        </div>
-        {% if r.match_desc %}
-        <div class="room-match">🎮 {{ r.match_desc }}</div>
-        {% endif %}
-        <div class="room-info">
-          <div class="info-item"><div class="lbl">میزبان</div><div class="val">{{ r.host }}</div></div>
-          <div class="info-item"><div class="lbl">بازیکنان</div><div class="val">{{ r.player_count }} / {{ r.max_players }}</div></div>
-          <div class="info-item"><div class="lbl">راند</div><div class="val">{{ r.current_round }}</div></div>
-          <div class="info-item"><div class="lbl">حرف</div><div class="val" style="color:#facc15; font-size:16px;">{{ r.current_letter }}</div></div>
-          <div class="info-item"><div class="lbl">شروع</div><div class="val" style="font-size:10px;">{{ r.created_at|jdate:"H:i" }}</div></div>
-        </div>
-        <div class="room-players">
-          {% for p in r.players %}
-            <span class="player-chip {% if p.alias == r.host %}host{% endif %} {% if p.team == 'A' %}team-a{% elif p.team == 'B' %}team-b{% endif %} {% if p.ready %}ready{% endif %}">
-              {% if p.alias == r.host %}👑 {% endif %}{{ p.alias }} ({{ p.score }})
-            </span>
-          {% endfor %}
-        </div>
-        <div class="room-actions">
-          <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق حذف شود؟');">
-            {% csrf_token %}
-            <button type="submit" class="btn-del">🗑️ حذف اتاق</button>
-          </form>
-        </div>
+  {% if message %}<div class="msg msg-success">{{ message.text }}</div>{% endif %}
+
+  {% if status_filter == 'in_round' %}
+    <!-- LIVE VIEW -->
+    <div class="live-header">
+      <div class="live-dot-pulse"></div>
+      <div>
+        <div class="live-title">بازی‌های زنده</div>
+        <div class="live-sub">در حال حاضر این بازی‌ها در جریان هستند</div>
       </div>
-      {% endfor %}
-    {% else %}
-      <div class="empty-state"><span class="icon">🎮</span>هیچ بازی در حال اجرا نیست.</div>
-    {% endif %}
-  </div>
-
-  <!-- ==================== WAITING ROOMS ==================== -->
-  <div class="section">
-    <div class="section-head waiting">
-      <h2>⏳ اتاق‌های در انتظار</h2>
-      <span class="badge-count">{{ count_waiting }}</span>
+      <div class="live-count">{{ rooms|length }}</div>
     </div>
-    {% if waiting %}
-      {% for r in waiting %}
-      <div class="room-card waiting">
-        <div class="room-top">
-          <span class="room-name">{{ r.room_name }}</span>
-          <span class="room-mode">{{ r.mode }}</span>
-          <span class="room-status status-waiting">در انتظار بازیکنان</span>
-        </div>
-        {% if r.match_desc %}
-        <div class="room-match">{{ r.match_desc }}</div>
-        {% endif %}
-        <div class="room-info">
-          <div class="info-item"><div class="lbl">میزبان</div><div class="val">{{ r.host }}</div></div>
-          <div class="info-item"><div class="lbl">بازیکنان</div><div class="val">{{ r.player_count }} / {{ r.max_players }}</div></div>
-          <div class="info-item"><div class="lbl">شروع</div><div class="val" style="font-size:10px;">{{ r.created_at|jdate:"H:i" }}</div></div>
-        </div>
-        <div class="room-players">
-          {% for p in r.players %}
-            <span class="player-chip {% if p.alias == r.host %}host{% endif %} {% if p.ready %}ready{% endif %}">
-              {% if p.alias == r.host %}👑 {% endif %}{{ p.alias }}{% if p.ready %} ✓{% endif %}
-            </span>
-          {% empty %}
-            <span style="color:#64748b; font-size:11px;">هیچ بازیکنی داخل نیست</span>
-          {% endfor %}
-        </div>
-        <div class="room-actions">
-          <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق حذف شود؟');">
-            {% csrf_token %}
-            <button type="submit" class="btn-del">🗑️ حذف اتاق</button>
-          </form>
-        </div>
-      </div>
-      {% endfor %}
-    {% else %}
-      <div class="empty-state"><span class="icon">⏳</span>هیچ اتاقی در انتظار نیست.</div>
-    {% endif %}
-  </div>
 
-  <!-- ==================== ROUND RESULT ==================== -->
-  {% if count_round_result > 0 %}
-  <div class="section">
-    <div class="section-head result">
-      <h2>📊 در حال نمایش نتیجه</h2>
-      <span class="badge-count">{{ count_round_result }}</span>
-    </div>
-    {% for r in round_result %}
-    <div class="room-card result">
-      <div class="room-top">
-        <span class="room-name">{{ r.room_name }}</span>
-        <span class="room-status status-result">نتیجه راند {{ r.current_round }}</span>
-      </div>
-      {% if r.match_desc %}<div class="room-match">{{ r.match_desc }}</div>{% endif %}
-      <div class="room-players">
-        {% for p in r.players %}
-          <span class="player-chip {% if p.alias == r.host %}host{% endif %}">{{ p.alias }} ({{ p.score }})</span>
+    {% if rooms %}
+      <div class="live-grid">
+        {% for r in rooms %}
+          <div class="live-card">
+            <div class="lc-head">
+              <div class="lc-icon">🎮</div>
+              <div class="lc-info">
+                <div class="lc-title">{{ r.room_name }}</div>
+                <div class="lc-meta">
+                  <span class="lc-code">#{{ r.code }}</span>
+                  <span>{{ r.mode }}</span>
+                </div>
+              </div>
+            </div>
+
+            {% if r.players %}
+              <div class="players-live">
+                {% for p in r.players %}
+                  <div class="player-chip">
+                    <div class="pc-av">{{ p.avatar }}</div>
+                    <span class="pc-name">{{ p.alias }}</span>
+                    <span class="pc-score">{{ p.score }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="live-stats">
+              <div class="ls-item">
+                <div class="l">بازیکنان</div>
+                <div class="v">{{ r.players_count }}/{{ r.max_players }}</div>
+              </div>
+              <div class="ls-item">
+                <div class="l">راند</div>
+                <div class="v">{{ r.current_round|default:"-" }}</div>
+              </div>
+              <div class="ls-item">
+                <div class="l">حرف</div>
+                <div class="v">{{ r.current_letter|default:"-" }}</div>
+              </div>
+            </div>
+
+            {% if r.current_round %}
+              <div class="letter-box">
+                <div class="lr-letter">{{ r.current_letter }}</div>
+                <div class="lr-info">
+                  <div class="lr-title">راند فعلی</div>
+                  <div class="lr-round">{{ r.current_round }}</div>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="lc-actions">
+              <form method="post" action="{% url 'custom_admin:room_delete' r.id %}" style="display:contents;" onsubmit="return confirm('حذف بازی {{ r.code }}؟');">
+                {% csrf_token %}
+                <button type="submit" class="btn-kill">🗑️ حذف اتاق</button>
+              </form>
+            </div>
+          </div>
         {% endfor %}
       </div>
-      <div class="room-actions">
-        <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق حذف شود؟');">
-          {% csrf_token %}
-          <button type="submit" class="btn-del">🗑️ حذف اتاق</button>
-        </form>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <!-- ==================== FINISHED (GRAYED) ==================== -->
-  <div class="section">
-    <div class="section-head finished">
-      <h2>🏁 اتاق‌های بسته شده</h2>
-      <span class="badge-count">{{ count_finished }}</span>
-    </div>
-    {% if finished %}
-      {% for r in finished %}
-      <div class="room-card finished">
-        <div class="room-top">
-          <span class="room-name">{{ r.room_name }}</span>
-          <span class="room-mode">{{ r.mode }}</span>
-          <span class="room-status status-finished">🏁 تمام‌شده</span>
-        </div>
-        {% if r.match_desc %}<div class="room-match">{{ r.match_desc }}</div>{% endif %}
-        <div class="room-info">
-          <div class="info-item"><div class="lbl">میزبان</div><div class="val">{{ r.host }}</div></div>
-          <div class="info-item"><div class="lbl">بازیکنان</div><div class="val">{{ r.player_count }}</div></div>
-          <div class="info-item"><div class="lbl">تاریخ</div><div class="val" style="font-size:10px;">{{ r.created_at|jdate:"Y/m/d H:i" }}</div></div>
-        </div>
-        <div class="room-players">
-          {% for p in r.players %}
-            <span class="player-chip" style="opacity:0.7;">{{ p.alias }} ({{ p.score }})</span>
-          {% endfor %}
-        </div>
-        <div class="room-actions">
-          <form method="post" action="{% url 'custom_admin:room_delete' r.obj.id %}" onsubmit="return confirm('این اتاق برای همیشه حذف شود؟');">
-            {% csrf_token %}
-            <button type="submit" class="btn-del">🗑️ حذف دائمی</button>
-          </form>
-        </div>
-      </div>
-      {% endfor %}
     {% else %}
-      <div class="empty-state"><span class="icon">🏁</span>هیچ اتاق بسته‌ای وجود ندارد.</div>
+      <div class="empty-live">
+        <span class="icon">🎮</span>
+        <h3>هیچ بازی زنده‌ای نیست</h3>
+        <p>وقتی بازی‌ای شروع بشه، اینجا نمایش داده می‌شه</p>
+      </div>
     {% endif %}
-  </div>
+  {% else %}
+    <!-- LIST ALL ROOMS -->
+    <div class="filter-row">
+      <form method="get" class="filter-row" style="flex:1; margin:0;">
+        <input type="text" name="q" value="{{ search }}" placeholder="جستجو...">
+        <select name="status">
+          <option value="">همه</option>
+          <option value="waiting" {% if status_filter == "waiting" %}selected{% endif %}>در انتظار</option>
+          <option value="in_round" {% if status_filter == "in_round" %}selected{% endif %}>در حال بازی</option>
+          <option value="finished" {% if status_filter == "finished" %}selected{% endif %}>تمام‌شده</option>
+        </select>
+        <button type="submit">🔍 فیلتر</button>
+      </form>
+    </div>
 
+    {% if rooms %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>کد</th><th>اسم</th><th>حالت</th><th>وضعیت</th><th>میزبان</th><th>بازیکنان</th><th>تاریخ</th><th>عملیات</th></tr>
+          </thead>
+          <tbody>
+            {% for r in rooms %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><span class="code-txt">{{ r.code }}</span></td>
+                <td>{{ r.room_name }}</td>
+                <td>{{ r.mode }}</td>
+                <td><span class="status-badge st-{{ r.status }}">{{ r.status }}</span></td>
+                <td>{{ r.host }} <span class="username">@{{ r.host_username }}</span></td>
+                <td>{{ r.players_count }}/{{ r.max_players }}</td>
+                <td style="font-size:11px; color:#64748b;">{{ r.created_at|jdate:"Y/m/d H:i" }}</td>
+                <td>
+                  <form method="post" action="{% url 'custom_admin:room_delete' r.id %}" style="display:inline;" onsubmit="return confirm('حذف؟');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-del-small">🗑️</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-live">
+        <span class="icon">🚪</span>
+        <h3>هیچ اتاقی نیست</h3>
+      </div>
+    {% endif %}
+  {% endif %}
 </div>
 </body>
 </html>

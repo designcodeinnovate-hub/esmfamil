@@ -1,72 +1,17 @@
-import secrets
-import random
-
 from django.contrib import messages
+# -*- coding: utf-8 -*-
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Max, Sum
-from django.db import models
 from django.shortcuts import redirect, render
-from django.utils import timezone
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .avatars import AVATAR_CATEGORIES, IMAGE_AVATARS, get_emoji, get_avatar_display
-from .models import EmailVerificationToken
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from .avatars import AVATAR_CATEGORIES, IMAGE_AVATARS, get_avatar_display, get_emoji
+
+User = get_user_model()
+
 
 # ============================================================
-#                       API Endpoints
-# ============================================================
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
-
-class LoginView(TokenObtainPairView):
-    serializer_class = LoginSerializer
-    permission_classes = [permissions.AllowAny]
-
-class MeView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    def get_object(self):
-        return self.request.user
-
-class VerifyEmailView(APIView):
-    permission_classes = [permissions.AllowAny]
-    def get(self, request):
-        token = request.query_params.get("token", "")
-        try:
-            ev = EmailVerificationToken.objects.select_related("user").get(token=token)
-        except EmailVerificationToken.DoesNotExist:
-            return Response({"detail": "invalid token"}, status=400)
-        if not ev.is_valid():
-            return Response({"detail": "expired or used"}, status=400)
-        ev.used_at = timezone.now()
-        ev.save(update_fields=["used_at"])
-        user = ev.user
-        user.is_active = True
-        user.email_verified_at = timezone.now()
-        user.save(update_fields=["is_active", "email_verified_at"])
-        return Response({"detail": "email verified"})
-
-class ResendVerificationView(APIView):
-    permission_classes = [permissions.AllowAny]
-    def post(self, request):
-        User = get_user_model()
-        email = (request.data.get("email") or "").lower()
-        try:
-            user = User.objects.get(email=email)
-            if not user.is_active:
-                pass
-        except User.DoesNotExist:
-            pass
-        return Response({"detail": "if the email exists, we sent a link"})
-
-# ============================================================
-#                       Web (HTML)
+# Helper
 # ============================================================
 def _next_after_login(user):
     if not user.has_chosen_avatar:
@@ -75,43 +20,61 @@ def _next_after_login(user):
         return redirect("accounts:complete_registration")
     return redirect("game:home")
 
+
+# ============================================================
+# Landing
+# ============================================================
 def landing(request):
     if request.user.is_authenticated:
         return _next_after_login(request.user)
     return render(request, "accounts/landing.html")
 
+
+# ============================================================
+# Register
+# ============================================================
 def register_view(request):
     if request.user.is_authenticated:
         return _next_after_login(request.user)
+
     error = None
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip().lower()
         password = request.POST.get("password") or ""
         password2 = request.POST.get("password2") or ""
-        User = get_user_model()
+
         if not username:
             error = "شناسه کاربری را وارد کن."
         elif len(username) < 3:
-            error = "شناسه کاربری باید حداقل ۳ کاراکتر باشد."
+            error = "شناسه باید حداقل ۳ حرف باشد."
         elif len(username) > 32:
-            error = "شناسه کاربری نمی‌تواند بیشتر از ۳۲ کاراکتر باشد."
+            error = "شناسه نمی‌تواند بیشتر از ۳۲ حرف باشد."
         elif not all(c.isalnum() or c == "_" for c in username):
-            error = "شناسه کاربری فقط می‌تواند شامل حروف انگلیسی، اعداد و _ باشد."
+            error = "شناسه فقط حروف انگلیسی، اعداد و _."
         elif User.objects.filter(username=username).exists():
-            error = "این شناسه کاربری قبلاً استفاده شده است."
+            error = "این شناسه قبلاً استفاده شده."
         elif len(password) < 6:
-            error = "رمز عبور باید حداقل ۶ کاراکتر باشد."
+            error = "رمز باید حداقل ۶ حرف باشد."
         elif password != password2:
-            error = "دو رمز عبور یکسان نیستند."
+            error = "دو رمز یکسان نیستند."
         else:
-            user = User.objects.create_user(username=username, password=password, alias=username, is_active=True)
+            user = User.objects.create_user(
+                username=username, password=password,
+                alias=username, is_active=True, coins=100,
+            )
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             return redirect("accounts:complete_registration")
+
     return render(request, "accounts/register.html", {"error": error})
 
+
+# ============================================================
+# Login
+# ============================================================
 def login_view(request):
     if request.user.is_authenticated:
         return _next_after_login(request.user)
+
     error = None
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip().lower()
@@ -120,93 +83,147 @@ def login_view(request):
         if user is not None:
             login(request, user)
             return _next_after_login(user)
-        error = "شناسه کاربری یا رمز عبور اشتباه است."
+        error = "شناسه یا رمز اشتباه است."
+
     return render(request, "accounts/login.html", {"error": error})
 
-def guest_start(request):
-    if request.user.is_authenticated:
-        return redirect("game:home")
-    
-    User = get_user_model()
-    for _ in range(30):
-        num = random.randint(10_000_000, 99_999_999)
-        username = f"user_{num}"
-        if not User.objects.filter(username=username).exists():
-            break
-    
-    password = secrets.token_urlsafe(24)
-    user = User.objects.create_user(
-        username=username, password=password, alias=username,
-        avatar_id=None, has_chosen_avatar=True, has_completed_registration=True,
-        is_active=True, is_guest=True,
-    )
-    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-    return redirect("game:home")
 
-def guest_name(request):
-    if request.method == "POST":
-        new_alias = (request.POST.get("alias") or "").strip()[:32]
-        if new_alias and new_alias != request.user.alias:
-            User = get_user_model()
-            if not User.objects.filter(alias__iexact=new_alias).exclude(pk=request.user.pk).exists():
-                request.user.alias = new_alias
-                request.user.save(update_fields=["alias"])
-        return redirect("accounts:avatar_select")
-    return render(request, "accounts/guest_name.html")
-
+# ============================================================
+# Complete registration (avatar + alias)
+# ============================================================
 @login_required
 def complete_registration(request):
     user = request.user
     if user.has_completed_registration:
         return redirect("game:home")
+
+    unlocked_ids = set(
+        UserUnlockedAvatar.objects.filter(user=user, avatar_type="image")
+        .values_list("avatar_id", flat=True)
+    )
+    image_list = []
+    for img in IMAGE_AVATARS:
+        image_list.append({
+            "id": img["id"],
+            "url": img["url"],
+            "unlocked": img["id"] in unlocked_ids,
+            "price": 0 if img["id"] in unlocked_ids else 50,
+        })
+
     error = None
     if request.method == "POST":
+        action = request.POST.get("action", "finish")
+
+        if action == "unlock":
+            try:
+                aid = int(request.POST.get("avatar_id", 0))
+            except (ValueError, TypeError):
+                aid = 0
+            if 1 <= aid <= 44:
+                if UserUnlockedAvatar.objects.filter(user=user, avatar_type="image", avatar_id=aid).exists():
+                    messages.info(request, "قبلاً باز شده.")
+                elif (user.coins or 0) >= 50:
+                    user.coins -= 50
+                    user.save(update_fields=["coins"])
+                    UserUnlockedAvatar.objects.create(user=user, avatar_type="image", avatar_id=aid)
+                    messages.success(request, "🎉 آواتار باز شد! -50 سکه")
+                else:
+                    messages.error(request, "سکه کافی نداری (نیاز: 50).")
+            return redirect("accounts:complete_registration")
+
         alias = (request.POST.get("alias") or "").strip()[:32]
         avatar_type = request.POST.get("avatar_type", "emoji")
         if avatar_type not in ("emoji", "image"):
             avatar_type = "emoji"
-        avatar_raw = request.POST.get("avatar_id", "")
-        
         try:
-            avatar_id = int(avatar_raw)
+            avatar_id = int(request.POST.get("avatar_id", ""))
         except (ValueError, TypeError):
             avatar_id = -1
-            
         max_id = 99 if avatar_type == "emoji" else 44
 
         if not alias:
             error = "نام نمایشی را وارد کن."
         elif len(alias) < 2:
-            error = "نام نمایشی باید حداقل ۲ کاراکتر باشد."
+            error = "نام باید حداقل ۲ حرف باشد."
         elif not (0 <= avatar_id <= max_id):
-            error = "لطفاً یک آواتار انتخاب کن."
+            error = "یک آواتار انتخاب کن."
+        elif avatar_type == "image" and not UserUnlockedAvatar.objects.filter(
+            user=user, avatar_type="image", avatar_id=avatar_id
+        ).exists():
+            error = "این آواتار قفله. اول بازش کن یا ایموجی انتخاب کن."
         else:
             user.alias = alias
             user.avatar_id = avatar_id
             user.avatar_type = avatar_type
             user.has_chosen_avatar = True
             user.has_completed_registration = True
-            user.save(update_fields=["alias", "avatar_id", "avatar_type", "has_chosen_avatar", "has_completed_registration"])
+            user.save(update_fields=[
+                "alias", "avatar_id", "avatar_type",
+                "has_chosen_avatar", "has_completed_registration",
+            ])
             return redirect("game:home")
 
     return render(request, "accounts/complete_registration.html", {
         "categories": AVATAR_CATEGORIES,
-        "image_avatars": IMAGE_AVATARS,
-        "current_avatar": user.avatar_id,
-        "current_type": user.avatar_type,
+        "image_avatars": image_list,
         "error": error,
+        "user_coins": user.coins or 0,
     })
+
+
 
 @login_required
 def avatar_select(request):
     if request.user.is_guest:
         return render(request, "accounts/avatar_select.html", {
             "categories": AVATAR_CATEGORIES,
-            "image_avatars": IMAGE_AVATARS,
+            "image_avatars": [],
             "is_guest": True,
             "locked_message": "🔒 تغییر آواتار در حالت مهمان قفل است.",
         })
+
+    unlocked_ids = set(
+        UserUnlockedAvatar.objects.filter(user=request.user, avatar_type="image")
+        .values_list("avatar_id", flat=True)
+    )
+
+    image_list = []
+    for img in IMAGE_AVATARS:
+        image_list.append({
+            "id": img["id"],
+            "url": img["url"],
+            "unlocked": img["id"] in unlocked_ids,
+            "price": 0 if img["id"] in unlocked_ids else 50,
+        })
+
     if request.method == "POST":
+        action = request.POST.get("action", "select")
+
+        if action == "unlock":
+            try:
+                aid = int(request.POST.get("avatar_id", 0))
+            except (ValueError, TypeError):
+                aid = 0
+            if not (1 <= aid <= 44):
+                messages.error(request, "آواتار نامعتبر.")
+                return redirect("accounts:avatar_select")
+
+            if UserUnlockedAvatar.objects.filter(user=request.user, avatar_type="image", avatar_id=aid).exists():
+                messages.info(request, "قبلاً باز شده.")
+                return redirect("accounts:avatar_select")
+
+            PRICE = 50
+            if (request.user.coins or 0) < PRICE:
+                messages.error(request, f"سکه کافی نداری (نیاز: {PRICE}).")
+                return redirect("accounts:avatar_select")
+
+            request.user.coins -= PRICE
+            request.user.save(update_fields=["coins"])
+            UserUnlockedAvatar.objects.create(user=request.user, avatar_type="image", avatar_id=aid)
+            messages.success(request, f"🎉 آواتار باز شد! -{PRICE} سکه")
+            return redirect("accounts:avatar_select")
+
+        # Normal selection
         avatar_type = request.POST.get("avatar_type", "emoji")
         if avatar_type not in ("emoji", "image"):
             avatar_type = "emoji"
@@ -214,109 +231,45 @@ def avatar_select(request):
             aid = int(request.POST.get("avatar_id", ""))
         except (ValueError, TypeError):
             aid = -1
-            
         max_id = 99 if avatar_type == "emoji" else 44
-        
-        if 0 <= aid <= max_id:
+
+        if not (0 <= aid <= max_id):
+            messages.error(request, "آواتار نامعتبر.")
+        elif avatar_type == "image" and not UserUnlockedAvatar.objects.filter(
+            user=request.user, avatar_type="image", avatar_id=aid
+        ).exists():
+            messages.error(request, "این آواتار قفله. اول بازش کن.")
+            return redirect("accounts:avatar_select")
+        else:
             request.user.avatar_id = aid
             request.user.avatar_type = avatar_type
             request.user.has_chosen_avatar = True
             request.user.save(update_fields=["avatar_id", "avatar_type", "has_chosen_avatar"])
+            messages.success(request, "آواتار تغییر کرد.")
             return redirect("accounts:profile")
 
     return render(request, "accounts/avatar_select.html", {
         "categories": AVATAR_CATEGORIES,
-        "image_avatars": IMAGE_AVATARS,
+        "image_avatars": image_list,
         "current_avatar": request.user.avatar_id,
         "current_type": request.user.avatar_type,
         "is_guest": False,
+        "user_coins": request.user.coins or 0,
+        "active": "profile",
     })
 
+
+
 def logout_view(request):
-    """Logout + full guest account deletion."""
-    if request.user.is_authenticated and getattr(request.user, "is_guest", False):
-        try:
-            from .models import GuestDeletionLog
-            from game.models import Player, Answer, BotAnswer
-            from social.models import (
-                Friendship, Notification, GameInvite, NotificationRead
-            )
-            from alliance.models import AllianceMember, AllianceMessage
-
-            u = request.user
-            u_id = u.id
-
-            # Log BEFORE deletion
-            try:
-                from django.db.models import Sum
-                total_games = Player.objects.filter(user_id=u_id).count()
-                total_score = Player.objects.filter(user_id=u_id).aggregate(
-                    t=Sum("score")
-                )["t"] or 0
-
-                GuestDeletionLog.objects.create(
-                    username=u.username,
-                    alias=u.alias or u.username,
-                    public_id=u.public_id,
-                    avatar_id=u.avatar_id,
-                    total_games=total_games,
-                    total_score=total_score,
-                    joined_at=u.date_joined,
-                )
-            except Exception as e:
-                print(f"[guest log] {e}")
-
-            # Logout first
-            logout(request)
-
-            # Delete everything related to this guest
-            try:
-                # Social
-                Friendship.objects.filter(
-                    models.Q(from_user_id=u_id) | models.Q(to_user_id=u_id)
-                ).delete()
-                Notification.objects.filter(user_id=u_id).delete()
-                GameInvite.objects.filter(
-                    models.Q(from_user_id=u_id) | models.Q(to_user_id=u_id)
-                ).delete()
-                NotificationRead.objects.filter(user_id=u_id).delete()
-
-                # Alliance
-                AllianceMember.objects.filter(user_id=u_id).delete()
-                AllianceMessage.objects.filter(sender_id=u_id).delete()
-
-                # Game answers
-                Answer.objects.filter(user_id=u_id).delete()
-
-                # Player rows
-                Player.objects.filter(user_id=u_id).delete()
-
-                # Finally, user
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                User.objects.filter(id=u_id).delete()
-
-                print(f"[guest] Fully deleted user {u_id}")
-            except Exception as e:
-                print(f"[guest deletion] {e}")
-
-        except Exception as e:
-            print(f"[logout guest] {e}")
-            logout(request)
-
-        return redirect("landing")
-
     logout(request)
     return redirect("landing")
 
-@login_required(login_url="/accounts/login/")
+
+# ============================================================
+# Profile
+# ============================================================
+@login_required
 def profile_view(request):
-    if not request.user.is_authenticated:
-        return redirect("accounts:login_view")
-    try:
-        from game.models import Player
-    except Exception:
-        pass
     from game.models import Player
     user = request.user
     message = None
@@ -328,7 +281,7 @@ def profile_view(request):
         new_alias = (request.POST.get("alias") or "").strip()[:32]
         if new_alias and new_alias != user.alias:
             if len(new_alias) < 2:
-                error = "نام نمایشی باید حداقل ۲ کاراکتر باشد."
+                error = "نام باید حداقل ۲ حرف باشد."
             else:
                 user.alias = new_alias
                 user.save(update_fields=["alias"])
@@ -343,9 +296,9 @@ def profile_view(request):
 
     level = 1 + total_score // 100
     level_progress = total_score % 100
-    
+
     atype, aval = get_avatar_display(user)
-    
+
     return render(request, "accounts/profile.html", {
         "profile_user": user,
         "avatar_emoji": get_emoji(user.avatar_id),
@@ -366,123 +319,42 @@ def profile_view(request):
         },
     })
 
+
+# ============================================================
+# Settings
+# ============================================================
 @login_required
 def settings_view(request):
     return render(request, "accounts/settings.html", {"active": "profile"})
 
+
+# ============================================================
+# Shop (delegate to shop_views)
+# ============================================================
 @login_required
 def shop_view(request):
-    return render(request, "accounts/shop.html", {"active": "profile"})
+    return redirect("accounts:shop")
 
 
 # ============================================================
-# SUPPORT / TICKETING
+# Guest
 # ============================================================
-BOT_REPLY_TEXT = "سلام! از پیام شما متشکریم. اگر انتقاد یا پیشنهادی دارید، لطفاً ذکر کنید — ممنون می‌شویم. تیم پشتیبانی در اسرع وقت پاسخ می‌دهد. 🙏"
+def guest_start(request):
+    if request.user.is_authenticated:
+        return redirect("game:home")
 
+    import random, secrets
+    for _ in range(30):
+        num = random.randint(10_000_000, 99_999_999)
+        username = f"user_{num}"
+        if not User.objects.filter(username=username).exists():
+            break
 
-@login_required
-def support_home(request):
-    if not getattr(request.user, "has_chosen_avatar", False):
-        return redirect("accounts:avatar_select")
-
-    from .models import SupportTicket, SupportMessage
-
-    if request.method == "POST":
-        subject = (request.POST.get("subject") or "").strip()[:100]
-        body = (request.POST.get("body") or "").strip()[:2000]
-
-        if not subject:
-            messages.error(request, "موضوع را وارد کن.")
-            return redirect("accounts:support_home")
-
-        if not body:
-            messages.error(request, "متن پیام را وارد کن.")
-            return redirect("accounts:support_home")
-
-        ticket = SupportTicket.objects.create(
-            user=request.user,
-            subject=subject,
-            status="answered",
-        )
-        SupportMessage.objects.create(
-            ticket=ticket, sender=request.user, body=body, is_staff=False,
-        )
-        # Auto-bot reply
-        SupportMessage.objects.create(
-            ticket=ticket, sender=None, body=BOT_REPLY_TEXT, is_staff=True,
-        )
-
-        messages.success(request, "تیکت شما ثبت شد. پاسخ اولیه ارسال شد.")
-        return redirect("accounts:support_detail", ticket_id=ticket.id)
-
-    tickets = SupportTicket.objects.filter(user=request.user).order_by("-updated_at")
-    tickets_data = []
-    for t in tickets:
-        last_msg = t.messages.order_by("-created_at").first()
-        tickets_data.append({
-            "id": t.id,
-            "subject": t.subject,
-            "status": t.status,
-            "status_display": t.get_status_display(),
-            "created_at": t.created_at,
-            "updated_at": t.updated_at,
-            "message_count": t.message_count(),
-            "last_msg": (last_msg.body[:60] + "...") if last_msg and len(last_msg.body) > 60 else (last_msg.body if last_msg else ""),
-        })
-
-    return render(request, "accounts/support_home.html", {
-        "tickets": tickets_data,
-        "active": "profile",
-    })
-
-
-@login_required
-def support_detail(request, ticket_id):
-    from .models import SupportTicket, SupportMessage
-
-    ticket = SupportTicket.objects.filter(id=ticket_id, user=request.user).first()
-    if not ticket:
-        messages.error(request, "تیکت پیدا نشد.")
-        return redirect("accounts:support_home")
-
-    if request.method == "POST":
-        action = request.POST.get("action", "reply")
-        if action == "reply":
-            body = (request.POST.get("body") or "").strip()[:2000]
-            if body:
-                SupportMessage.objects.create(
-                    ticket=ticket, sender=request.user, body=body, is_staff=False,
-                )
-                if ticket.status == "closed":
-                    ticket.status = "open"
-                else:
-                    ticket.status = "open"
-                ticket.save()
-            return redirect("accounts:support_detail", ticket_id=ticket.id)
-        elif action == "close":
-            ticket.status = "closed"
-            ticket.save()
-            messages.info(request, "تیکت بسته شد.")
-            return redirect("accounts:support_detail", ticket_id=ticket.id)
-        elif action == "delete":
-            ticket.delete()
-            messages.success(request, "تیکت حذف شد.")
-            return redirect("accounts:support_home")
-
-    msgs_list = ticket.messages.select_related("sender").all()
-    msgs_data = [{
-        "id": m.id,
-        "sender": m.sender,
-        "sender_alias": (m.sender.alias if m.sender else "🤖 پشتیبانی"),
-        "body": m.body,
-        "is_staff": m.is_staff,
-        "is_me": m.sender_id == request.user.id if m.sender_id else False,
-        "created_at": m.created_at,
-    } for m in msgs_list]
-
-    return render(request, "accounts/support_detail.html", {
-        "ticket": ticket,
-        "ticket_messages": msgs_data,
-        "active": "profile",
-    })
+    password = secrets.token_urlsafe(24)
+    user = User.objects.create_user(
+        username=username, password=password, alias=username,
+        avatar_id=None, has_chosen_avatar=True, has_completed_registration=True,
+        is_active=True, is_guest=True,
+    )
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    return redirect("game:home")

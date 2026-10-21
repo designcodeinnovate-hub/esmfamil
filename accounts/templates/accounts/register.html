@@ -7,153 +7,47 @@
   <title>ساخت اکانت کاربری</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Tahoma, sans-serif;
-      min-height: 100vh;
-      background: radial-gradient(circle at 30% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%);
-      color: #e2e8f0;
-      display: flex; justify-content: center; align-items: center;
-      padding: 24px 20px;
-    }
-    .glow {
-      position: fixed; width: 500px; height: 500px;
-      border-radius: 50%; filter: blur(130px);
-      opacity: 0.28; z-index: 0; pointer-events: none;
-    }
+    body { font-family: Tahoma, sans-serif; min-height: 100vh; background: radial-gradient(circle at 30% 10%, #1e1b4b 0%, #0f0f1e 45%, #060608 100%); color: #e2e8f0; display: flex; justify-content: center; align-items: center; padding: 24px 20px; }
+    .glow { position: fixed; width: 500px; height: 500px; border-radius: 50%; filter: blur(130px); opacity: 0.28; z-index: 0; pointer-events: none; }
     .glow-1 { top: -180px; right: -150px; background: #f4c542; }
     .glow-2 { bottom: -180px; left: -150px; background: #8b5cf6; }
-
-    .box {
-      position: relative; z-index: 10;
-      background: rgba(30, 41, 59, 0.75);
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      padding: 34px 28px;
-      border-radius: 22px;
-      width: 420px; max-width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    h1 {
-      font-size: 24px; text-align: center;
-      background: linear-gradient(135deg, #f4c542, #f97316);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 6px;
-    }
-    p.sub {
-      color: #94a3b8; font-size: 13px;
-      text-align: center; margin-bottom: 22px;
-      line-height: 1.6;
-    }
-
-    label {
-      display: block; color: #cbd5e1;
-      font-size: 13px; margin: 14px 0 6px;
-    }
-    input {
-      width: 100%;
-      padding: 13px 16px;
-      border-radius: 12px;
-      border: 1.5px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.7);
-      color: #fff;
-      font-size: 15px;
-      font-family: inherit;
-      transition: border 0.2s;
-    }
-    input:focus {
-      outline: none;
-      border-color: #f4c542;
-      box-shadow: 0 0 0 3px rgba(244,197,66,0.15);
-    }
-
-    .hint {
-      font-size: 11px; color: #64748b;
-      margin-top: 5px; line-height: 1.5;
-    }
-
-    .error {
-      background: rgba(239, 68, 68, 0.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 13.5px;
-      margin-bottom: 8px;
-      text-align: right;
-      line-height: 1.6;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 24px;
-      padding: 15px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      color: #1a1a1a;
-      background: linear-gradient(135deg, #f4c542, #eab308);
-      box-shadow: 0 10px 30px rgba(244,197,66,0.4);
-      transition: transform 0.15s;
-    }
+    .box { position: relative; z-index: 10; background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(148, 163, 184, 0.18); padding: 34px 28px; border-radius: 22px; width: 420px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    h1 { font-size: 24px; text-align: center; background: linear-gradient(135deg, #f4c542, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
+    p.sub { color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 22px; line-height: 1.6; }
+    label { display: block; color: #cbd5e1; font-size: 13px; margin: 14px 0 6px; }
+    input { width: 100%; padding: 13px 16px; border-radius: 12px; border: 1.5px solid rgba(148, 163, 184, 0.2); background: rgba(15, 23, 42, 0.7); color: #fff; font-size: 15px; font-family: inherit; transition: border 0.2s; }
+    input:focus { outline: none; border-color: #f4c542; box-shadow: 0 0 0 3px rgba(244,197,66,0.15); }
+    .hint { font-size: 11px; color: #64748b; margin-top: 5px; line-height: 1.5; }
+    .error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 8px; text-align: right; line-height: 1.6; }
+    button { width: 100%; margin-top: 24px; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; font-family: inherit; cursor: pointer; color: #1a1a1a; background: linear-gradient(135deg, #f4c542, #eab308); box-shadow: 0 10px 30px rgba(244,197,66,0.4); transition: transform 0.15s; }
     button:hover { transform: translateY(-2px); }
-
-    .links {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 13px;
-      color: #94a3b8;
-    }
+    .links { margin-top: 20px; text-align: center; font-size: 13px; color: #94a3b8; }
     .links a { color: #fdba74; text-decoration: none; }
     .links a:hover { text-decoration: underline; }
-    .divider {
-      height: 1px;
-      background: rgba(148,163,184,0.15);
-      margin: 18px 0;
-    }
+    .divider { height: 1px; background: rgba(148,163,184,0.15); margin: 18px 0; }
   </style>
 </head>
 <body>
   <div class="glow glow-1"></div>
   <div class="glow glow-2"></div>
-
   <div class="box">
-    <h1>✍️ ساخت اکانت کاربری</h1>
-    <p class="sub">خوش آمدی! فقط یه نام کاربری و رمز بساز و بریم.</p>
-
+    <h1>✍️ ساخت اکانت</h1>
+    <p class="sub">فقط یه نام کاربری و رمز بساز و بریم!</p>
     {% if error %}<div class="error">{{ error }}</div>{% endif %}
-
     <form method="post" autocomplete="off">
       {% csrf_token %}
-
-      <label>شناسه کاربری (نام کاربری)</label>
-      <input type="text" name="username" maxlength="32" required autofocus
-             value="{{ request.POST.username|default:'' }}"
-             placeholder="مثلاً: ali_71" autocomplete="off">
-      <div class="hint">فقط حروف انگلیسی، اعداد و _ — بین ۳ تا ۳۲ کاراکتر</div>
-
+      <label>شناسه کاربری</label>
+      <input type="text" name="username" maxlength="32" required autofocus value="{{ request.POST.username|default:'' }}" placeholder="مثلاً: ali_71" autocomplete="off">
+      <div class="hint">فقط حروف انگلیسی، اعداد و _ — ۳ تا ۳۲ حرف</div>
       <label>رمز عبور</label>
-      <input type="password" name="password" required minlength="6"
-             placeholder="حداقل ۶ کاراکتر" autocomplete="new-password">
-
-      <label>تکرار رمز عبور</label>
-      <input type="password" name="password2" required minlength="6"
-             placeholder="همون رمز رو دوباره بزن" autocomplete="new-password">
-
-      <button type="submit">🚀 ساخت اکانت کاربری</button>
+      <input type="password" name="password" required minlength="6" placeholder="حداقل ۶ حرف" autocomplete="new-password">
+      <label>تکرار رمز</label>
+      <input type="password" name="password2" required minlength="6" placeholder="همون رمز رو دوباره بزن" autocomplete="new-password">
+      <button type="submit">🚀 ساخت اکانت</button>
     </form>
-
     <div class="divider"></div>
-
     <div class="links">
-      قبلاً اکانت ساختی؟
-      <a href="/accounts/login/">وارد شو</a>
-      &nbsp;|&nbsp;
-      <a href="/">بازگشت</a>
+      قبلاً اکانت داری؟ <a href="/accounts/login/">وارد شو</a> | <a href="/">بازگشت</a>
     </div>
   </div>
 </body>
