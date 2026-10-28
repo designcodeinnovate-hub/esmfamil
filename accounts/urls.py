@@ -7,6 +7,7 @@ app_name = "accounts"
 # Web routes (used with namespace accounts)
 web_urlpatterns = [
     path("register/", views.register_view, name="register_view"),
+    path("check-username/", views.check_username, name="check_username"),
     path("login/", views.login_view, name="login_view"),
     path("complete/", views.complete_registration, name="complete_registration"),
     path("avatar/", views.avatar_select, name="avatar_select"),

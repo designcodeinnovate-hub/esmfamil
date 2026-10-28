@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}زنجیره کلمات{% endblock %}
+{% block extra_css %}
+<style>
+  .head{display:flex;align-items:center;gap:12px;margin-bottom:14px;justify-content:space-between}
+  .head h1{font-size:20px;font-weight:900;color:#a5f3fc}
+  .score-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .score-card{padding:14px;border-radius:14px;text-align:center}
+  .score-card.you{background:linear-gradient(135deg,rgba(6,182,212,0.2),rgba(59,130,246,0.15));border:2px solid rgba(6,182,212,0.4)}
+  .score-card.bot{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(236,72,153,0.15));border:2px solid rgba(139,92,246,0.4)}
+  .score-card .lbl{font-size:11px;color:#94a3b8;margin-bottom:4px}
+  .score-card .val{font-size:24px;font-weight:900;font-family:monospace}
+  .score-card.you .val{color:#67e8f9}
+  .score-card.bot .val{color:#c4b5fd}
+  .chain-display{background:radial-gradient(circle at 100% 0%,rgba(6,182,212,0.25),transparent 60%),linear-gradient(135deg,#0a1e2a,#0f0f1e);border:2px solid rgba(6,182,212,0.5);border-radius:22px;padding:22px;margin-bottom:16px;text-align:center}
+  .chain-display .label{font-size:11px;color:#94a3b8;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+  .chain-display .last-word{font-size:26px;font-weight:900;color:#fff;margin-bottom:14px;text-shadow:0 2px 10px rgba(0,0,0,0.3)}
+  .chain-display .next-info{font-size:12px;color:#94a3b8;margin-bottom:6px}
+  .chain-display .next-letter{display:inline-flex;align-items:center;justify-content:center;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(6,182,212,0.4),rgba(59,130,246,0.15));border:3px solid #22d3ee;color:#fff;font-size:36px;font-weight:900;box-shadow:0 0 25px rgba(6,182,212,0.6);margin:8px auto;font-family:Tahoma,sans-serif}
+  .chain-display .category{font-size:12px;color:#67e8f9;margin-top:8px;font-weight:bold}
+  .timer-box{display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:900;font-family:monospace;color:#fde68a;margin-bottom:16px}
+  .timer-box .timer-num{padding:6px 16px;border-radius:12px;background:rgba(244,197,66,0.15);border:2px solid rgba(244,197,66,0.4);min-width:50px;text-align:center;transition:all 0.3s}
+  .timer-box .timer-num.warn{background:rgba(249,115,22,0.2);border-color:#f97316;color:#fdba74;animation:pulse 1s infinite}
+  .timer-box .timer-num.danger{background:rgba(239,68,68,0.25);border-color:#ef4444;color:#fca5a5;animation:pulse 0.6s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .answer-form{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;margin-bottom:16px}
+  .answer-form input[type=text]{width:100%;padding:16px;border-radius:12px;border:2px solid rgba(6,182,212,0.4);background:rgba(15,23,42,0.8);color:#fff;font-size:20px;text-align:center;font-weight:900;margin-bottom:12px;box-sizing:border-box;font-family:inherit}
+  .answer-form input[type=text]:focus{outline:none;border-color:#22d3ee;box-shadow:0 0 20px rgba(6,182,212,0.3)}
+  .answer-form button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 8px 20px rgba(34,197,94,0.4)}
+  .history{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;max-height:220px;overflow-y:auto;margin-bottom:16px}
+  .history-title{font-size:12px;color:#94a3b8;margin-bottom:8px;font-weight:bold}
+  .history-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;font-size:13px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.1)}
+  .history-item.you{border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.08)}
+  .history-item.bot{border-color:rgba(139,92,246,0.3);background:rgba(139,92,246,0.08)}
+  .history-item .who{font-size:18px}
+  .history-item .word{flex:1;font-weight:bold;color:#fff}
+  .game-over-panel{text-align:center;padding:40px 20px;border-radius:22px;margin-bottom:16px}
+  .game-over-panel.win{background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.4)}
+  .game-over-panel.lose{background:rgba(239,68,68,0.15);border:2px solid rgba(239,68,68,0.4)}
+  .game-over-panel .icon{font-size:80px;margin-bottom:12px}
+  .game-over-panel h2{font-size:24px;font-weight:900;margin-bottom:8px}
+  .game-over-panel.win h2{color:#4ade80}
+  .game-over-panel.lose h2{color:#f87171}
+  .game-over-panel .final-scores{display:flex;gap:12px;justify-content:center;margin-top:16px}
+  .game-over-panel .final-scores > div{padding:10px 18px;border-radius:12px;background:rgba(15,23,42,0.6)}
+  .game-over-panel .final-scores .l{font-size:10px;color:#94a3b8}
+  .game-over-panel .final-scores .v{font-size:18px;font-weight:900;font-family:monospace;color:#fff}
+  .new-game-btn{display:block;width:100%;padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#f4c542,#eab308);color:#1a1a1a;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;box-shadow:0 10px 30px rgba(244,197,66,0.4)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>🔗 زنجیره کلمات</h1>
+  <div style="font-size:11px;color:#94a3b8;background:rgba(6,182,212,0.15);padding:4px 10px;border-radius:8px;">{{ game.category }}</div>
+</div>
+
+<div class="score-bar">
+  <div class="score-card you"><div class="lbl">👤 شما</div><div class="val">{{ game.player_score }}</div></div>
+  <div class="score-card bot"><div class="lbl">🤖 بات</div><div class="val">{{ game.bot_score }}</div></div>
+</div>
+
+{% if game_over %}
+  <div class="game-over-panel {% if game.winner == 'player' %}win{% else %}lose{% endif %}">
+    <div class="icon">{% if game.winner == 'player' %}🏆{% else %}😢{% endif %}</div>
+    <h2>{% if game.winner == 'player' %}بردی!{% else %}باختی!{% endif %}</h2>
+    <div class="final-scores">
+      <div><div class="l">شما</div><div class="v">{{ game.player_score }}</div></div>
+      <div><div class="l">بات</div><div class="v">{{ game.bot_score }}</div></div>
+    </div>
+  </div>
+  <div class="history">
+    <div class="history-title">📜 تاریخچه</div>
+    {% for h in game.history %}
+      <div class="history-item {% if h.who == 'player' %}you{% elif h.who == 'bot' %}bot{% endif %}">
+        <span class="who">{% if h.who == 'player' %}👤{% elif h.who == 'bot' %}🤖{% else %}🎯{% endif %}</span>
+        <span class="word">{{ h.word }}</span>
+      </div>
+    {% endfor %}
+  </div>
+  <a href="/game/chain/reset/" class="new-game-btn">🔄 بازی جدید</a>
+{% else %}
+  <div class="chain-display">
+    <div class="label">آخرین کلمه</div>
+    <div class="last-word">{{ game.last_word }}</div>
+    <div class="next-info">کلمه بعدی با این حرف شروع بشه:</div>
+    <div class="next-letter">{{ game.last_letter }}</div>
+    <div class="category">📋 دسته: {{ game.category }}</div>
+  </div>
+  <div class="timer-box">
+    <span>⏱</span>
+    <div class="timer-num" id="timerEl">{{ remaining }}</div>
+    <span style="font-size:12px;color:#94a3b8;">ثانیه</span>
+  </div>
+  <form method="post" class="answer-form" id="answerForm">
+    {% csrf_token %}
+    <input type="text" name="answer" placeholder="کلمه با «{{ game.last_letter }}»..." required autofocus autocomplete="off" maxlength="50" id="answerInput">
+    <button type="submit">📤 ارسال</button>
+  </form>
+  <div class="history">
+    <div class="history-title">📜 تاریخچه ({{ game.history|length }} کلمه)</div>
+    {% for h in game.history %}
+      <div class="history-item {% if h.who == 'player' %}you{% elif h.who == 'bot' %}bot{% endif %}">
+        <span class="who">{% if h.who == 'player' %}👤{% elif h.who == 'bot' %}🤖{% else %}🎯{% endif %}</span>
+        <span class="word">{{ h.word }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+{% if not game_over %}
+<script>
+  let remaining = {{ remaining }};
+  const timerEl = document.getElementById('timerEl');
+  const form = document.getElementById('answerForm');
+  const input = document.getElementById('answerInput');
+  function tick() {
+    remaining--;
+    if (timerEl) {
+      timerEl.textContent = remaining;
+      timerEl.classList.remove('warn', 'danger');
+      if (remaining <= 3) timerEl.classList.add('danger');
+      else if (remaining <= 5) timerEl.classList.add('warn');
+    }
+    if (remaining <= 0) {
+      if (input) { input.disabled = true; input.value = ''; }
+      if (form) form.submit();
+      return;
+    }
+    setTimeout(tick, 1000);
+  }
+  setTimeout(tick, 1000);
+</script>
+{% endif %}
+{% endblock %}

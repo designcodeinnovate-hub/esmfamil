@@ -92,3 +92,71 @@ class NotificationRead(models.Model):
 
     def __str__(self):
         return f"{self.user.alias} read #{self.notification_id}"
+
+# ============================================================
+# Direct Chat — 1-on-1 messaging between friends
+# ============================================================
+class DirectChat(models.Model):
+    """
+    A 1-on-1 conversation between two users.
+    user1_id < user2_id is enforced to prevent duplicates.
+    Soft-delete: each side can "clear" the chat independently.
+    """
+    user1 = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="direct_chats_as_user1",
+    )
+    user2 = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="direct_chats_as_user2",
+    )
+    # Soft-delete flags
+    user1_deleted_at = models.DateTimeField(null=True, blank=True)
+    user2_deleted_at = models.DateTimeField(null=True, blank=True)
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_message_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user1", "user2")
+        ordering = ("-last_message_at",)
+
+    def save(self, *args, **kwargs):
+        # Enforce ordering to prevent A->B vs B->A duplicates
+        if self.user1_id and self.user2_id and self.user1_id > self.user2_id:
+            self.user1_id, self.user2_id = self.user2_id, self.user1_id
+        super().save(*args, **kwargs)
+
+    def other_user(self, me):
+        return self.user2 if self.user1_id == me.id else self.user1
+
+    def __str__(self):
+        return f"{self.user1.alias} ↔ {self.user2.alias}"
+
+
+class DirectMessage(models.Model):
+    chat = models.ForeignKey(DirectChat, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    body = models.TextField(max_length=2000)
+    is_read = models.BooleanField(default=False)
+    # Soft-delete per-side (user can "delete for me" — the other still sees it)
+    deleted_by_sender = models.BooleanField(default=False)
+    deleted_by_receiver = models.BooleanField(default=False)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("sent_at",)
+        indexes = [
+            models.Index(fields=["chat", "-sent_at"]),
+        ]
+
+    def visible_to(self, user):
+        """Return True if `user` should see this message."""
+        if user.id == self.sender_id:
+            return not self.deleted_by_sender
+        return not self.deleted_by_receiver
+
+    def __str__(self):
+        return f"{self.sender.alias}: {self.body[:30]}"
+

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}زنجیره کلمات — زنده{% endblock %}
+{% block extra_css %}
+<style>
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.head h1{font-size:20px;font-weight:900;color:#a5f3fc}
+.players-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.pcard{padding:12px;border-radius:14px;text-align:center;border:2px solid}
+.pcard.me{background:rgba(6,182,212,0.15);border-color:rgba(6,182,212,0.5)}
+.pcard.other{background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.5)}
+.pcard .who{font-size:11px;color:#94a3b8;margin-bottom:4px}
+.pcard .name{font-size:15px;font-weight:bold;color:#fff}
+.pcard .badge{display:inline-block;margin-top:4px;font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(244,197,66,0.3);color:#fde68a;font-weight:bold}
+.display{background:radial-gradient(circle at 100% 0%,rgba(6,182,212,0.3),transparent 60%),linear-gradient(135deg,#0a1e2a,#0f0f1e);border:2px solid rgba(6,182,212,0.5);border-radius:22px;padding:22px;margin-bottom:16px;text-align:center}
+.display .lbl{font-size:11px;color:#94a3b8;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+.display .last{font-size:28px;font-weight:900;color:#fff;margin-bottom:14px;text-shadow:0 2px 10px rgba(0,0,0,0.4)}
+.display .next-lbl{font-size:12px;color:#94a3b8;margin-bottom:6px}
+.display .next{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,rgba(6,182,212,0.4),rgba(59,130,246,0.15));border:3px solid #22d3ee;color:#fff;font-size:38px;font-weight:900;box-shadow:0 0 25px rgba(6,182,212,0.7);font-family:Tahoma,sans-serif;margin:8px auto}
+.display .cat{font-size:12px;color:#67e8f9;margin-top:8px;font-weight:bold}
+.turn-banner{padding:12px;text-align:center;border-radius:14px;font-size:14px;font-weight:900;margin-bottom:14px}
+.turn-banner.mine{background:rgba(34,197,94,0.2);color:#86efac;border:1.5px solid rgba(34,197,94,0.4)}
+.turn-banner.other{background:rgba(234,179,8,0.15);color:#fde68a;border:1.5px solid rgba(234,179,8,0.4)}
+.timer{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px}
+.timer-num{padding:8px 18px;border-radius:12px;font-size:20px;font-weight:900;font-family:monospace;background:rgba(244,197,66,0.15);border:2px solid rgba(244,197,66,0.4);color:#fde68a;transition:all 0.3s;min-width:60px;text-align:center}
+.timer-num.warn{background:rgba(249,115,22,0.2);border-color:#f97316;color:#fdba74}
+.timer-num.danger{background:rgba(239,68,68,0.25);border-color:#ef4444;color:#fca5a5;animation:pulseT 0.6s infinite}
+@keyframes pulseT{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.answer-form{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px}
+.answer-form input{width:100%;padding:16px;border-radius:12px;border:2px solid rgba(6,182,212,0.4);background:rgba(15,23,42,0.8);color:#fff;font-size:20px;text-align:center;font-weight:900;box-sizing:border-box;font-family:inherit;transition:all 0.3s;margin-bottom:10px}
+.answer-form input:focus{outline:none;border-color:#22d3ee;box-shadow:0 0 20px rgba(6,182,212,0.3)}
+.answer-form input.correct{border-color:#22c55e;background:rgba(34,197,94,0.15);color:#86efac;box-shadow:0 0 25px rgba(34,197,94,0.5);animation:correctPulse 0.6s}
+.answer-form input.wrong{border-color:#ef4444;background:rgba(239,68,68,0.15);color:#fca5a5;box-shadow:0 0 25px rgba(239,68,68,0.5);animation:shake 0.4s}
+@keyframes correctPulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.answer-form button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 8px 20px rgba(34,197,94,0.4)}
+.flash{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:10px;text-align:center}
+.flash-success{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+.flash-error{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.35)}
+.history{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;max-height:200px;overflow-y:auto;margin-bottom:16px}
+.h-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;font-size:13px;background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.1)}
+.h-item.mine{border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.08)}
+.h-item.other{border-color:rgba(139,92,246,0.3);background:rgba(139,92,246,0.08)}
+.game-over{text-align:center;padding:40px 20px;border-radius:22px;margin-bottom:16px}
+.game-over.win{background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.4)}
+.game-over.lose{background:rgba(239,68,68,0.15);border:2px solid rgba(239,68,68,0.4)}
+.game-over.draw{background:rgba(234,179,8,0.15);border:2px solid rgba(234,179,8,0.4)}
+.game-over .icon{font-size:80px;margin-bottom:12px}
+.game-over h2{font-size:24px;font-weight:900;margin-bottom:8px}
+.game-over.win h2{color:#4ade80}
+.game-over.lose h2{color:#f87171}
+.btn-home{display:block;width:100%;padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;text-decoration:none;text-align:center;box-shadow:0 10px 30px rgba(6,182,212,0.4)}
+.forfeit{text-align:center;margin-top:14px}
+.forfeit button{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);padding:8px 20px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:12px;cursor:pointer}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head"><h1>🔗 زنجیره کلمات — زنده</h1></div>
+
+<div class="players-bar">
+  {% for p in players %}
+    <div class="pcard {% if p.user.id == request.user.id %}me{% else %}other{% endif %}">
+      <div class="who">{% if p.user.id == request.user.id %}👤 شما{% else %}👤 حریف{% endif %}</div>
+      <div class="name">{{ p.user.alias }}</div>
+      {% if state.turn_user_id == p.user.id %}<div class="badge">🎯 نوبت</div>{% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+{% if finished %}
+  <div class="game-over {% if state.winner_user_id == request.user.id %}win{% elif state.winner_user_id %}lose{% else %}draw{% endif %}">
+    <div class="icon">{% if state.winner_user_id == request.user.id %}🏆{% elif state.winner_user_id %}😢{% else %}⏰{% endif %}</div>
+    <h2>{% if state.winner_user_id == request.user.id %}بردی!{% elif state.winner_user_id %}باختی!{% else %}تموم شد{% endif %}</h2>
+  </div>
+  <a href="/game/chain-live/" class="btn-home">🔄 بازی جدید</a>
+{% else %}
+  {% for m in messages %}<div class="flash flash-{{ m.tags }}">{{ m }}</div>{% endfor %}
+
+  <div class="display">
+    <div class="lbl">آخرین کلمه</div>
+    <div class="last">{{ state.last_word }}</div>
+    <div class="next-lbl">کلمه بعدی با این حرف:</div>
+    <div class="next">{{ state.last_letter }}</div>
+    <div class="cat">📋 دسته: {{ state.category }}</div>
+  </div>
+
+  {% if is_my_turn %}
+    <div class="turn-banner mine">🎯 نوبت شماست!</div>
+    <div class="timer"><span>⏱</span><div class="timer-num" id="timerNum">{{ remaining }}</div><span style="font-size:12px;color:#94a3b8">ثانیه</span></div>
+    <form method="post" class="answer-form" id="answerForm">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="answer">
+      <input type="text" name="answer" id="answerInput" placeholder="کلمه با «{{ state.last_letter }}»..." required autofocus autocomplete="off" maxlength="50">
+      <button type="submit">📤 ارسال</button>
+    </form>
+  {% else %}
+    <div class="turn-banner other">⏳ منتظر حریف...</div>
+    <div class="timer"><span>⏱</span><div class="timer-num" id="timerNum">{{ remaining }}</div><span style="font-size:12px;color:#94a3b8">ثانیه</span></div>
+  {% endif %}
+
+  <div class="history">
+    {% for h in state.history %}
+      <div class="h-item {% if h.who == request.user.id %}mine{% else %}other{% endif %}">
+        <span>{% if h.who == 'start' %}🎯{% elif h.who == request.user.id %}👤{% else %}🛡️{% endif %}</span>
+        <span style="flex:1;font-weight:bold;color:#fff">{{ h.word }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="forfeit">
+    <form method="post" onsubmit="return confirm('از بازی خارج بشی؟');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="forfeit">
+      <button type="submit">🚪 خروج از بازی</button>
+    </form>
+  </div>
+{% endif %}
+
+<script>
+{% if not finished and is_my_turn %}
+let remaining = {{ remaining }};
+const tn = document.getElementById('timerNum');
+const form = document.getElementById('answerForm');
+const inp = document.getElementById('answerInput');
+
+// handle server messages by flashing input
+{% for m in messages %}
+  {% if 'همچین کلمه' in m.message or 'وجود ندارد' in m.message or 'شروع بشه' in m.message or 'استفاده شده' in m.message %}
+    if (inp) {
+      inp.classList.add('wrong');
+      setTimeout(() => inp.classList.remove('wrong'), 1200);
+    }
+  {% elif 'ثبت شد' in m.message %}
+    if (inp) {
+      inp.classList.add('correct');
+      setTimeout(() => inp.classList.remove('correct'), 1200);
+    }
+  {% endif %}
+{% endfor %}
+
+function tick() {
+  remaining--;
+  if (tn) {
+    tn.textContent = remaining;
+    tn.classList.remove('warn', 'danger');
+    if (remaining <= 3) tn.classList.add('danger');
+    else if (remaining <= 5) tn.classList.add('warn');
+  }
+  if (remaining <= 0) { if (form) form.submit(); return; }
+  setTimeout(tick, 1000);
+}
+if (remaining > 0) setTimeout(tick, 1000);
+{% else %}
+// poll for state change
+setInterval(() => location.reload(), 2000);
+{% endif %}
+</script>
+{% endblock %}

@@ -2,61 +2,126 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>پشتیبانی — پنل ادمین</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Tahoma,sans-serif;min-height:100vh;background:#0a0a15;color:#e2e8f0;padding:20px 16px 40px}
-    .container{max-width:1300px;margin:0 auto}
-    .topbar{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1e1b4b,#0f0f1e);border:1px solid rgba(239,68,68,0.3);padding:16px 22px;border-radius:16px;margin-bottom:20px}
-    .topbar h1{font-size:20px;color:#fca5a5}
-    .topbar a{padding:9px 16px;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;text-decoration:none;font-size:13px;font-weight:bold}
-    .admin-tabs{display:flex;gap:6px;margin-bottom:20px;background:#12121f;border:1px solid rgba(148,163,184,0.15);padding:6px;border-radius:14px;overflow-x:auto}
-    .admin-tab{flex:1;min-width:100px;padding:12px 14px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:bold;color:#94a3b8;white-space:nowrap}
-    .admin-tab:hover{background:rgba(148,163,184,0.1);color:#fff}
-    .admin-tab.active{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
-    .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
-    .ticket-row{display:flex;align-items:center;gap:14px;padding:16px;background:#12121f;border:1.5px solid rgba(148,163,184,0.15);border-radius:14px;margin-bottom:10px;text-decoration:none;color:inherit}
-    .ticket-row:hover{border-color:#06b6d4;transform:translateX(-3px)}
-    .ticket-row .av{font-size:28px;width:48px;height:48px;border-radius:50%;background:rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .ticket-row .info{flex:1}
-    .ticket-row .title{font-size:14px;font-weight:bold;color:#fff;margin-bottom:3px}
-    .ticket-row .meta{font-size:11px;color:#94a3b8}
-    .badge{font-size:10px;padding:4px 12px;border-radius:8px;font-weight:bold}
-    .badge-open{background:rgba(234,179,8,0.2);color:#fde68a}
-    .badge-answered{background:rgba(34,197,94,0.2);color:#86efac}
-    .badge-closed{background:rgba(100,116,139,0.2);color:#cbd5e1}
-    .badge-in_progress{background:rgba(59,130,246,0.2);color:#93c5fd}
-    .empty{text-align:center;padding:60px 20px;color:#64748b}
-    .empty .icon{font-size:60px;display:block;margin-bottom:12px;opacity:0.5}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; background: #0f111a; color: #e2e8f0; min-height: 100vh; padding-right: 85px; }
+
+    .admin-rail { position: fixed; top: 0; right: 0; bottom: 0; width: 70px; height: 100vh; background-color: #161925; border-left: 1px solid #232838; display: flex; flex-direction: column; align-items: center; padding: 20px 0; z-index: 1000; gap: 12px; }
+    .rail-logo { color: #8b5cf6; margin-bottom: 10px; }
+    .rail-item { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; text-decoration: none; transition: all 0.2s; }
+    .rail-item:hover { color: #a78bfa; background: rgba(139,92,246,0.1); }
+    .rail-item.active { color: #fff; background: rgba(139,92,246,0.9); }
+    .rail-item::after { content: attr(title); position: absolute; right: 60px; background: #1e2230; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s; border: 1px solid #2d3748; z-index: 1001; }
+    .rail-item:hover::after { opacity: 1; }
+    .rail-logout { margin-top: auto; width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ef4444; text-decoration: none; }
+
+    .admin-content { padding: 30px 20px; max-width: 1100px; margin: 0 auto; }
+    .page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-head h1 { font-size: 24px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 12px; }
+    .page-head h1 .badge { background: #8b5cf6; color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 20px; font-family: monospace; }
+
+    .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-chip { flex: 1; min-width: 110px; padding: 14px; border-radius: 14px; text-align: center; border: 1.5px solid; }
+    .stat-chip.open { background: rgba(234,179,8,0.1); border-color: rgba(234,179,8,0.4); }
+    .stat-chip.in_progress { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.4); }
+    .stat-chip.answered { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.4); }
+    .stat-chip.closed { background: rgba(100,116,139,0.1); border-color: rgba(100,116,139,0.4); }
+    .stat-chip .l { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    .stat-chip .v { font-size: 22px; font-weight: 900; color: #fff; font-family: monospace; }
+
+    .filters { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .filter { padding: 8px 14px; background: #161925; border: 1px solid #232838; border-radius: 10px; color: #94a3b8; font-size: 12px; font-weight: bold; text-decoration: none; transition: 0.2s; }
+    .filter:hover { border-color: #8b5cf6; color: #fff; }
+    .filter.active { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; border-color: transparent; }
+
+    .chat-list { display: flex; flex-direction: column; gap: 8px; }
+    .chat-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: #161925; border: 1.5px solid #232838; border-radius: 14px; text-decoration: none; color: inherit; transition: 0.2s; }
+    .chat-item:hover { border-color: #8b5cf6; transform: translateX(-3px); }
+    .chat-item.unread { border-color: rgba(139,92,246,0.6); background: linear-gradient(90deg, rgba(139,92,246,0.08), transparent); }
+
+    .ch-av { width: 52px; height: 52px; border-radius: 50%; background: rgba(139,92,246,0.15); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; }
+    .ch-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .ch-body { flex: 1; min-width: 0; }
+    .ch-name { font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .ch-name .username { color: #8b5cf6; font-family: monospace; font-size: 12px; font-weight: normal; }
+    .ch-meta { font-size: 11px; color: #94a3b8; display: flex; gap: 10px; flex-wrap: wrap; font-family: monospace; }
+    .ch-subject { font-size: 13px; color: #cbd5e1; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ch-badge { padding: 4px 12px; border-radius: 8px; font-size: 10px; font-weight: 900; flex-shrink: 0; }
+    .ch-badge.open { background: rgba(234,179,8,0.2); color: #fde68a; }
+    .ch-badge.in_progress { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .ch-badge.answered { background: rgba(34,197,94,0.2); color: #86efac; }
+    .ch-badge.closed { background: rgba(100,116,139,0.2); color: #cbd5e1; }
+
+    .empty { padding: 60px 20px; text-align: center; color: #64748b; background: #12121f; border: 2px dashed #232838; border-radius: 16px; }
+    .empty .icon { font-size: 60px; display: block; margin-bottom: 12px; opacity: 0.5; }
+    .empty h3 { font-size: 17px; color: #94a3b8; }
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="topbar">
-    <h1>💬 پشتیبانی</h1>
-    <a href="{% url 'custom_admin:logout' %}">خروج</a>
+<div class="admin-rail">
+  <div class="rail-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17l2-9 6 4 2-6 2 6 6-4 2 9H2z"/></svg></div>
+  <a href="/panel-admin/dashboard/" class="rail-item" title="کاربران"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></a>
+  <a href="/panel-admin/alliances/" class="rail-item" title="اتحادها"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M9 19v-2a3 3 0 0 1 6 0v2"/><circle cx="6" cy="10" r="2"/><path d="M3 18v-1a3 3 0 0 1 3-3"/><circle cx="18" cy="10" r="2"/><path d="M21 18v-1a3 3 0 0 0-3-3"/></svg></a>
+  <a href="/panel-admin/rooms/" class="rail-item" title="اتاق‌ها"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v17"/><path d="M2 21h20"/><rect x="14" y="9" width="4" height="6" rx="1"/></svg></a>
+  <a href="/panel-admin/rooms/active/" class="rail-item" title="در حال بازی"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4"/><path d="M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258A4 4 0 0 0 17.32 5z"/></svg></a>
+  <a href="/panel-admin/announcements/" class="rail-item" title="اعلان‌ها"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></a>
+  <a href="/panel-admin/challenges/" class="rail-item" title="چالش"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M9.5 17.5L21 6V3h-3L6.5 14.5"/><path d="M11 19l-6-6"/><path d="M8 16l-4 4"/><path d="M5 21l-2-2"/></svg></a>
+  <a href="/panel-admin/support/" class="rail-item active" title="پشتیبانی"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="3"/><path d="M7 18v3l3-3"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="11" r="1" fill="currentColor"/><circle cx="15" cy="11" r="1" fill="currentColor"/></svg></a>
+  <a href="/panel-admin/shop/" class="rail-item" title="فروشگاه"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></a>
+  <a href="/panel-admin/logout/" class="rail-logout" title="خروج"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+</div>
+
+<div class="admin-content">
+  <div class="page-head">
+    <h1>💬 پشتیبانی <span class="badge">{{ tickets|length }}</span></h1>
   </div>
-  <div class="admin-tabs">
-    <a href="/panel-admin/dashboard/" class="admin-tab">👥 کاربران</a>
-    <a href="/panel-admin/alliances/" class="admin-tab">🛡️ اتحادها</a>
-    <a href="/panel-admin/rooms/" class="admin-tab">🚪 اتاق‌ها</a>
-    <a href="/panel-admin/support/" class="admin-tab active">💬 پشتیبانی</a>
+
+  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
+
+  <div class="stats-row">
+    <div class="stat-chip open"><div class="l">باز</div><div class="v">{{ status_counts.open|default:0 }}</div></div>
+    <div class="stat-chip in_progress"><div class="l">در حال بررسی</div><div class="v">{{ status_counts.in_progress|default:0 }}</div></div>
+    <div class="stat-chip answered"><div class="l">پاسخ داده شده</div><div class="v">{{ status_counts.answered|default:0 }}</div></div>
+    <div class="stat-chip closed"><div class="l">بسته</div><div class="v">{{ status_counts.closed|default:0 }}</div></div>
   </div>
-  {% if message %}<div class="msg">{{ message.text }}</div>{% endif %}
-  {% if tickets %}
+
+  <div class="filters">
+    <a href="?" class="filter {% if not status_filter %}active{% endif %}">همه</a>
+    <a href="?status=open" class="filter {% if status_filter == 'open' %}active{% endif %}">باز</a>
+    <a href="?status=in_progress" class="filter {% if status_filter == 'in_progress' %}active{% endif %}">در حال بررسی</a>
+    <a href="?status=answered" class="filter {% if status_filter == 'answered' %}active{% endif %}">پاسخ داده شده</a>
+    <a href="?status=closed" class="filter {% if status_filter == 'closed' %}active{% endif %}">بسته</a>
+  </div>
+
+  <div class="chat-list">
     {% for t in tickets %}
-      <a href="/panel-admin/support/{{ t.id }}/" class="ticket-row">
-        <div class="av">{{ t.avatar }}</div>
-        <div class="info">
-          <div class="title">#{{ t.id }} — {{ t.subject }}</div>
-          <div class="meta">👤 {{ t.user_alias }} · {{ t.created_at|jdate:"Y/m/d H:i" }}</div>
+      <a href="/panel-admin/support/{{ t.id }}/" class="chat-item {% if t.status == 'open' %}unread{% endif %}">
+        <div class="ch-av">{{ t.avatar|safe }}</div>
+        <div class="ch-body">
+          <div class="ch-name">
+            {{ t.user_alias }}
+            <span class="username">@{{ t.user_username }}</span>
+          </div>
+          <div class="ch-subject">#{{ t.id }} — {{ t.subject }}</div>
+          <div class="ch-meta">
+            <span>{{ t.created_at|jdate:"Y/m/d H:i" }}</span>
+          </div>
         </div>
-        <span class="badge badge-{{ t.status }}">{{ t.status_display }}</span>
+        <span class="ch-badge {{ t.status }}">{{ t.status_display }}</span>
       </a>
+    {% empty %}
+      <div class="empty">
+        <span class="icon">📭</span>
+        <h3>هیچ تیکتی موجود نیست</h3>
+      </div>
     {% endfor %}
-  {% else %}
-    <div class="empty"><span class="icon">📭</span>هیچ تیکتی نیست</div>
-  {% endif %}
+  </div>
 </div>
 </body>
 </html>

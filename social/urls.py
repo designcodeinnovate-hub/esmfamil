@@ -11,6 +11,10 @@ urlpatterns = [
     path("reject/<int:req_id>/", views.reject_request, name="reject_request"),
     path("remove/<int:user_id>/", views.remove_friend, name="remove_friend"),
     path("chat/<int:user_id>/", views.chat_view, name="chat"),
+    # Chat API (JSON)
+    path("chat/<int:user_id>/send/", views.chat_send, name="chat_send"),
+    path("chat/<int:user_id>/messages/", views.chat_messages, name="chat_messages"),
+    path("chat/<int:user_id>/clear/", views.chat_clear, name="chat_clear"),
     path("notifications/", views.notifications_view, name="notifications"),
     
     # دعوت به بازی

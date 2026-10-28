@@ -4,10 +4,54 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me-in-production")
-DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
-ALLOWED_HOSTS = ["*"]  # Allow all hosts (safe for now)
 
+# ============================================================
+# .env loader (بدون نیاز به python-dotenv)
+# ============================================================
+_env_path = BASE_DIR / ".env"
+if _env_path.exists():
+    with open(_env_path, "r", encoding="utf-8") as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if not _line or _line.startswith("#"):
+                continue
+            if "=" in _line:
+                _k, _, _v = _line.partition("=")
+                _k = _k.strip()
+                _v = _v.strip().strip('"').strip("'")
+                os.environ.setdefault(_k, _v)
+
+
+def env_bool(key, default=False):
+    return os.environ.get(key, str(default)).lower() in ("1", "true", "yes", "on")
+
+
+def env_int(key, default=0):
+    try:
+        return int(os.environ.get(key, default))
+    except (ValueError, TypeError):
+        return default
+
+
+def env_list(key, default=""):
+    raw = os.environ.get(key, default)
+    return [x.strip() for x in raw.split(",") if x.strip()]
+
+
+# ============================================================
+# Security & Core
+# ============================================================
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "dev-only-change-me-in-production-please-set-env-var",
+)
+DEBUG = env_bool("DJANGO_DEBUG", True)
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "*") or ["*"]
+
+
+# ============================================================
+# Applications
+# ============================================================
 INSTALLED_APPS = [
     "daphne",
     "django.contrib.admin",
@@ -30,6 +74,10 @@ INSTALLED_APPS = [
     "common",
 ]
 
+
+# ============================================================
+# Middleware
+# ============================================================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -37,9 +85,14 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "accounts.middleware.LastSeenMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
+
+# ============================================================
+# Templates
+# ============================================================
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
@@ -59,31 +112,74 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+
+# ============================================================
+# Database
+# ============================================================
+_db_url = os.environ.get("DJANGO_DATABASE_URL") or os.environ.get("DATABASE_URL")
+if _db_url:
+    try:
+        import dj_database_url
+        DATABASES = {
+            "default": dj_database_url.config(
+                default=_db_url,
+                conn_max_age=600,
+                ssl_require=False,
+                conn_health_checks=True,
+            )
+        }
+    except ImportError:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
+
+# ============================================================
+# Auth
+# ============================================================
 AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-     "OPTIONS": {"min_length": 8}},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
 ]
 
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+
+# ============================================================
+# i18n / Timezone
+# ============================================================
+LANGUAGE_CODE = "fa-ir"
+TIME_ZONE = "Asia/Tehran"
 USE_I18N = True
 USE_TZ = True
 
+
+# ============================================================
+# Static
+# ============================================================
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --- DRF ---
+
+# ============================================================
+# DRF / JWT
+# ============================================================
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -99,109 +195,104 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# --- CORS (dev only) ---
-CORS_ALLOW_ALL_ORIGINS = True
 
-# --- Email (dev: چاپ لینک در کنسول ترمینال runserver) ---
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "spdmax2010@gmail.com"
-EMAIL_HOST_PASSWORD = "gidbmiflvwzqizih"
-DEFAULT_FROM_EMAIL = "noreply@esmfamil.local"
-BACKEND_URL = "http://127.0.0.1:8000"
+# ============================================================
+# CORS
+# ============================================================
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = env_list("DJANGO_CORS_ALLOWED_ORIGINS")
 
-# --- Login redirect for @login_required ---
+
+# ============================================================
+# Email
+# ============================================================
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = env_int("DJANGO_EMAIL_PORT", 587)
+EMAIL_USE_TLS = env_bool("DJANGO_EMAIL_USE_TLS", True)
+EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "noreply@esmfamil.local")
+BACKEND_URL = os.environ.get("DJANGO_BACKEND_URL", "http://127.0.0.1:8000")
+
+
+# ============================================================
+# Login
+# ============================================================
 LOGIN_URL = "/accounts/login/"
-ASGI_APPLICATION = "config.asgi.application"
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
-}
 LOGIN_REDIRECT_URL = "/game/"
 
-# ============================================================
-# PRODUCTION SAFETY BLOCK (always applied)
-# ============================================================
 
-# --- CSRF Trusted Origins (critical for Runflare/proxy) ---
-CSRF_TRUSTED_ORIGINS = [
-    "https://esmfamil-c78-esmfamil-db.runflare.cloud",
-    "https://esmfamil.com",
-    "https://www.esmfamil.com",
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-]
-# Also add any from env var
-_csrf_env = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "")
-if _csrf_env:
-    for origin in _csrf_env.split(","):
-        origin = origin.strip()
-        if origin and origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
+# ============================================================
+# Channels
+# ============================================================
+_redis_url = os.environ.get("DJANGO_REDIS_URL") or os.environ.get("REDIS_URL")
+if _redis_url:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [_redis_url]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
 
-# --- Proxy SSL header (for HTTPS behind proxy) ---
+
+# ============================================================
+# CSRF / Security
+# ============================================================
+CSRF_TRUSTED_ORIGINS = env_list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    "http://127.0.0.1:8000,http://localhost:8000",
+)
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# --- Database from env (PostgreSQL on Runflare) ---
-if os.environ.get("DATABASE_URL"):
-    try:
-        import dj_database_url
-        DATABASES = {
-            "default": dj_database_url.config(
-                conn_max_age=600,
-                ssl_require=False,
-                conn_health_checks=True,
-            )
-        }
-    except ImportError:
-        pass
+if DEBUG:
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
+else:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = False
+    SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", True)
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
-# --- WhiteNoise for static files ---
-if "whitenoise.middleware.WhiteNoiseMiddleware" not in MIDDLEWARE:
-    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# ============================================================
+# WhiteNoise (اختیاری)
+# ============================================================
+try:
+    import whitenoise  # noqa: F401
+    if "whitenoise.middleware.WhiteNoiseMiddleware" not in MIDDLEWARE:
+        MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+except ImportError:
+    pass
 
-# --- Login URLs (fix for @login_required) ---
-LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/game/"
 
-# --- Cookie settings (safe for HTTP and HTTPS) ---
-# If you later get real HTTPS, set these to True
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False  # JS needs to read CSRF token
-
-# --- X-Frame-Options ---
+# ============================================================
+# Misc
+# ============================================================
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-# ============================================================
-# FINAL PRODUCTION FIX (always applied)
-# ============================================================
-
-# 1. Trust Runflare domain for CSRF (critical!)
-CSRF_TRUSTED_ORIGINS = [
-    "https://esmfamil-c78-esmfamil-db.runflare.cloud",
-    "https://esmfamil.com",
-    "https://www.esmfamil.com",
-]
-
-# 2. Tell Django it is behind an HTTPS proxy
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# 3. Ensure cookies work correctly in this environment
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
 
 # ============================================================
-# AUTH MODE TOGGLE
+# Feature Flags
 # ============================================================
-# True  = auto-guest, no login/register UI (direct to game)
-# False = normal auth flow (login/register visible)
-FORCE_GUEST_MODE = True
+FORCE_GUEST_MODE = env_bool("DJANGO_FORCE_GUEST_MODE", False)

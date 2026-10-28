@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}حافظه آنلاین{% endblock %}
+{% block extra_css %}
+<style>
+  .head-online {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    margin-bottom: 16px; padding: 14px 16px;
+    background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.35), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 2px solid rgba(139,92,246,0.5); border-radius: 20px;
+  }
+  .hp { flex: 1; text-align: center; }
+  .hp .n { font-size: 13px; font-weight: bold; color: #fff; }
+  .hp .s { font-size: 20px; font-weight: 900; color: #fde68a; font-family: monospace; margin-top: 2px; }
+  .hp .st { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+  .hp .av { font-size: 28px; margin-bottom: 4px; }
+  .vs { font-size: 16px; font-weight: 900; color: #ef4444; }
+  .timer {
+    background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
+    padding: 10px 22px; border-radius: 999px; font-size: 22px; font-weight: 900;
+    font-family: monospace; text-align: center; margin-bottom: 14px;
+    box-shadow: 0 8px 25px rgba(239,68,68,0.4);
+  }
+  .timer.safe { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .timer.warn { background: linear-gradient(135deg, #eab308, #ca8a04); }
+  .stats-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+  .stat-chip {
+    flex: 1; background: rgba(139,92,246,0.15); border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: 12px; padding: 10px; text-align: center;
+  }
+  .stat-chip .lbl { font-size: 10px; color: #94a3b8; margin-bottom: 2px; }
+  .stat-chip .val { font-size: 16px; font-weight: 900; color: #c4b5fd; font-family: monospace; }
+  .grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;
+  }
+  .card {
+    aspect-ratio: 1; position: relative; perspective: 600px; cursor: pointer;
+  }
+  .card-inner {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.5s; transform-style: preserve-3d;
+  }
+  .card.flipped .card-inner, .card.matched .card-inner {
+    transform: rotateY(180deg);
+  }
+  .card-face {
+    position: absolute; inset: 0; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  }
+  .card-back {
+    background: linear-gradient(135deg, rgba(139,92,246,0.4), rgba(6,182,212,0.3));
+    border: 2px solid rgba(139,92,246,0.6); font-size: 30px; color: rgba(255,255,255,0.3);
+  }
+  .card-front {
+    background: linear-gradient(135deg, rgba(244,197,66,0.35), rgba(139,92,246,0.25));
+    border: 2px solid rgba(244,197,66,0.6); font-size: 34px;
+    transform: rotateY(180deg);
+  }
+  .card.matched .card-front {
+    background: linear-gradient(135deg, rgba(34,197,94,0.35), rgba(6,182,212,0.25));
+    border-color: rgba(34,197,94,0.7);
+  }
+  .stop-btn {
+    width: 100%; padding: 15px; border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
+    font-size: 16px; font-weight: 900; font-family: inherit; cursor: pointer;
+    box-shadow: 0 10px 30px rgba(239,68,68,0.4); margin-top: 10px;
+  }
+  .finished {
+    text-align: center; padding: 30px 20px; border-radius: 22px; margin-bottom: 16px;
+  }
+  .finished.win { background: rgba(34,197,94,0.15); border: 2px solid rgba(34,197,94,0.4); }
+  .finished.lose { background: rgba(239,68,68,0.15); border: 2px solid rgba(239,68,68,0.4); }
+  .finished.tie { background: rgba(234,179,8,0.15); border: 2px solid rgba(234,179,8,0.4); }
+  .finished .ic { font-size: 66px; margin-bottom: 10px; }
+  .finished h2 { font-size: 22px; font-weight: 900; margin-bottom: 12px; }
+  .finished.win h2 { color: #4ade80; }
+  .finished.lose h2 { color: #f87171; }
+  .finished.tie h2 { color: #facc15; }
+  .finished .scores { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
+  .finished .sc { padding: 10px 18px; background: rgba(15,23,42,0.6); border-radius: 12px; }
+  .finished .sc .n { font-size: 24px; font-weight: 900; color: #fde68a; font-family: monospace; }
+  .finished .sc .l { font-size: 10px; color: #94a3b8; }
+  .btn-home {
+    display: block; padding: 14px; border-radius: 14px;
+    background: linear-gradient(135deg, #f4c542, #eab308); color: #1a1a1a;
+    text-decoration: none; text-align: center; font-size: 15px; font-weight: 900;
+    box-shadow: 0 10px 30px rgba(244,197,66,0.4); margin-top: 12px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+
+  <div class="head-online">
+    <div class="hp">
+      <div class="av">{{ me.user.avatar_id|default:"👤" }}</div>
+      <div class="n">{{ me.user.alias }}</div>
+      <div class="s">{% if me.finished_at %}{{ me.score }}/{{ total_pairs }}{% else %}—{% endif %}</div>
+      <div class="st">{% if me.finished_at %}✅ تمام{% else %}⏳ بازی{% endif %}</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="hp">
+      <div class="av">{{ other.user.avatar_id|default:"👤" }}</div>
+      <div class="n">{{ other.user.alias }}</div>
+      <div class="s">{% if other.finished_at %}{{ other.score }}/{{ total_pairs }}{% else %}—{% endif %}</div>
+      <div class="st">{% if other.finished_at %}✅ تمام{% else %}⏳ بازی{% endif %}</div>
+    </div>
+  </div>
+
+  {% if game.status == "finished" %}
+    <div class="finished {% if game.winner_user_id == request.user.id %}win{% elif game.winner_user_id %}lose{% else %}tie{% endif %}">
+      <div class="ic">{% if game.winner_user_id == request.user.id %}🏆{% elif game.winner_user_id %}😢{% else %}🤝{% endif %}</div>
+      <h2>{% if game.winner_user_id == request.user.id %}بردی!{% elif game.winner_user_id %}باختی{% else %}مساوی{% endif %}</h2>
+      <div class="scores">
+        <div class="sc"><div class="n">{{ me.score }}/{{ total_pairs }}</div><div class="l">تو</div></div>
+        <div class="sc"><div class="n">{{ other.score }}/{{ total_pairs }}</div><div class="l">{{ other.user.alias }}</div></div>
+      </div>
+      {% if game.winner_user_id == request.user.id %}
+        <div style="color: #4ade80; font-weight: bold; margin-bottom: 12px;">🎁 +۱۰۰ سکه</div>
+      {% elif game.winner_user_id %}
+        <div style="color: #fca5a5; font-weight: bold; margin-bottom: 12px;">🎁 +۱۰ سکه</div>
+      {% else %}
+        <div style="color: #fde68a; font-weight: bold; margin-bottom: 12px;">🎁 +۵۰ سکه هر کدوم</div>
+      {% endif %}
+      <a href="/game/rooms/" class="btn-home">🔁 بازی جدید</a>
+    </div>
+
+  {% elif me.finished_at %}
+    <div style="text-align:center; padding:30px 20px; background:var(--card); border-radius:20px;">
+      <div style="font-size:48px; margin-bottom:10px;">⏳</div>
+      <div style="font-size:16px; font-weight:bold; margin-bottom:8px;">نتیجه ثبت شد</div>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:16px;">
+        {{ me.score }} از {{ total_pairs }} جفت. منتظر {{ other.user.alias }}...
+      </div>
+      <a href="/game/online/memory/{{ game.id }}/" style="color:var(--gold); font-size:13px;">🔄 بروزرسانی</a>
+    </div>
+    <script>setTimeout(() => location.reload(), 2500);</script>
+
+  {% else %}
+    <div class="timer {% if remaining > 60 %}safe{% elif remaining > 25 %}warn{% endif %}" id="timerEl">
+      ⏱ <span id="timerNum">{{ remaining }}</span>ث
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-chip"><div class="lbl">جفت پیدا شده</div><div class="val" id="matchedCount">0 / {{ total_pairs }}</div></div>
+      <div class="stat-chip"><div class="lbl">حرکت</div><div class="val" id="movesCount">0</div></div>
+    </div>
+
+    <div class="grid" id="memoryGrid">
+      {% for c in cards %}
+        <div class="card" data-id="{{ c.id }}" data-emoji="{{ c.emoji }}" onclick="flipCard(this)">
+          <div class="card-inner">
+            <div class="card-face card-back">❓</div>
+            <div class="card-face card-front">{{ c.emoji }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form method="post" id="memForm">
+      {% csrf_token %}
+      <input type="hidden" name="found_pairs" id="foundPairsInput" value="0">
+      <button type="submit" class="stop-btn" onclick="return confirm('استپ بزنی؟ دیگه کارت‌ها رو نمی‌تونی بزنی!');">
+        ✋ استپ!
+      </button>
+    </form>
+
+    <script>
+      const TOTAL_PAIRS = {{ total_pairs }};
+      let firstCard = null, secondCard = null, lock = false, matched = 0, moves = 0;
+      const matchedEl = document.getElementById('matchedCount');
+      const movesEl = document.getElementById('movesCount');
+      const foundInput = document.getElementById('foundPairsInput');
+
+      function flipCard(card) {
+        if (lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+        card.classList.add('flipped');
+        if (!firstCard) { firstCard = card; return; }
+        secondCard = card;
+        lock = true;
+        moves++;
+        movesEl.textContent = moves;
+
+        if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+          setTimeout(() => {
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            matched++;
+            matchedEl.textContent = matched + ' / ' + TOTAL_PAIRS;
+            foundInput.value = matched;
+            reset();
+            if (matched >= TOTAL_PAIRS) {
+              // همه پیدا شد → خودکار استپ
+              setTimeout(() => document.getElementById('memForm').submit(), 500);
+            }
+          }, 400);
+        } else {
+          setTimeout(() => {
+            firstCard.classList.remove('flipped');
+            secondCard.classList.remove('flipped');
+            reset();
+          }, 800);
+        }
+      }
+      function reset() { firstCard = null; secondCard = null; lock = false; }
+
+      // تایمر
+      let rem = {{ remaining }};
+      const total = {{ duration }};
+      const numEl = document.getElementById('timerNum');
+      const wrapEl = document.getElementById('timerEl');
+      function tick() {
+        if (rem <= 0) { document.getElementById('memForm').submit(); return; }
+        rem--;
+        numEl.textContent = rem;
+        wrapEl.classList.remove('safe','warn');
+        if (rem > 60) wrapEl.classList.add('safe');
+        else if (rem > 25) wrapEl.classList.add('warn');
+        setTimeout(tick, 1000);
+      }
+      setTimeout(tick, 1000);
+    </script>
+  {% endif %}
+
+{% endblock %}

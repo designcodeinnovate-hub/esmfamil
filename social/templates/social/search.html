@@ -110,7 +110,7 @@
       <div class="user-av">{{ r.avatar }}</div>
       <div class="user-info">
         <div class="user-name">{{ r.user.alias }}</div>
-        <div class="user-id">#{{ r.user.public_id }}</div>
+        <div class="user-id">@{{r.user.username}}</div>
       </div>
       {% if r.state == "friend" %}
         <span class="status-tag">✓ دوست</span>

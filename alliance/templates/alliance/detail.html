@@ -2,115 +2,766 @@
 {% block title %}{{ alliance.name }}{% endblock %}
 {% block extra_css %}
 <style>
-.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.hero{text-align:center;padding:30px 20px;background:linear-gradient(135deg,rgba(30,41,59,.8),rgba(15,23,42,.9));border:1px solid rgba(148,163,184,.2);border-radius:24px;margin-bottom:20px;position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(244,197,66,.1) 0,transparent 60%);pointer-events:none}
-.emb-big{font-size:76px;margin-bottom:12px}
-.title{font-size:26px;font-weight:900;background:linear-gradient(135deg,#fde68a,#f4c542,#ca8a04);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
-.code-box{display:inline-flex;align-items:center;gap:10px;background:rgba(15,23,42,.8);border:1px solid var(--border);padding:8px 16px;border-radius:12px;margin-top:16px;cursor:pointer}
-.code-box:hover{border-color:var(--gold)}
-.code-txt{font-family:monospace;font-size:18px;letter-spacing:3px;color:var(--gold);font-weight:bold}
-.cap-wrap{margin-top:16px}
-.cap-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
-.cap-bar{height:8px;background:rgba(148,163,184,.15);border-radius:8px;overflow:hidden}
-.cap-fill{height:100%;background:linear-gradient(90deg,#8b5cf6,#06b6d4);border-radius:8px}
-.stats{display:flex;gap:10px;margin-bottom:20px}
-.stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center}
-.stat-val{font-size:22px;font-weight:bold;color:#fff;margin-bottom:4px}
-.stat-lbl{font-size:11px;color:var(--muted)}
-.actions{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.actions a,.actions button{flex:1;min-width:140px;text-align:center;padding:14px;border-radius:14px;text-decoration:none;font-weight:bold;font-size:15px;border:none;font-family:inherit;cursor:pointer;color:#fff}
-.btn-chat{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
-.btn-edit{background:linear-gradient(135deg,#8b5cf6,#6b4eff)}
-.btn-leave{background:linear-gradient(135deg,#ef4444,#dc2626)}
-.members{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px}
-.members h3{font-size:15px;color:var(--gold);margin-bottom:16px;display:flex;justify-content:space-between}
-.badge{display:inline-block;background:var(--border);color:#fff;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:bold}
-.mrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.mrow:last-child{border-bottom:none}
-.avwrap{position:relative}
-.mav{width:44px;height:44px;border-radius:50%;background:rgba(15,23,42,.6);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;background-size:cover;background-position:center}
-.dot-on{position:absolute;bottom:0;right:0;width:12px;height:12px;background:#22c55e;border-radius:50%;border:2px solid var(--card)}
-.minfo{flex:1}
-.mname{font-size:14px;font-weight:bold;color:#fff;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.mjoin{font-size:11px;color:var(--dim)}
-.lvl{background:linear-gradient(135deg,#8b5cf6,#6b4eff);color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-family:monospace}
-.rbadge{font-size:11px;padding:4px 10px;border-radius:8px;font-weight:bold}
-.r-leader{background:rgba(244,197,66,.2);color:#facc15;border:1px solid rgba(244,197,66,.3)}
-.r-officer{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
-.r-member{background:rgba(100,116,139,.2);color:#cbd5e1;border:1px solid rgba(100,116,139,.3)}
-.kbtn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:inherit}
+  body { padding-bottom: 0 !important; }
+  /* ========== هدر اصلی (سبک بله - فقط بالا) ========== */
+  .blh {
+    position: sticky; top: 0; z-index: 60;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    margin: -16px -16px 0;
+    background: linear-gradient(135deg, rgba(26,15,46,0.98), rgba(15,15,30,0.98));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(139,92,246,0.35);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .blh-back {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(148,163,184,0.12);
+    border: 1px solid rgba(148,163,184,0.2);
+    color: #fff; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; text-decoration: none;
+    font-family: inherit; transition: 0.2s;
+  }
+  .blh-back:hover { background: rgba(139,92,246,0.3); border-color: rgba(139,92,246,0.5); }
+  .blh-center {
+    flex: 1; min-width: 0; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .blh-emblem {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.35), rgba(6,182,212,0.2));
+    border: 1.5px solid rgba(139,92,246,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    box-shadow: 0 0 15px rgba(139,92,246,0.4);
+  }
+  .blh-text { min-width: 0; flex: 1; }
+  .blh-name {
+    font-size: 15px; font-weight: 900; color: #fff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 3px;
+  }
+  .blh-tag {
+    font-size: 9px; color: #1a1a1a; background: var(--gold);
+    padding: 1px 6px; border-radius: 5px;
+    font-family: monospace; font-weight: 900;
+  }
+  .blh-meta {
+    font-size: 11px; color: #94a3b8;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .blh-meta .online-dot { color: #4ade80; }
+  .blh-menu-btn {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(148,163,184,0.12);
+    border: 1px solid rgba(148,163,184,0.2);
+    color: #fff; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-family: inherit; transition: 0.2s;
+    flex-shrink: 0; position: relative;
+  }
+  .blh-menu-btn:hover { background: rgba(139,92,246,0.3); border-color: rgba(139,92,246,0.5); }
+
+  /* ========== منوی سه خط ========== */
+  .blh-menu {
+    display: none; position: absolute;
+    top: 50px; left: 0;
+    background: linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: 16px;
+    min-width: 240px;
+    padding: 8px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.7), 0 0 30px rgba(139,92,246,0.2);
+    z-index: 100;
+  }
+  .blh-menu.active { display: block; animation: menuIn 0.2s ease-out; }
+  @keyframes menuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .blh-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: 10px;
+    color: #fff; text-decoration: none;
+    font-size: 14px; font-weight: bold;
+    transition: 0.15s; cursor: pointer;
+    border: none; background: transparent;
+    font-family: inherit; text-align: right; width: 100%;
+  }
+  .blh-menu-item:hover { background: rgba(139,92,246,0.15); }
+  .blh-menu-item .mi-icon { font-size: 18px; width: 24px; text-align: center; }
+  .blh-menu-item.danger { color: #fca5a5; }
+  .blh-menu-item.danger:hover { background: rgba(239,68,68,0.15); }
+  .blh-menu-sep { height: 1px; background: rgba(148,163,184,0.15); margin: 6px 0; }
+
+  /* ========== صفحه چت (مستقیم زیر هدر) ========== */
+  .chat-area {
+    min-height: 400px;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+    padding: 14px 4px calc(90px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; gap: 8px;
+    scroll-behavior: smooth;
+  }
+  .chat-area::-webkit-scrollbar { width: 5px; }
+  .chat-area::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 5px; }
+  .msg-row { display: flex; gap: 8px; align-items: flex-end; animation: msgFade 0.3s ease-out; }
+  @keyframes msgFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  .msg-row.me { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+    border: 1.5px solid rgba(148,163,184,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+    background-size: cover; background-position: center;
+    overflow: hidden;
+  }
+  .msg-content { max-width: 78%; display: flex; flex-direction: column; gap: 3px; }
+  .msg-row.me .msg-content { align-items: flex-end; }
+  .msg-sender { font-size: 10.5px; color: #c4b5fd; font-weight: bold; margin-bottom: 1px; padding: 0 4px; }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 16px;
+    background: rgba(30,41,59,0.85);
+    border: 1px solid rgba(148,163,184,0.15);
+    color: #fff; font-size: 14px; line-height: 1.6;
+    border-bottom-left-radius: 4px;
+    word-wrap: break-word; word-break: break-word;
+  }
+  .msg-row.me .msg-bubble {
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    border-color: transparent;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 15px rgba(139,92,246,0.35);
+  }
+  .msg-time { font-size: 9px; color: #64748b; margin-top: 2px; padding: 0 4px; font-family: monospace; }
+  .system-msg {
+    text-align: center; font-size: 11.5px; color: #94a3b8;
+    padding: 6px 14px; background: rgba(148,163,184,0.08);
+    border-radius: 12px; margin: 6px auto; max-width: 90%;
+  }
+  .empty-chat {
+    text-align: center; color: #64748b; font-size: 13px;
+    padding: 50px 20px; margin: auto; line-height: 1.9;
+  }
+  .empty-chat .big-icon { font-size: 56px; display: block; margin-bottom: 12px; opacity: 0.4; }
+
+  /* ========== Input Bar ========== */
+  .chat-input-bar {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px 16px;
+    background: var(--bg);
+    border-top: 1px solid rgba(148,163,184,0.12);
+    position: sticky; bottom: 0;
+    z-index: 45;
+  }
+  .chat-input-bar input {
+    flex: 1; padding: 13px 16px; border-radius: 22px;
+    border: 1.5px solid rgba(139,92,246,0.35);
+    background: rgba(15,23,42,0.9);
+    color: #fff; font-size: 14px; font-family: inherit;
+    transition: 0.2s; min-width: 0;
+  }
+  .chat-input-bar input:focus {
+    outline: none; border-color: #8b5cf6;
+    box-shadow: 0 0 18px rgba(139,92,246,0.25);
+  }
+  .chat-send {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    color: #fff; font-size: 20px; cursor: pointer;
+    box-shadow: 0 4px 18px rgba(139,92,246,0.5);
+    flex-shrink: 0; transition: 0.2s; font-family: inherit;
+    font-weight: 900;
+  }
+  .chat-send:hover { transform: scale(1.06); }
+  .blocked-bar {
+    padding: 14px 16px; text-align: center;
+    background: rgba(234,179,8,0.08);
+    border: 1.5px solid rgba(234,179,8,0.3);
+    border-radius: 14px;
+    color: #fde68a; font-size: 13px; line-height: 1.6;
+    margin: 12px 0;
+  }
+
+  /* ========== Drawer (اطلاعات + اعضا) ========== */
+  .drawer-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.28s; z-index: 998;
+  }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .info-drawer {
+    position: fixed;
+    top: 0; bottom: 0; left: 0; right: 0;
+    background: var(--bg);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+    z-index: 999;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .info-drawer.open { transform: translateY(0); }
+
+  .drawer-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    background: rgba(10,10,21,0.98);
+    border-bottom: 1px solid var(--border);
+    padding-top: max(14px, env(safe-area-inset-top));
+    flex-shrink: 0;
+  }
+  .drawer-back {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: #fff; font-size: 18px;
+    cursor: pointer; flex-shrink: 0;
+    font-family: inherit; transition: 0.2s;
+  }
+  .drawer-back:hover { background: rgba(255,255,255,0.12); }
+  .drawer-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    flex: 1; text-align: center;
+  }
+
+  .drawer-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px 40px;
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+  }
+  .drawer-scroll::-webkit-scrollbar { width: 5px; }
+  .drawer-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 5px; }
+
+  /* ========== اطلاعات اتحاد (بالای drawer) ========== */
+  .info-hero {
+    background: radial-gradient(circle at 50% 0%, rgba(139,92,246,0.25), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: 20px;
+    padding: 24px 18px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(139,92,246,0.15);
+  }
+  .info-emblem-big {
+    font-size: 72px; margin-bottom: 10px;
+    filter: drop-shadow(0 0 30px rgba(139,92,246,0.6));
+  }
+  .info-name-big {
+    font-size: 22px; font-weight: 900; color: #c4b5fd;
+    margin-bottom: 6px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex-wrap: wrap;
+  }
+  .info-desc {
+    font-size: 13px; color: #94a3b8;
+    line-height: 1.7; margin-top: 10px;
+  }
+  .info-stats-row {
+    display: flex; gap: 8px; margin-top: 14px;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .stat-pill {
+    font-size: 12px; padding: 6px 12px;
+    background: rgba(15,23,42,0.7);
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 20px;
+    color: #cbd5e1; font-weight: bold;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+
+  .info-row-copy {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(30,41,59,0.55);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .info-row-copy .label { color: var(--muted); }
+  .info-row-copy .val { color: #fff; font-weight: bold; font-family: monospace; cursor: pointer; }
+
+  /* ========== نوار اعضا (افقی) ========== */
+  .members-section-title {
+    font-size: 14px; font-weight: bold; color: #fff;
+    margin: 20px 0 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .members-section-title .cnt {
+    font-size: 11px; padding: 2px 8px;
+    background: var(--gold); color: #000;
+    border-radius: 10px; font-weight: 900;
+  }
+  .members-h-strip {
+    display: flex; gap: 12px;
+    overflow-x: auto;
+    padding: 4px 0 12px;
+    scrollbar-width: thin;
+  }
+  .members-h-strip::-webkit-scrollbar { height: 4px; }
+  .members-h-strip::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.4); border-radius: 4px; }
+  .member-tile {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px; cursor: pointer; flex-shrink: 0; width: 64px;
+    background: transparent; border: none; padding: 0; font-family: inherit;
+    transition: transform 0.2s;
+  }
+  .member-tile:hover { transform: translateY(-3px); }
+  .member-av {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+    border: 2px solid rgba(148,163,184,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; position: relative;
+    background-size: cover; background-position: center;
+    overflow: hidden;
+  }
+  .member-av.leader { border-color: #f4c542; box-shadow: 0 0 16px rgba(244,197,66,0.6); }
+  .member-av.admin { border-color: #8b5cf6; box-shadow: 0 0 14px rgba(139,92,246,0.6); }
+  .member-av.me { border-color: #22c55e; box-shadow: 0 0 14px rgba(34,197,94,0.6); }
+  .member-status {
+    position: absolute; bottom: 1px; right: 1px;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #0f0f1e;
+  }
+  .member-status.online { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+  .member-status.offline { background: #64748b; }
+  .member-name-small {
+    font-size: 10px; color: #cbd5e1; text-align: center;
+    max-width: 64px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-weight: bold;
+  }
+
+  /* ========== آخرین بازدید ========== */
+  .lastseen-list { display: flex; flex-direction: column; gap: 8px; }
+  .lastseen-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px;
+    background: rgba(30,41,59,0.55);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: 0.18s;
+  }
+  .lastseen-row:hover { border-color: rgba(139,92,246,0.5); background: rgba(30,41,59,0.85); }
+  .ls-av {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(139,92,246,0.2));
+    border: 2px solid rgba(148,163,184,0.25);
+    background-size: cover; background-position: center;
+    flex-shrink: 0; position: relative;
+  }
+  .ls-info { flex: 1; min-width: 0; }
+  .ls-name {
+    font-size: 13px; font-weight: bold; color: #fff;
+    margin-bottom: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ls-role-mini {
+    font-size: 9px; padding: 1px 6px;
+    border-radius: 4px; font-weight: bold;
+  }
+  .ls-role-mini.leader { background: rgba(244,197,66,0.2); color: #fde68a; }
+  .ls-role-mini.admin { background: rgba(139,92,246,0.25); color: #c4b5fd; }
+  .ls-time { font-size: 11px; color: var(--muted); }
+  .ls-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .ls-dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .ls-dot.offline { background: #64748b; }
+
+  /* ========== Member Modal ========== */
+  .member-modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88); backdrop-filter: blur(10px);
+    z-index: 2000;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .member-modal-bg.active { display: flex; }
+  .member-modal {
+    background: radial-gradient(circle at 50% 0%, rgba(139,92,246,0.3), transparent 60%),
+                linear-gradient(135deg, #1a0f2e, #0f0f1e);
+    border: 1.5px solid rgba(139,92,246,0.5);
+    border-radius: 24px;
+    padding: 28px 22px 22px;
+    max-width: 360px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+    position: relative;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.8), 0 0 50px rgba(139,92,246,0.25);
+    text-align: center;
+  }
+  .member-modal-close {
+    position: absolute; top: 14px; left: 14px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(148,163,184,0.12);
+    border: 1px solid rgba(148,163,184,0.2);
+    color: #fff; cursor: pointer; font-size: 13px;
+    font-family: inherit; transition: 0.2s;
+  }
+  .member-modal-close:hover { background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.5); }
+  .member-modal-avatar {
+    width: 95px; height: 95px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+    border: 3px solid #8b5cf6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; margin: 0 auto 14px;
+    overflow: hidden; background-size: cover; background-position: center;
+    box-shadow: 0 0 35px rgba(139,92,246,0.6);
+  }
+  .member-modal-name { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+  .member-modal-username { font-size: 12px; color: #94a3b8; font-family: monospace; margin-bottom: 14px; }
+  .member-modal-badges { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .member-badge { font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+  .badge-leader { background: rgba(244,197,66,0.2); color: #fde68a; border: 1px solid rgba(244,197,66,0.5); }
+  .badge-admin { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.5); }
+  .badge-member { background: rgba(100,116,139,0.2); color: #cbd5e1; border: 1px solid rgba(100,116,139,0.5);}
+  .badge-online { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.5); }
+  .badge-offline { background: rgba(100,116,139,0.2); color: #94a3b8; border: 1px solid rgba(100,116,139,0.4); }
+  .badge-level { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.5); font-family: monospace; }
+  .member-modal-actions { display: flex; gap: 8px; flex-direction: column; }
+  .member-btn {
+    padding: 13px; border-radius: 12px; border: none;
+    font-family: inherit; font-weight: bold; font-size: 14px;
+    cursor: pointer; text-decoration: none; text-align: center;
+    transition: 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .member-btn:hover { transform: translateY(-1px); }
+  .member-btn-chat { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; box-shadow: 0 4px 15px rgba(139,92,246,0.45); }
+  .member-btn-profile { background: rgba(148,163,184,0.15); color: #fff; border: 1px solid rgba(148,163,184,0.25); }
+  .member-btn-kick { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+  .toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    background: rgba(34,197,94,0.95); color: #fff;
+    padding: 12px 20px; border-radius: 12px; font-size: 13px;
+    z-index: 9999; font-family: inherit; font-weight: bold;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+
+  @media (max-width: 400px) {
+    .blh-name { font-size: 14px; }
+    .info-name-big { font-size: 19px; }
+    .info-emblem-big { font-size: 60px; }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="head"><a href="/alliance/" class="back-btn"><span class="arrow-icon">→</span></a></div>
-<div class="hero">
-  <div class="emb-big">{{ alliance.emblem }}</div>
-  <div class="title">{{ alliance.name }}</div>
-  {% if alliance.tag %}<div style="color:var(--muted);font-size:14px;letter-spacing:2px;">{{ alliance.tag }}</div>{% endif %}
-  <div class="code-box" onclick="copyCode()">
-    <span class="code-txt" id="codeTxt">{{ alliance.invite_code }}</span>
-    <span>📋</span>
-  </div>
-  <div style="font-size:10px;color:var(--dim);margin-top:6px;">برای کپی کلیک کنید</div>
-  <div class="cap-wrap">
-    <div class="cap-labels"><span>ظرفیت</span><span>{{ member_count }} / {{ alliance.max_members }}</span></div>
-    <div class="cap-bar"><div class="cap-fill" style="width:{% widthratio member_count alliance.max_members 100 %}%;"></div></div>
-  </div>
-</div>
 
-<div class="stats">
-  <div class="stat"><div class="stat-val">{{ member_count }} / {{ alliance.max_members }}</div><div class="stat-lbl">ظرفیت</div></div>
-  <div class="stat"><div class="stat-val">{{ alliance.created_at|date:"Y/m/d" }}</div><div class="stat-lbl">تأسیس</div></div>
-</div>
-
-<div class="actions">
-  <a href="/alliance/{{ alliance.id }}/chat/" class="btn-chat">💬 چت</a>
-  {% if my_role == 'leader' %}<a href="/alliance/{{ alliance.id }}/edit/" class="btn-edit">✏️ ویرایش</a>{% endif %}
-  <form method="post" action="/alliance/{{ alliance.id }}/leave/" style="flex:1;min-width:140px;margin:0;" onsubmit="return confirm('{% if my_role == 'leader' %}اتحاد منحل شود؟{% else %}از اتحاد خارج شوی؟{% endif %}');">
-    {% csrf_token %}
-    <button type="submit" class="btn-leave" style="width:100%;">{% if my_role == 'leader' %}🗑️ حذف{% else %}🚪 خروج{% endif %}</button>
-  </form>
-</div>
-
-<div class="members">
-  <h3>👥 اعضا <span class="badge">{{ member_count }}</span></h3>
-  {% for m in members %}
-    <div class="mrow">
-      <div class="avwrap">
-        {% if m.user.avatar_type == 'image' and m.user.avatar_id %}
-          <div class="mav" style="background-image:url('/static/avatars/images/{{ m.user.avatar_id|stringformat:"03d" }}.jpg');"></div>
-        {% else %}
-          <div class="mav">{{ m.avatar }}</div>
-        {% endif %}
-        {% if m.is_online %}<div class="dot-on"></div>{% endif %}
+<!-- ========== هدر (فقط بالا) ========== -->
+<div class="blh">
+  <a href="{{ back_url }}" class="blh-back" title="بازگشت">→</a>
+  <div class="blh-center" onclick="openInfoDrawer()">
+    <div class="blh-emblem">{{ alliance.emblem }}</div>
+    <div class="blh-text">
+      <div class="blh-name">
+        {{ alliance.name }}
+        {% if alliance.tag %}<span class="blh-tag">{{ alliance.tag }}</span>{% endif %}
       </div>
-      <div class="minfo">
-        <div class="mname">
-          {{ m.user.alias }}
-          {% if m.user.id == request.user.id %}<span style="color:var(--teal);font-size:10px;">(شما)</span>{% endif %}
-          <span class="lvl">Lv {{ m.level }}</span>
-        </div>
-        <div class="mjoin">عضو از {{ m.joined_at|date:"Y/m/d" }}</div>
+      <div class="blh-meta">
+        <span>👥 {{ member_count }} عضو</span>
+        <span>·</span>
+        <span class="online-dot">●</span>
+        <span>{{ online_count|default:0 }} آنلاین</span>
       </div>
-      <span class="rbadge r-{{ m.role }}">
-        {% if m.role == 'leader' %}👑 رهبر{% elif m.role == 'officer' %}🛡️ افسر{% else %}👤 عضو{% endif %}
-      </span>
-      {% if is_leader and m.role != 'leader' %}
-        <form method="post" action="/alliance/{{ alliance.id }}/kick/{{ m.user.id }}/" style="margin:0;" onsubmit="return confirm('حذف شود؟');">
+    </div>
+  </div>
+  <div style="position: relative; flex-shrink: 0;">
+    <button class="blh-menu-btn" onclick="toggleMenu(event)" title="منو">⋮</button>
+    <div class="blh-menu" id="hdrMenu" onclick="event.stopPropagation()">
+
+      <button class="blh-menu-item" onclick="openInfoDrawer();closeMenu()">
+        <span class="mi-icon">ℹ️</span>
+        <span>اطلاعات و اعضا</span>
+      </button>
+
+      {% if my_role == "leader" %}
+        <div class="blh-menu-sep"></div>
+        <a href="/alliance/{{ alliance.id }}/edit/" class="blh-menu-item">
+          <span class="mi-icon">✏️</span>
+          <span>ویرایش اتحاد</span>
+        </a>
+        <div class="blh-menu-sep"></div>
+        <form method="post" action="/alliance/{{ alliance.id }}/delete/" onsubmit="return confirm('مطمئنی می‌خوای اتحاد رو برای همیشه حذف کنی؟');" style="margin:0;">
           {% csrf_token %}
-          <button type="submit" class="kbtn">حذف</button>
+          <button type="submit" class="blh-menu-item danger">
+            <span class="mi-icon">🗑️</span>
+            <span>حذف اتحاد</span>
+          </button>
+        </form>
+      {% elif my_role %}
+        <div class="blh-menu-sep"></div>
+        <form method="post" action="/alliance/{{ alliance.id }}/leave/" onsubmit="return confirm('مطمئنی می‌خوای از اتحاد خارج بشی؟');" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="blh-menu-item danger">
+            <span class="mi-icon">🚪</span>
+            <span>خروج از اتحاد</span>
+          </button>
         </form>
       {% endif %}
+
     </div>
-  {% endfor %}
+  </div>
 </div>
+
+<!-- ========== چت (مستقیم زیر هدر) ========== -->
+<div class="chat-area" id="chatArea">
+  {% if chat_messages %}
+    {% for m in chat_messages %}
+      {% if m.message_type == "system" %}
+        <div class="system-msg">{{ m.body }}</div>
+      {% else %}
+        <div class="msg-row {% if m.is_me %}me{% endif %}">
+          <div class="msg-avatar"
+               {% if m.avatar.is_image %}style="background-image: url('{{ m.avatar.value }}');"{% endif %}>
+            {% if not m.avatar.is_image %}{{ m.avatar.value }}{% endif %}
+          </div>
+          <div class="msg-content">
+            {% if not m.is_me %}<div class="msg-sender">{{ m.sender_alias }}</div>{% endif %}
+            <div class="msg-bubble">{{ m.body }}</div>
+            <div class="msg-time">{{ m.sent_at|date:"H:i" }}</div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <div class="empty-chat">
+      <span class="big-icon">💬</span>
+      هنوز پیامی در این اتحاد نیست.<br>
+      اولین پیام رو بفرست!
+    </div>
+  {% endif %}
+</div>
+
+<!-- ========== Input Bar ========== -->
+{% if can_send %}
+  <form method="post" class="chat-input-bar" id="chatForm">
+    {% csrf_token %}
+    <input type="text" name="body" placeholder="پیامت را بنویس..." maxlength="2000" required autocomplete="off" id="chatInput">
+    <button type="submit" class="chat-send" title="ارسال">↑</button>
+  </form>
+{% else %}
+  <div class="blocked-bar">🔒 {{ send_blocked_reason }}</div>
+{% endif %}
+
+<!-- ========== Drawer: اطلاعات + اعضا + آخرین بازدید ========== -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeInfoDrawer()"></div>
+<div class="info-drawer" id="infoDrawer">
+
+  <div class="drawer-head">
+    <button class="drawer-back" onclick="closeInfoDrawer()">→</button>
+    <div class="drawer-title">اطلاعات اتحاد</div>
+    <div style="width:40px;"></div>
+  </div>
+
+  <div class="drawer-scroll">
+
+    <!-- اطلاعات اتحاد -->
+    <div class="info-hero">
+      <div class="info-emblem-big">{{ alliance.emblem }}</div>
+      <div class="info-name-big">
+        {{ alliance.name }}
+        {% if alliance.tag %}<span class="blh-tag">{{ alliance.tag }}</span>{% endif %}
+      </div>
+      {% if alliance.description %}<div class="info-desc">{{ alliance.description }}</div>{% endif %}
+      <div class="info-stats-row">
+        <span class="stat-pill">👥 {{ member_count }} عضو</span>
+        <span class="stat-pill" style="color:#4ade80;">🟢 {{ online_count|default:0 }} آنلاین</span>
+        <span class="stat-pill">📊 ظرفیت {{ alliance.max_members }}</span>
+      </div>
+    </div>
+
+    {% if alliance.invite_code %}
+      <div class="info-row-copy">
+        <span class="label">🔑 کد دعوت</span>
+        <span class="val" onclick="copyText('{{ alliance.invite_code }}')">{{ alliance.invite_code }}</span>
+      </div>
+    {% endif %}
+    <div class="info-row-copy">
+      <span class="label">🚪 نوع عضویت</span>
+      <span class="val">{{ alliance.get_join_type_display|default:alliance.join_type }}</span>
+    </div>
+    <div class="info-row-copy">
+      <span class="label">📅 تاریخ ساخت</span>
+      <span class="val">{{ alliance.created_at|date:"Y/m/d" }}</span>
+    </div>
+    {% if my_role %}
+      <div class="info-row-copy">
+        <span class="label">👤 نقش شما</span>
+        <span class="val">{% if my_role == "leader" %}👑 رهبر{% elif my_role == "admin" %}🛡️ مدیر{% else %}👤 عضو{% endif %}</span>
+      </div>
+    {% endif %}
+
+    <!-- نوار اعضا -->
+    <div class="members-section-title">
+      👥 اعضا
+      <span class="cnt">{{ member_count }}</span>
+    </div>
+    <div class="members-h-strip">
+      {% for m in members %}
+        <button type="button" class="member-tile"
+          data-user-id="{{ m.user.id }}"
+          data-alias="{{ m.user.alias }}"
+          data-username="{{ m.user.username }}"
+          data-avatar-emoji="{% if m.avatar.is_image %}🖼️{% else %}{{ m.avatar.value }}{% endif %}"
+          data-avatar-url="{% if m.avatar.is_image %}{{ m.avatar.value }}{% endif %}"
+          data-role="{{ m.role }}"
+          data-online="{% if m.is_online %}1{% else %}0{% endif %}"
+          data-level="{{ m.level }}"
+          data-is-me="{% if m.is_me %}1{% else %}0{% endif %}"
+          data-display-name="{{ m.display_name }}"
+          onclick="openMemberModal(this)">
+          <div class="member-av {% if m.role == 'leader' %}leader{% elif m.role == 'admin' %}admin{% endif %}{% if m.is_me %} me{% endif %}"
+               {% if m.avatar.is_image %}style="background-image: url('{{ m.avatar.value }}');"{% endif %}>
+            {% if not m.avatar.is_image %}{{ m.avatar.value }}{% endif %}
+            <div class="member-status {% if m.is_online %}online{% else %}offline{% endif %}"></div>
+          </div>
+          <div class="member-name-small">{{ m.display_name|truncatechars:8 }}</div>
+        </button>
+      {% endfor %}
+    </div>
+
+    <!-- آخرین بازدید -->
+    <div class="members-section-title">
+      ⏱️ آخرین بازدید
+    </div>
+    <div class="lastseen-list">
+      {% for m in members %}
+        <div class="lastseen-row" onclick="openMemberModal(this)" style="cursor:pointer;"
+          data-user-id="{{ m.user.id }}"
+          data-alias="{{ m.user.alias }}"
+          data-username="{{ m.user.username }}"
+          data-avatar-emoji="{% if m.avatar.is_image %}🖼️{% else %}{{ m.avatar.value }}{% endif %}"
+          data-avatar-url="{% if m.avatar.is_image %}{{ m.avatar.value }}{% endif %}"
+          data-role="{{ m.role }}"
+          data-online="{% if m.is_online %}1{% else %}0{% endif %}"
+          data-level="{{ m.level }}"
+          data-is-me="{% if m.is_me %}1{% else %}0{% endif %}"
+          data-display-name="{{ m.display_name }}">
+          <div class="ls-av"
+               {% if m.avatar.is_image %}style="background-image: url('{{ m.avatar.value }}');"{% endif %}>
+            {% if not m.avatar.is_image %}{{ m.avatar.value }}{% endif %}
+          </div>
+          <div class="ls-info">
+            <div class="ls-name">
+              {{ m.display_name }}
+              {% if m.role == 'leader' %}<span class="ls-role-mini leader">👑</span>
+              {% elif m.role == 'admin' %}<span class="ls-role-mini admin">🛡️</span>{% endif %}
+              {% if m.is_me %}<span style="font-size:10px;color:#4ade80;">(شما)</span>{% endif %}
+            </div>
+            <div class="ls-time">
+              {% if m.is_online %}همین الان آنلاین{% else %}{{ m.user.last_seen|timesince|default:"خیلی وقت پیش" }} پیش{% endif %}
+            </div>
+          </div>
+          <div class="ls-dot {% if m.is_online %}online{% else %}offline{% endif %}"></div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== Member Modal ========== -->
+<div class="member-modal-bg" id="memberModal" onclick="if(event.target.id==='memberModal')closeMemberModal()">
+  <div class="member-modal">
+    <button class="member-modal-close" onclick="closeMemberModal()" type="button">✕</button>
+    <div class="member-modal-avatar" id="modalAvatar">👤</div>
+    <div class="member-modal-name" id="modalName">—</div>
+    <div class="member-modal-username" id="modalUsername">@—</div>
+    <div class="member-modal-badges" id="modalBadges"></div>
+    <div class="member-modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
-function copyCode(){
-  const c = document.getElementById('codeTxt').innerText;
-  navigator.clipboard.writeText(c).then(()=>alert('کپی شد: '+c)).catch(()=>alert('کد: '+c));
-}
+  const ALLIANCE_DATA = {
+    id: {{ alliance.id }},
+    myRole: "{{ my_role }}",
+    name: "{{ alliance.name|escapejs }}",
+    inviteCode: "{{ alliance.invite_code|default:''|escapejs }}",
+  };
+
+  const chatArea = document.getElementById('chatArea');
+  if (chatArea) setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 80);
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) setTimeout(() => chatInput.focus(), 200);
+
+  /* --- منو --- */
+  function toggleMenu(e) {
+    e.stopPropagation();
+    document.getElementById('hdrMenu').classList.toggle('active');
+  }
+  function closeMenu() { document.getElementById('hdrMenu').classList.remove('active'); }
+  document.addEventListener('click', closeMenu);
+
+  /* --- Drawer --- */
+  function openInfoDrawer() {
+    closeMenu();
+    document.getElementById('infoDrawer').classList.add('open');
+    document.getElementById('drawerBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeInfoDrawer() {
+    document.getElementById('infoDrawer').classList.remove('open');
+    document.getElementById('drawerBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  /* --- کپی --- */
+  function copyText(txt) {
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => showToast('✓ کپی شد'));
+  }
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2200);
+  }
+
+  /* --- Member Modal --- */
+  function openMemberModal(el) {
+    const d = el.dataset;
+    const avEl = document.getElementById('modalAvatar');
+    if (d.avatarUrl) { avEl.style.backgroundImage = `url('${d.avatarUrl}')`; avEl.textContent = ''; }
+    else { avEl.style.backgroundImage = ''; avEl.textContent = d.avatarEmoji || '👤'; }
+    document.getElementById('modalName').textContent = d.displayName || d.alias || '—';
+    document.getElementById('modalUsername').textContent = '@' + (d.username || '—');
+    let badges = '';
+    if (d.role === 'leader') badges += '<span class="member-badge badge-leader">👑 رهبر</span>';
+    else if (d.role === 'admin') badges += '<span class="member-badge badge-admin">🛡️ مدیر</span>';
+    else badges += '<span class="member-badge badge-member">👤 عضو</span>';
+    badges += d.online === '1'
+      ? '<span class="member-badge badge-online">● آنلاین</span>'
+      : '<span class="member-badge badge-offline">● آفلاین</span>';
+    if (d.level) badges += '<span class="member-badge badge-level">Lv ' + d.level + '</span>';
+    document.getElementById('modalBadges').innerHTML = badges;
+
+    let actions = '';
+    if (d.isMe === '1') {
+      actions = '<a href="/accounts/profile/" class="member-btn member-btn-profile">👤 پروفایل من</a>';
+    } else {
+      actions = `<a href="/social/chat/${d.userId}/" class="member-btn member-btn-chat">💬 ارسال پیام</a>`;
+    }
+    document.getElementById('modalActions').innerHTML = actions;
+    document.getElementById('memberModal').classList.add('active');
+  }
+  function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeMemberModal(); closeMenu(); closeInfoDrawer(); }
+  });
 </script>
 {% endblock %}

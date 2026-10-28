@@ -1,11 +1,12 @@
-from django.contrib import messages
 # -*- coding: utf-8 -*-
+from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Max, Sum
 from django.shortcuts import redirect, render
 
 from .avatars import AVATAR_CATEGORIES, IMAGE_AVATARS, get_avatar_display, get_emoji
+from .models import EmailVerificationToken, GuestDeletionLog, UserUnlockedAvatar
 
 User = get_user_model()
 
@@ -52,7 +53,7 @@ def register_view(request):
         elif not all(c.isalnum() or c == "_" for c in username):
             error = "شناسه فقط حروف انگلیسی، اعداد و _."
         elif User.objects.filter(username=username).exists():
-            error = "این شناسه قبلاً استفاده شده."
+            error = "این اسم قبلاً وجود دارد. لطفاً شناسه کاربری دیگری امتحان کنید."
         elif len(password) < 6:
             error = "رمز باید حداقل ۶ حرف باشد."
         elif password != password2:
@@ -97,60 +98,30 @@ def complete_registration(request):
     if user.has_completed_registration:
         return redirect("game:home")
 
-    unlocked_ids = set(
-        UserUnlockedAvatar.objects.filter(user=user, avatar_type="image")
-        .values_list("avatar_id", flat=True)
-    )
-    image_list = []
-    for img in IMAGE_AVATARS:
-        image_list.append({
-            "id": img["id"],
-            "url": img["url"],
-            "unlocked": img["id"] in unlocked_ids,
-            "price": 0 if img["id"] in unlocked_ids else 50,
-        })
-
     error = None
     if request.method == "POST":
-        action = request.POST.get("action", "finish")
-
-        if action == "unlock":
-            try:
-                aid = int(request.POST.get("avatar_id", 0))
-            except (ValueError, TypeError):
-                aid = 0
-            if 1 <= aid <= 44:
-                if UserUnlockedAvatar.objects.filter(user=user, avatar_type="image", avatar_id=aid).exists():
-                    messages.info(request, "قبلاً باز شده.")
-                elif (user.coins or 0) >= 50:
-                    user.coins -= 50
-                    user.save(update_fields=["coins"])
-                    UserUnlockedAvatar.objects.create(user=user, avatar_type="image", avatar_id=aid)
-                    messages.success(request, "🎉 آواتار باز شد! -50 سکه")
-                else:
-                    messages.error(request, "سکه کافی نداری (نیاز: 50).")
-            return redirect("accounts:complete_registration")
-
         alias = (request.POST.get("alias") or "").strip()[:32]
         avatar_type = request.POST.get("avatar_type", "emoji")
         if avatar_type not in ("emoji", "image"):
             avatar_type = "emoji"
+
+        # Default avatar 🧑‍🚀 (id=22) if user didn't pick one
+        avatar_raw = request.POST.get("avatar_id", "").strip()
         try:
-            avatar_id = int(request.POST.get("avatar_id", ""))
+            avatar_id = int(avatar_raw) if avatar_raw else 22
         except (ValueError, TypeError):
-            avatar_id = -1
+            avatar_id = 22
+            avatar_type = "emoji"
+
         max_id = 99 if avatar_type == "emoji" else 44
+        if not (0 <= avatar_id <= max_id):
+            avatar_id = 22
+            avatar_type = "emoji"
 
         if not alias:
             error = "نام نمایشی را وارد کن."
         elif len(alias) < 2:
             error = "نام باید حداقل ۲ حرف باشد."
-        elif not (0 <= avatar_id <= max_id):
-            error = "یک آواتار انتخاب کن."
-        elif avatar_type == "image" and not UserUnlockedAvatar.objects.filter(
-            user=user, avatar_type="image", avatar_id=avatar_id
-        ).exists():
-            error = "این آواتار قفله. اول بازش کن یا ایموجی انتخاب کن."
         else:
             user.alias = alias
             user.avatar_id = avatar_id
@@ -165,11 +136,9 @@ def complete_registration(request):
 
     return render(request, "accounts/complete_registration.html", {
         "categories": AVATAR_CATEGORIES,
-        "image_avatars": image_list,
+        "image_avatars": IMAGE_AVATARS,
         "error": error,
-        "user_coins": user.coins or 0,
     })
-
 
 
 @login_required
@@ -261,7 +230,29 @@ def avatar_select(request):
 
 
 def logout_view(request):
-    logout(request)
+    if request.user.is_authenticated and getattr(request.user, 'is_guest', False):
+        # Guest: log stats → logout → delete account
+        user = request.user
+        try:
+            from game.models import Player
+            from django.db.models import Sum, Count
+            agg = Player.objects.filter(user=user).aggregate(
+                t=Sum("score"), c=Count("id")
+            )
+            GuestDeletionLog.objects.create(
+                username=user.username,
+                alias=user.alias or "",
+                public_id=user.public_id,
+                avatar_id=user.avatar_id,
+                total_games=agg["c"] or 0,
+                total_score=agg["t"] or 0,
+            )
+        except Exception:
+            pass  # never block logout
+        logout(request)
+        user.delete()
+    else:
+        logout(request)
     return redirect("landing")
 
 
@@ -358,3 +349,57 @@ def guest_start(request):
     )
     login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return redirect("game:home")
+
+
+# ============================================================
+# AJAX: Username availability check
+# ============================================================
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+
+@require_GET
+def check_username(request):
+    """AJAX endpoint to check username availability before registration."""
+    username = (request.GET.get("username") or "").strip().lower()
+
+    if not username:
+        return JsonResponse({
+            "available": False,
+            "reason": "empty",
+            "message": "شناسه کاربری را وارد کن.",
+        })
+
+    if len(username) < 3:
+        return JsonResponse({
+            "available": False,
+            "reason": "short",
+            "message": "شناسه باید حداقل ۳ حرف باشد.",
+        })
+
+    if len(username) > 32:
+        return JsonResponse({
+            "available": False,
+            "reason": "long",
+            "message": "شناسه نمی‌تواند بیشتر از ۳۲ حرف باشد.",
+        })
+
+    if not all(c.isalnum() or c == "_" for c in username):
+        return JsonResponse({
+            "available": False,
+            "reason": "invalid_chars",
+            "message": "فقط حروف انگلیسی، اعداد و _ مجاز است.",
+        })
+
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({
+            "available": False,
+            "reason": "taken",
+            "message": "این اسم قبلاً وجود دارد. لطفاً شناسه کاربری دیگری امتحان کنید.",
+        })
+
+    return JsonResponse({
+        "available": True,
+        "reason": "ok",
+        "message": "این شناسه آزاد است ✅",
+    })

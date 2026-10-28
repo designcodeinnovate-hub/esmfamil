@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>آیتم جدید — فروشگاه</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; background: #0f111a; color: #e2e8f0; min-height: 100vh; padding-right: 85px; }
+
+    .admin-rail { position: fixed; top: 0; right: 0; bottom: 0; width: 70px; height: 100vh; background-color: #161925; border-left: 1px solid #232838; display: flex; flex-direction: column; align-items: center; padding: 20px 0; z-index: 1000; gap: 12px; }
+    .rail-logo { color: #8b5cf6; margin-bottom: 10px; }
+    .rail-item { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; text-decoration: none; transition: all 0.2s; }
+    .rail-item:hover { color: #a78bfa; background: rgba(139,92,246,0.1); }
+    .rail-item.active { color: #fff; background: rgba(139,92,246,0.9); }
+    .rail-logout { margin-top: auto; width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ef4444; }
+
+    .admin-content { padding: 30px 20px; max-width: 700px; margin: 0 auto; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #60a5fa; text-decoration: none; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
+    .back-link:hover { text-decoration: underline; }
+    h1 { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 24px; }
+
+    .card { background: #161925; border: 1px solid #232838; border-radius: 16px; padding: 24px; margin-bottom: 18px; }
+    .card h3 { color: #fdba74; font-size: 15px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #232838; }
+
+    label { display: block; color: #94a3b8; font-size: 12px; font-weight: bold; margin: 14px 0 6px; }
+    input[type=text], input[type=number], textarea, select { width: 100%; padding: 12px 14px; background: #0f111a; border: 1.5px solid #232838; border-radius: 10px; color: #fff; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139,92,246,0.2); }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    .emoji-picker { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 8px; }
+    .emoji-opt { padding: 10px; text-align: center; font-size: 22px; background: #0f111a; border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: 0.15s; }
+    .emoji-opt:hover { border-color: rgba(139,92,246,0.5); }
+    .emoji-opt input { display: none; }
+    .emoji-opt:has(input:checked) { border-color: #8b5cf6; background: rgba(139,92,246,0.15); box-shadow: 0 0 15px rgba(139,92,246,0.3); }
+
+    .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+    .checkbox-row input[type=checkbox] { width: auto; }
+
+    button.submit { width: 100%; padding: 16px; border: none; border-radius: 12px; font-family: inherit; font-weight: 900; font-size: 15px; cursor: pointer; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 10px 30px rgba(34,197,94,0.4); margin-top: 20px; }
+    button.submit:hover { transform: translateY(-2px); }
+
+    .hint { font-size: 11px; color: #64748b; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="admin-rail">
+  <div class="rail-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17l2-9 6 4 2-6 2 6 6-4 2 9H2z"/></svg></div>
+  <a href="/panel-admin/dashboard/" class="rail-item" title="کاربران">👥</a>
+  <a href="/panel-admin/alliances/" class="rail-item" title="اتحادها">🛡️</a>
+  <a href="/panel-admin/rooms/" class="rail-item" title="اتاق‌ها">🚪</a>
+  <a href="/panel-admin/rooms/active/" class="rail-item" title="در حال بازی">🎮</a>
+  <a href="/panel-admin/announcements/" class="rail-item" title="اعلان‌ها">📢</a>
+  <a href="/panel-admin/challenges/" class="rail-item" title="چالش">🏆</a>
+  <a href="/panel-admin/support/" class="rail-item" title="پشتیبانی">💬</a>
+  <a href="/panel-admin/shop/" class="rail-item active" title="فروشگاه">🛒</a>
+  <a href="/panel-admin/logout/" class="rail-logout" title="خروج">🚪</a>
+</div>
+
+<div class="admin-content">
+  <a href="/panel-admin/shop/" class="back-link">← بازگشت به فروشگاه</a>
+  <h1>+ آیتم فروشگاه جدید</h1>
+
+  <form method="post" action="/panel-admin/shop/create/">
+    {% csrf_token %}
+
+    <div class="card">
+      <h3>📋 اطلاعات اصلی</h3>
+      <label>نام آیتم</label>
+      <input type="text" name="name" required maxlength="60" placeholder="مثلاً: جعبه شانس طلایی">
+
+      <label>توضیح کوتاه</label>
+      <textarea name="description" maxlength="200" placeholder="توضیح کوتاه..."></textarea>
+
+      <label>آیکون</label>
+      <div class="emoji-picker">
+        <label class="emoji-opt"><input type="radio" name="icon" value="🎁" checked>🎁</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="💎">💎</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="💰">💰</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🎨">🎨</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="⚡">⚡</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🏆">🏆</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🎯">🎯</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🔮">🔮</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💵 قیمت و دسته</h3>
+      <label>دسته</label>
+      <select name="category">
+        <option value="box">جعبه شانس</option>
+        <option value="bundle">بسته ارز</option>
+        <option value="boost">بوست</option>
+        <option value="theme">تم</option>
+        <option value="cosmetic">ظاهری</option>
+      </select>
+
+      <div class="row-2">
+        <div><label>قیمت به سکه</label><input type="number" name="price_coins" min="0" value="0"></div>
+        <div><label>قیمت به جم</label><input type="number" name="price_gems" min="0" value="0"></div>
+      </div>
+
+      <label>موجودی (خالی = نامحدود)</label>
+      <input type="number" name="stock" min="0" placeholder="مثلاً 100">
+    </div>
+
+    <div class="card">
+      <h3>🎁 جایزه هنگام خرید</h3>
+      <label>نوع جایزه</label>
+      <select name="reward_type">
+        <option value="">بدون جایزه (فقط آیتم)</option>
+        <option value="coins_fixed">سکه ثابت</option>
+        <option value="coins_random">سکه تصادفی</option>
+        <option value="gems_fixed">جم ثابت</option>
+        <option value="gems_random">جم تصادفی</option>
+        <option value="theme">فعال‌سازی تم</option>
+        <option value="boost">فعال‌سازی بوست</option>
+      </select>
+
+      <div class="row-3">
+        <div><label>مقدار ثابت</label><input type="number" name="reward_value" value="0"></div>
+        <div><label>حداقل تصادفی</label><input type="number" name="reward_min" value="0"></div>
+        <div><label>حداکثر تصادفی</label><input type="number" name="reward_max" value="0"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>⚙️ ترتیب نمایش</h3>
+      <label>شماره ترتیب (کوچک‌تر = بالاتر)</label>
+      <input type="number" name="sort_order" value="0">
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" name="is_active" id="is_active" checked>
+      <label for="is_active" style="margin: 0;">آیتم به‌صورت پیش‌فرض فعال باشد</label>
+    </div>
+
+    <button type="submit" class="submit">💾 ساخت آیتم</button>
+  </form>
+</div>
+</body>
+</html>

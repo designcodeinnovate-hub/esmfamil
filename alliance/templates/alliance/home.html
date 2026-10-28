@@ -2,97 +2,420 @@
 {% block title %}اتحاد{% endblock %}
 {% block extra_css %}
 <style>
-.hero{padding:26px 22px;background:radial-gradient(circle at 100% 0%,rgba(139,92,246,.4),transparent 55%),radial-gradient(circle at 0% 100%,rgba(236,72,153,.2),transparent 55%),linear-gradient(135deg,#1a0f2e,#170a24,#0f0f1e);border:2px solid rgba(139,92,246,.55);border-radius:24px;margin-bottom:18px;text-align:center;box-shadow:0 15px 40px rgba(139,92,246,.25)}
-.hero .em{font-size:56px;margin-bottom:8px}
-.hero h1{font-size:22px;font-weight:900;margin-bottom:8px;background:linear-gradient(135deg,#e9d5ff,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:18px}
-.cbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 24px;border-radius:16px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;text-decoration:none;font-weight:900;font-size:16px;box-shadow:0 10px 30px rgba(34,197,94,.4)}
-.search{display:flex;gap:8px;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:4px;margin-bottom:18px}
-.search input{flex:1;padding:12px 16px;border-radius:12px;border:none;background:transparent;color:#fff;font-size:15px;font-family:inherit}
-.search input:focus{outline:none}
-.search button{padding:0 20px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6b4eff);color:#fff;border:none;font-weight:bold;font-family:inherit;cursor:pointer;font-size:15px}
-.sect{font-size:15px;color:var(--gold);font-weight:bold;margin:8px 0 14px;display:flex;align-items:center;gap:8px}
-.sect .c{background:rgba(244,197,66,.15);padding:3px 10px;border-radius:8px;font-size:11px;font-family:monospace}
-.list{display:flex;flex-direction:column;gap:10px}
-.card{display:flex;align-items:center;gap:14px;padding:16px;background:var(--card);border:1.5px solid var(--border);border-radius:18px;transition:.2s}
-.card:hover{border-color:rgba(139,92,246,.6);transform:translateX(-3px)}
-.card.full{opacity:.6}
-.emb{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(139,92,246,.3),rgba(6,182,212,.15));border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
-.info{flex:1;min-width:0}
-.name-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.name{font-size:15px;font-weight:bold;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag{background:var(--gold);color:#1a1a1a;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:900;font-family:monospace}
-.meta{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.jbtn{padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6b4eff);color:#fff;border:none;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;flex-shrink:0}
-.jbtn.full{background:rgba(148,163,184,.2);cursor:not-allowed}
-.empty{text-align:center;padding:50px 20px;background:var(--card);border:1.5px dashed var(--border);border-radius:20px}
-.empty .em{font-size:60px;margin-bottom:14px;display:block;opacity:.5}
-.empty h3{font-size:17px;margin-bottom:8px}
-.empty p{color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.6}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;padding:20px}
-.modal-bg.active{display:flex}
-.modal{background:linear-gradient(135deg,rgba(30,41,59,.98),rgba(15,23,42,.98));border:1.5px solid rgba(139,92,246,.5);border-radius:22px;padding:26px 22px;max-width:380px;width:100%;text-align:center}
-.modal .em{font-size:48px;margin-bottom:10px}
-.modal h3{font-size:18px;color:#c4b5fd;margin-bottom:6px}
-.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
-.modal input{width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:#fff;font-size:16px;font-family:monospace;text-align:center;letter-spacing:3px;margin-bottom:14px;box-sizing:border-box}
-.acts{display:flex;gap:8px}
-.acts button{flex:1;padding:12px;border-radius:12px;font-family:inherit;font-weight:bold;font-size:14px;cursor:pointer;border:none}
-.bok{background:linear-gradient(135deg,#8b5cf6,#6b4eff);color:#fff}
-.bno{background:rgba(148,163,184,.2);color:#fff}
+  /* ========== Sticky Top Bar (سبک بله) ========== */
+  .contacts-top {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,10,21,0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 16px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .ctb-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+  .ctb-title .badge {
+    font-size: 11px; padding: 2px 8px;
+    background: var(--gold); color: #000;
+    border-radius: 10px; font-weight: 900;
+  }
+  .ctb-search {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: rgba(30,41,59,0.8);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 9px 12px;
+    cursor: pointer; transition: 0.2s; min-width: 0;
+  }
+  .ctb-search:hover { border-color: var(--teal); }
+  .ctb-search span { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ctb-btn {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.4);
+    color: #c4b5fd; font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.2s; flex-shrink: 0;
+    text-decoration: none; font-family: inherit;
+  }
+  .ctb-btn:hover { background: rgba(139,92,246,0.3); border-color: rgba(139,92,246,0.7); }
+  .ctb-btn.create {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-color: rgba(34,197,94,0.5); color: #fff;
+    box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+  }
+  .ctb-btn.create:hover { box-shadow: 0 6px 20px rgba(34,197,94,0.5); }
+
+  /* ========== My Alliance Card ========== */
+  .my-alliance {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px; margin-bottom: 16px;
+    background: radial-gradient(circle at 100% 0%, rgba(34,197,94,0.3), transparent 60%),
+                linear-gradient(135deg, #0a1f0f, #0f1e15);
+    border: 1.5px solid rgba(34,197,94,0.55);
+    border-radius: 18px;
+    text-decoration: none; color: #fff;
+    box-shadow: 0 8px 25px rgba(34,197,94,0.2);
+    transition: 0.22s;
+  }
+  .my-alliance:hover {
+    transform: translateY(-2px);
+    border-color: rgba(34,197,94,0.9);
+    box-shadow: 0 15px 35px rgba(34,197,94,0.35);
+  }
+  .ma-icon {
+    font-size: 32px; width: 54px; height: 54px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(34,197,94,0.35), rgba(6,182,212,0.15));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(34,197,94,0.4);
+  }
+  .ma-body { flex: 1; min-width: 0; }
+  .ma-title {
+    font-size: 16px; font-weight: bold; margin-bottom: 3px; color: #86efac;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .ma-tag {
+    font-size: 10px; color: #1a1a1a; background: var(--gold);
+    padding: 2px 8px; border-radius: 6px;
+    font-family: monospace; font-weight: bold;
+  }
+  .ma-desc { font-size: 12px; color: var(--muted); }
+  .ma-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .ma-btn {
+    padding: 8px 12px; border-radius: 10px; border: none;
+    font-family: inherit; font-weight: bold; font-size: 12px;
+    cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+    transition: 0.2s;
+  }
+  .ma-btn.chat {
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(139,92,246,0.4);
+  }
+  .ma-btn.chat:hover { transform: scale(1.05); }
+
+  /* ========== Section title ========== */
+  .section-title {
+    font-size: 15px; color: var(--text); margin: 18px 0 12px;
+    font-weight: bold; display: flex; align-items: center; gap: 8px;
+  }
+  .badge-count {
+    background: var(--gold); color: #000;
+    font-size: 12px; padding: 2px 8px; border-radius: 10px;
+    font-weight: 900;
+  }
+
+  /* ========== Alliance Row (compact) ========== */
+  .alliance-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; margin-bottom: 8px;
+    background: rgba(30,41,59,0.55);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: #fff;
+    transition: 0.18s;
+    text-decoration: none;
+  }
+  .alliance-row:hover { border-color: rgba(139,92,246,0.6); background: rgba(30,41,59,0.85); transform: translateX(-2px); }
+  .alliance-row.full { opacity: 0.55; pointer-events: none; }
+  .ar-icon {
+    width: 46px; height: 46px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.15));
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .ar-body { flex: 1; min-width: 0; }
+  .ar-name {
+    font-size: 14px; font-weight: bold; color: #fff;
+    margin-bottom: 3px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .ar-tag {
+    font-size: 9px; color: #1a1a1a; background: var(--gold);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: monospace; font-weight: 900;
+  }
+  .ar-lock { font-size: 12px; }
+  .ar-meta {
+    font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ar-arrow { color: var(--dim); font-size: 18px; flex-shrink: 0; }
+
+  /* ========== Join button ========== */
+  .btn-join {
+    padding: 9px 14px; border-radius: 10px; border: none;
+    font-family: inherit; font-weight: bold; font-size: 12px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #8b5cf6, #6b4eff);
+    color: #fff; flex-shrink: 0;
+    transition: 0.2s;
+  }
+  .btn-join:hover { transform: scale(1.05); }
+  .btn-join.locked { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .btn-join.full {
+    background: rgba(148,163,184,0.2); color: #94a3b8;
+    cursor: not-allowed;
+  }
+  .btn-join.full:hover { transform: none; }
+
+  /* ========== Drawer (سبک بله) ========== */
+  .drawer-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.28s; z-index: 998;
+  }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .alliance-drawer {
+    position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+    background: var(--bg);
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(.2,.8,.2,1);
+    z-index: 999;
+    display: flex; flex-direction: column;
+  }
+  .alliance-drawer.open { transform: translateY(0); }
+  .drawer-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    background: rgba(10,10,21,0.98);
+    border-bottom: 1px solid var(--border);
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  .drawer-back {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: #fff; font-size: 18px;
+    cursor: pointer; flex-shrink: 0;
+    font-family: inherit; transition: 0.2s;
+  }
+  .drawer-back:hover { background: rgba(255,255,255,0.12); }
+  .drawer-search {
+    flex: 1; padding: 10px 14px; border-radius: 12px;
+    background: rgba(30,41,59,0.8);
+    border: 1px solid var(--border);
+    color: #fff; font-size: 14px; font-family: inherit;
+    min-width: 0;
+  }
+  .drawer-search:focus { outline: none; border-color: var(--teal); }
+  .drawer-body {
+    flex: 1; overflow-y: auto;
+    padding: 12px 16px 40px;
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+  }
+  .drawer-body::-webkit-scrollbar { width: 5px; }
+  .drawer-body::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 5px; }
+
+  /* ========== Empty ========== */
+  .empty {
+    text-align: center; padding: 40px 20px;
+    background: var(--card);
+    border: 1.5px dashed var(--border);
+    border-radius: 20px;
+  }
+  .empty .em { font-size: 56px; margin-bottom: 12px; display: block; opacity: 0.5; }
+  .empty h3 { font-size: 16px; margin-bottom: 8px; }
+  .empty p { color: var(--muted); font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
+  .empty .cta {
+    display: inline-block;
+    padding: 12px 22px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff; text-decoration: none; font-weight: bold; font-size: 14px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(34,197,94,0.35);
+  }
+
+  /* ========== Password modal ========== */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.active { display: flex; }
+  .modal {
+    background: linear-gradient(135deg, rgba(30,41,59,0.98), rgba(15,23,42,0.98));
+    border: 1.5px solid rgba(139,92,246,0.5);
+    border-radius: 22px; padding: 26px 22px;
+    max-width: 380px; width: 100%; text-align: center;
+  }
+  .modal .em { font-size: 48px; margin-bottom: 10px; }
+  .modal h3 { font-size: 18px; color: #c4b5fd; margin-bottom: 6px; }
+  .modal p { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+  .modal input {
+    width: 100%; padding: 14px; border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: #fff;
+    font-size: 16px; font-family: monospace;
+    text-align: center; letter-spacing: 3px;
+    margin-bottom: 14px; box-sizing: border-box;
+  }
+  .modal input:focus { outline: none; border-color: var(--teal); }
+  .modal-acts { display: flex; gap: 8px; }
+  .modal-acts button {
+    flex: 1; padding: 12px; border-radius: 12px;
+    font-family: inherit; font-weight: bold; font-size: 14px;
+    cursor: pointer; border: none;
+  }
+  .bok { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; }
+  .bno { background: rgba(148,163,184,0.2); color: #fff; }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="hero">
-  <div class="em">🛡️</div>
-  <h1>اتحاد</h1>
-  <p>با دوستانت یه تیم بساز،<br>با هم بازی کن و به بالای جدول برس!</p>
-  <a href="/alliance/create/" class="cbtn">+ ساخت اتحاد جدید</a>
+
+<!-- ========== Sticky Top Bar ========== -->
+<div class="contacts-top">
+  <div class="ctb-title">
+    🛡️ اتحادها
+    <span class="badge">{{ alliances|length }}</span>
+  </div>
+  <div class="ctb-search" onclick="openDrawer()">
+    <span>🔍</span>
+    <span>{% if query %}«{{ query }}»{% else %}جستجو در اتحادها...{% endif %}</span>
+  </div>
+  <a href="/alliance/create/" class="ctb-btn create" title="ساخت اتحاد">+</a>
+  <button class="ctb-btn" onclick="openDrawer()" title="همه اتحادها">☰</button>
 </div>
 
-<form method="get" class="search">
-  <input type="text" name="q" placeholder="جستجو..." value="{{ query }}" autocomplete="off">
-  <button type="submit">🔍</button>
-</form>
-
-<div class="sect"><span>🌍 اتحادهای فعال</span><span class="c">{{ alliances|length }}</span></div>
-
-{% if alliances %}
-<div class="list">
-{% for a in alliances %}
-  <div class="card {% if a.is_full %}full{% endif %}">
-    <div class="emb">{{ a.obj.emblem }}</div>
-    <div class="info">
-      <div class="name-row">
-        <div class="name">{{ a.obj.name }}</div>
-        {% if a.obj.tag %}<span class="tag">{{ a.obj.tag }}</span>{% endif %}
-        {% if a.has_password %}<span>🔒</span>{% endif %}
+<!-- ========== My Alliance Card ========== -->
+{% if my_alliance %}
+  <a href="/alliance/{{ my_alliance.id }}/" class="my-alliance">
+    <div class="ma-icon">{{ my_alliance.emblem }}</div>
+    <div class="ma-body">
+      <div class="ma-title">
+        {{ my_alliance.name }}
+        {% if my_alliance.tag %}<span class="ma-tag">{{ my_alliance.tag }}</span>{% endif %}
       </div>
-      <div class="meta">
-        <span>{{ a.leader_avatar }} {{ a.obj.leader.alias }}</span>
-        <span>•</span>
-        <span>{{ a.count }} / {{ a.obj.max_members }}</span>
+      <div class="ma-desc">
+        {{ my_alliance.member_count }} / {{ my_alliance.max_members }} عضو · {{ my_alliance.role_display }}
       </div>
     </div>
-    {% if a.is_full %}
-      <button class="jbtn full" disabled>پر</button>
-    {% elif a.has_password %}
-      <button class="jbtn" onclick="openPass({{ a.obj.id }}, '{{ a.obj.name|escapejs }}')">🔐</button>
-    {% else %}
-      <form method="post" action="/alliance/join-id/{{ a.obj.id }}/" style="margin:0;">
-        {% csrf_token %}
-        <button type="submit" class="jbtn">ورود</button>
-      </form>
-    {% endif %}
-  </div>
-{% endfor %}
-</div>
-{% elif query %}
-<div class="empty"><span class="em">🔍</span><h3>نتیجه‌ای پیدا نشد</h3><p>اتحادی با این مشخصات نیست.</p><a href="/alliance/" class="jbtn" style="display:inline-block;padding:12px 22px;">پاک کردن</a></div>
-{% else %}
-<div class="empty"><span class="em">🏰</span><h3>هنوز اتحادی نیست!</h3><p>اولین نفری باش که یه اتحاد می‌سازه</p><a href="/alliance/create/" class="cbtn" style="max-width:280px;margin:0 auto;">+ ساخت اولین اتحاد</a></div>
+    <div class="ma-actions">
+      <a href="/alliance/{{ my_alliance.id }}/chat/" class="ma-btn chat" onclick="event.stopPropagation()">💬 چت</a>
+    </div>
+  </a>
 {% endif %}
 
+<!-- ========== Alliance Preview (۶ تای اول) ========== -->
+<div class="section-title">🌍 اتحادهای فعال <span class="badge-count">{{ alliances|length }}</span></div>
+
+{% if alliances %}
+  {% for a in alliances|slice:":6" %}
+    {% if a.is_full %}
+      <div class="alliance-row full">
+        <div class="ar-icon">{{ a.obj.emblem }}</div>
+        <div class="ar-body">
+          <div class="ar-name">{{ a.obj.name }} {% if a.obj.tag %}<span class="ar-tag">{{ a.obj.tag }}</span>{% endif %}</div>
+          <div class="ar-meta">{{ a.leader_avatar }} {{ a.obj.leader.alias }} · {{ a.count }}/{{ a.obj.max_members }}</div>
+        </div>
+        <button class="btn-join full" disabled>پر</button>
+      </div>
+    {% else %}
+      <div class="alliance-row">
+        <div class="ar-icon">{{ a.obj.emblem }}</div>
+        <a href="/alliance/{{ a.obj.id }}/" style="flex:1;min-width:0;text-decoration:none;color:inherit;">
+          <div class="ar-body">
+            <div class="ar-name">
+              {{ a.obj.name }}
+              {% if a.obj.tag %}<span class="ar-tag">{{ a.obj.tag }}</span>{% endif %}
+              {% if a.has_password %}<span class="ar-lock">🔒</span>{% endif %}
+            </div>
+            <div class="ar-meta">{{ a.leader_avatar }} {{ a.obj.leader.alias }} · {{ a.count }}/{{ a.obj.max_members }}</div>
+          </div>
+        </a>
+        {% if a.has_password %}
+          <button class="btn-join locked" onclick="openPass({{ a.obj.id }}, '{{ a.obj.name|escapejs }}')">🔐</button>
+        {% else %}
+          <form method="post" action="/alliance/join-id/{{ a.obj.id }}/" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn-join">ورود</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endfor %}
+
+  {% if alliances|length > 6 %}
+    <button onclick="openDrawer()" style="width:100%;padding:13px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:14px;color:#c4b5fd;font-family:inherit;font-weight:bold;font-size:14px;cursor:pointer;margin-top:10px;">
+      نمایش همه {{ alliances|length }} اتحاد ←
+    </button>
+  {% endif %}
+{% elif query %}
+  <div class="empty">
+    <span class="em">🔍</span>
+    <h3>نتیجه‌ای پیدا نشد</h3>
+    <p>اتحادی با «{{ query }}» نیست.</p>
+    <a href="/alliance/" class="cta">پاک کردن جستجو</a>
+  </div>
+{% else %}
+  <div class="empty">
+    <span class="em">🏰</span>
+    <h3>هنوز اتحادی نیست!</h3>
+    <p>اولین نفری باش که یه اتحاد می‌سازه</p>
+    <a href="/alliance/create/" class="cta">+ ساخت اولین اتحاد</a>
+  </div>
+{% endif %}
+
+<!-- ========== DRAWER (سبک بله) ========== -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="alliance-drawer" id="allianceDrawer">
+  <div class="drawer-head">
+    <button class="drawer-back" onclick="closeDrawer()">→</button>
+    <input type="text" class="drawer-search" placeholder="جستجو در اتحادها..."
+           id="drawerSearch" value="{{ query }}" oninput="filterAlliances(this.value)">
+    <a href="/alliance/create/" class="ctb-btn create" style="width:38px;height:38px;">+</a>
+  </div>
+  <div class="drawer-body">
+    {% if alliances %}
+      {% for a in alliances %}
+        <div class="alliance-row {% if a.is_full %}full{% endif %}" data-name="{{ a.obj.name|lower }} {{ a.obj.tag|default:''|lower }}">
+          <div class="ar-icon">{{ a.obj.emblem }}</div>
+          <a href="/alliance/{{ a.obj.id }}/" style="flex:1;min-width:0;text-decoration:none;color:inherit;">
+            <div class="ar-body">
+              <div class="ar-name">
+                {{ a.obj.name }}
+                {% if a.obj.tag %}<span class="ar-tag">{{ a.obj.tag }}</span>{% endif %}
+                {% if a.has_password %}<span class="ar-lock">🔒</span>{% endif %}
+              </div>
+              <div class="ar-meta">{{ a.leader_avatar }} {{ a.obj.leader.alias }} · {{ a.count }}/{{ a.obj.max_members }}</div>
+            </div>
+          </a>
+          {% if a.is_full %}
+            <button class="btn-join full" disabled>پر</button>
+          {% elif a.has_password %}
+            <button class="btn-join locked" onclick="openPass({{ a.obj.id }}, '{{ a.obj.name|escapejs }}')">🔐</button>
+          {% else %}
+            <form method="post" action="/alliance/join-id/{{ a.obj.id }}/" style="margin:0;">
+              {% csrf_token %}
+              <button type="submit" class="btn-join">ورود</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:40px;color:var(--muted);">اتحادی نیست.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ========== Password Modal ========== -->
 <div class="modal-bg" id="passModal">
   <div class="modal">
     <div class="em">🔐</div>
@@ -101,24 +424,52 @@
     <form method="post" id="passForm">
       {% csrf_token %}
       <input type="password" name="password" placeholder="رمز" required>
-      <div class="acts">
+      <div class="modal-acts">
         <button type="submit" class="bok">ورود</button>
         <button type="button" class="bno" onclick="closePass()">انصراف</button>
       </div>
     </form>
   </div>
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
-function openPass(id, name){
+function openDrawer() {
+  document.getElementById('allianceDrawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('drawerSearch').focus(), 350);
+}
+function closeDrawer() {
+  document.getElementById('allianceDrawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function filterAlliances(q) {
+  q = q.trim().toLowerCase();
+  document.querySelectorAll('#allianceDrawer .alliance-row').forEach(row => {
+    const name = row.dataset.name || '';
+    row.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+}
+
+function openPass(id, name) {
   document.getElementById('passForm').action = '/alliance/join-id/' + id + '/';
   document.getElementById('passName').textContent = name;
   document.getElementById('passModal').classList.add('active');
 }
-function closePass(){ document.getElementById('passModal').classList.remove('active'); }
-document.getElementById('passModal').addEventListener('click', function(e){
+function closePass() { document.getElementById('passModal').classList.remove('active'); }
+document.getElementById('passModal').addEventListener('click', e => {
   if (e.target.id === 'passModal') closePass();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeDrawer();
+    closePass();
+  }
 });
 </script>
 {% endblock %}

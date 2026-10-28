@@ -69,7 +69,6 @@ def friends_home(request):
             "id": a.id,
             "name": a.name,
             "emblem": a.emblem,
-            "tag": a.tag,
             "member_count": a.member_count(),
             "max_members": a.max_members,
             "role": membership.role,
@@ -87,10 +86,8 @@ def friends_home(request):
                     "id": a.id,
                     "name": a.name,
                     "emblem": a.emblem,
-                    "tag": a.tag,
-                    "member_count": count,
+                            "member_count": count,
                     "max_members": a.max_members,
-                    "has_password": bool(a.password),
                     "leader_avatar": _avatar_of(a.leader),
                 })
 
@@ -304,3 +301,175 @@ def notifications_view(request):
         "unread_total": unread,
         "active": "home",
     })
+
+# ============================================================
+# Direct Chat API — for the 1-on-1 chat page
+# ============================================================
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST, require_GET
+from .models import DirectChat, DirectMessage
+
+
+def _are_friends(user_a, user_b):
+    """True if both sides have an accepted friendship."""
+    if user_a.id == user_b.id:
+        return False
+    return Friendship.objects.filter(
+        (Q(from_user=user_a, to_user=user_b, status="accepted")) |
+        (Q(from_user=user_b, to_user=user_a, status="accepted"))
+    ).exists()
+
+
+def _get_chat_between(user_a, user_b):
+    """Get (or create) the canonical chat between two users."""
+    if user_a.id > user_b.id:
+        user_a, user_b = user_b, user_a
+    chat, _ = DirectChat.objects.get_or_create(user1=user_a, user2=user_b)
+    return chat
+
+
+@login_required
+@require_POST
+def chat_send(request, user_id):
+    """POST body: 'body'
+    Returns { ok: True, message: {...} } on success.
+    """
+    other = get_object_or_404(User, id=user_id)
+
+    if other.id == request.user.id:
+        return JsonResponse({"error": "cannot_message_self"}, status=400)
+
+    if not _are_friends(request.user, other):
+        return JsonResponse({"error": "not_friends"}, status=403)
+
+    body = (request.POST.get("body") or "").strip()[:2000]
+    if not body:
+        return JsonResponse({"error": "empty"}, status=400)
+
+    chat = _get_chat_between(request.user, other)
+
+    # Un-delete the chat for both sides (new message revives it)
+    chat.user1_deleted_at = None
+    chat.user2_deleted_at = None
+    chat.last_message_at = timezone.now()
+    chat.save(update_fields=["user1_deleted_at", "user2_deleted_at", "last_message_at"])
+
+    # Also reset any previously-deleted messages' visibility for the sender's new view
+    msg = DirectMessage.objects.create(
+        chat=chat,
+        sender=request.user,
+        body=body,
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "chat_id": chat.id,
+        "message": {
+            "id": msg.id,
+            "body": msg.body,
+            "is_mine": True,
+            "sent_at": msg.sent_at.isoformat(),
+            "is_read": False,
+        }
+    })
+
+
+@login_required
+@require_GET
+def chat_messages(request, user_id):
+    """Returns all visible messages between me and `user_id`.
+    Also marks incoming messages as read.
+    """
+    other = get_object_or_404(User, id=user_id)
+
+    if not _are_friends(request.user, other):
+        return JsonResponse({"error": "not_friends"}, status=403)
+
+    chat = DirectChat.objects.filter(
+        (Q(user1=request.user, user2=other)) |
+        (Q(user1=other, user2=request.user))
+    ).first()
+
+    if not chat:
+        return JsonResponse({
+            "chat_id": None,
+            "messages": [],
+            "other": {
+                "id": other.id,
+                "alias": other.alias,
+                "username": other.username,
+                "avatar_type": getattr(other, "avatar_type", "emoji"),
+                "avatar_id": other.avatar_id,
+            }
+        })
+
+    # Mark incoming as read
+    DirectMessage.objects.filter(
+        chat=chat, is_read=False
+    ).exclude(sender=request.user).update(is_read=True)
+
+    # Load visible messages
+    msgs = list(chat.messages.all().order_by("sent_at"))
+    data = []
+    for m in msgs:
+        if not m.visible_to(request.user):
+            continue
+        data.append({
+            "id": m.id,
+            "body": m.body,
+            "is_mine": m.sender_id == request.user.id,
+            "sent_at": m.sent_at.isoformat(),
+            "is_read": m.is_read,
+        })
+
+    return JsonResponse({
+        "chat_id": chat.id,
+        "messages": data,
+        "other": {
+            "id": other.id,
+            "alias": other.alias,
+            "username": other.username,
+            "avatar_type": getattr(other, "avatar_type", "emoji"),
+            "avatar_id": other.avatar_id,
+        }
+    })
+
+
+@login_required
+@require_POST
+def chat_clear(request, user_id):
+    """Soft-delete the entire conversation for the current user only."""
+    other = get_object_or_404(User, id=user_id)
+
+    if not _are_friends(request.user, other):
+        return JsonResponse({"error": "not_friends"}, status=403)
+
+    chat = DirectChat.objects.filter(
+        (Q(user1=request.user, user2=other)) |
+        (Q(user1=other, user2=request.user))
+    ).first()
+
+    if not chat:
+        return JsonResponse({"ok": True})
+
+    now = timezone.now()
+
+    # Soft-delete all messages FROM me for me
+    DirectMessage.objects.filter(
+        chat=chat, sender=request.user
+    ).update(deleted_by_sender=True)
+
+    # Soft-delete all messages TO me for me
+    DirectMessage.objects.filter(chat=chat).exclude(
+        sender=request.user
+    ).update(deleted_by_receiver=True)
+
+    # Mark conversation as cleared for me
+    if chat.user1_id == request.user.id:
+        chat.user1_deleted_at = now
+    else:
+        chat.user2_deleted_at = now
+    chat.save(update_fields=["user1_deleted_at", "user2_deleted_at"])
+
+    return JsonResponse({"ok": True})
+

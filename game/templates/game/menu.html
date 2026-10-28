@@ -3,7 +3,6 @@
 
 {% block extra_css %}
 <style>
-  /* ============ ANIMATED DOTS BACKGROUND ============ */
   .bg-pattern { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   .bg-pattern::before, .bg-pattern::after {
     content: ""; position: absolute; inset: -50%;
@@ -30,162 +29,430 @@
     to { transform: translateY(-50px) scale(1); opacity: 0; }
   }
 
-  /* ============ TOP BAR ============ */
-  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: relative; z-index: 2; }
-  .version-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(234,179,8,0.15); color: #facc15; font-size: 10px; padding: 5px 10px; border-radius: 10px; border: 1px solid rgba(234,179,8,0.3); font-weight: bold; }
-  .btn-settings-b { width: 42px; height: 42px; border-radius: 14px; background: rgba(30,41,59,0.9); border: 1.5px solid rgba(148,163,184,0.2); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; transition: all 0.2s; }
-  .btn-settings-b:hover { border-color: #f4c542; transform: rotate(45deg); }
+  /* ============ TOP LAYOUT ============ */
+  .top-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 5;
+  }
 
-  /* ============ PROFILE OVAL ============ */
-  .profile-wrap { position: relative; z-index: 5; margin-bottom: 18px; }
-  .profile-oval {
-    display: flex; align-items: center; gap: 0; padding: 6px;
-    width: 62px; height: 62px; border-radius: 31px;
-    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.35), transparent 60%),
-                radial-gradient(circle at 0% 100%, rgba(139,92,246,0.25), transparent 60%),
-                linear-gradient(135deg, #1a1a2e, #0f0f1e);
-    border: 2.5px solid rgba(244,197,66,0.6);
-    cursor: pointer; transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden; margin-right: auto;
-    box-shadow: 0 0 25px rgba(244,197,66,0.3);
-  }
-  .profile-oval:hover { border-color: #fde68a; box-shadow: 0 0 40px rgba(244,197,66,0.6); }
-  .profile-oval.expanded {
-    width: 100%; height: 90px; border-radius: 45px;
-    padding: 14px 18px; gap: 14px;
-    box-shadow: 0 15px 45px rgba(244,197,66,0.4);
-  }
-  .po-av {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; border: 2px solid #f4c542;
-    box-shadow: 0 0 15px rgba(244,197,66,0.5);
-    overflow: hidden; background-size: cover; background-position: center;
-    flex-shrink: 0; transition: all 0.4s;
-  }
-  .profile-oval.expanded .po-av { width: 62px; height: 62px; font-size: 30px; box-shadow: 0 0 25px rgba(244,197,66,0.8); }
-  .po-details {
-    flex: 1; min-width: 0; max-width: 0; opacity: 0; overflow: hidden;
-    transition: all 0.4s; text-align: right; white-space: nowrap;
-  }
-  .profile-oval.expanded .po-details { max-width: 400px; opacity: 1; }
-  .po-name { font-size: 16px; font-weight: 900; color: #fde68a; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; }
-  .po-meta { display: flex; gap: 8px; font-size: 11px; color: #94a3b8; align-items: center; }
-  .po-meta .lvl { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; padding: 2px 8px; border-radius: 8px; font-family: monospace; font-weight: 900; font-size: 10px; }
-  .po-chevron { color: #f4c542; font-size: 14px; transition: transform 0.4s; flex-shrink: 0; }
-  .profile-oval.expanded .po-chevron { transform: rotate(180deg); }
-
-  /* ============ CIRCLE BUTTONS (top players + shop) ============ */
-  /* ============ CIRCLE BUTTONS (small, vertical) ============ */
-  .circle-row {
+  .left-stack {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
-    margin-bottom: 18px;
+    flex-shrink: 0;
+  }
+
+  .btn-settings-b {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--card), #0f0f1e);
+    border: 2px solid rgba(148,163,184,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 24px;
+    flex-shrink: 0;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .btn-settings-b:hover {
+    border-color: var(--gold);
+    transform: rotate(45deg) scale(1.08);
+    box-shadow: 0 8px 20px rgba(244,197,66,0.3);
+  }
+
+  .right-stack {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  /* ============ CIRCLE BUTTONS ============ */
+  .circle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .circle-btn:hover { transform: scale(1.08); }
+  .circle-btn:active { transform: scale(0.95); }
+
+  .cb-circle {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border: 2px solid;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .cb-circle::before {
+    content: "";
+    position: absolute;
+    inset: -100%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.22), transparent);
+    animation: rotate360 8s linear infinite;
+    opacity: 0.55;
+  }
+  @keyframes rotate360 { to { transform: rotate(360deg); } }
+  .cb-circle > * { position: relative; z-index: 1; }
+
+  .cb-daily {
+    background: radial-gradient(circle at 30% 30%, rgba(244,197,66,0.45), rgba(234,179,8,0.15));
+    border-color: rgba(244,197,66,0.75);
+    box-shadow: 0 0 22px rgba(244,197,66,0.5);
+  }
+  .cb-daily.has-reward { animation: dailyPulse 2s ease-in-out infinite; }
+  @keyframes dailyPulse {
+    0%,100% { box-shadow: 0 0 22px rgba(244,197,66,0.5); }
+    50% { box-shadow: 0 0 38px rgba(244,197,66,1); }
+  }
+  .cb-top {
+    background: radial-gradient(circle at 30% 30%, rgba(244,197,66,0.35), rgba(234,179,8,0.1));
+    border-color: rgba(244,197,66,0.6);
+    box-shadow: 0 0 18px rgba(244,197,66,0.35);
+  }
+  .cb-shop {
+    background: radial-gradient(circle at 30% 30%, rgba(6,182,212,0.45), rgba(34,197,94,0.15));
+    border-color: rgba(6,182,212,0.75);
+    box-shadow: 0 0 20px rgba(6,182,212,0.45);
+  }
+
+  .daily-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid #0a0a15;
+    box-shadow: 0 0 12px rgba(239,68,68,0.9);
+    animation: dotPulseDaily 1.5s infinite;
+    z-index: 10;
+  }
+  @keyframes dotPulseDaily {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+
+  /* ============ PROFILE OVAL ============ */
+  .profile-oval {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 6px;
+    height: 72px;
+    width: 72px;
+    border-radius: 36px;
+    background: radial-gradient(circle at 100% 0%, rgba(244,197,66,0.35), transparent 60%),
+                radial-gradient(circle at 0% 100%, rgba(139,92,246,0.3), transparent 60%),
+                linear-gradient(135deg, #1a1a2e, #0f0f1e);
+    border: 2.5px solid rgba(244,197,66,0.65);
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 28px rgba(244,197,66,0.35);
+    flex-shrink: 0;
+    align-self: flex-end;
+  }
+  .profile-oval:hover {
+    border-color: #fde68a;
+    box-shadow: 0 0 45px rgba(244,197,66,0.6);
+  }
+
+  .profile-oval.expanded {
+    width: 100%;
+    max-width: 460px;
+    height: 112px;
+    border-radius: 56px;
+    padding: 8px 16px;
+    gap: 14px;
+    box-shadow: 0 15px 50px rgba(244,197,66,0.5);
+    border-color: #fde68a;
+  }
+
+  .po-av {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    border: 2px solid #f4c542;
+    box-shadow: 0 0 16px rgba(244,197,66,0.55);
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    transition: all 0.4s;
+  }
+  .profile-oval.expanded .po-av {
+    width: 78px;
+    height: 78px;
+    font-size: 38px;
+    box-shadow: 0 0 28px rgba(244,197,66,0.9);
+  }
+
+  .po-details {
+    flex: 1;
+    min-width: 0;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.4s;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .profile-oval.expanded .po-details {
+    max-width: 100%;
+    opacity: 1;
+    white-space: normal;
+  }
+
+  .po-row-1 {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .po-name {
+    font-size: 17px;
+    font-weight: 900;
+    color: #fde68a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .po-username {
+    font-size: 11px;
+    color: #64748b;
+    font-family: monospace;
+  }
+
+  .po-pills {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .po-pill {
+    font-size: 10.5px;
+    padding: 2px 9px;
+    border-radius: 7px;
+    font-family: monospace;
+    font-weight: 900;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    line-height: 1.5;
+  }
+  .po-pill-lvl   { background: linear-gradient(135deg, #8b5cf6, #6b4eff); color: #fff; }
+  .po-pill-coins { background: rgba(244,197,66,0.18); color: #fde68a; border: 1px solid rgba(244,197,66,0.4); }
+  .po-pill-gems  { background: rgba(6,182,212,0.18); color: #67e8f9; border: 1px solid rgba(6,182,212,0.4); }
+  .po-pill-games { background: rgba(59,130,246,0.18); color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+  .po-pill-score { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
+
+  .po-level-bar { display: none; width: 100%; }
+  .profile-oval.expanded .po-level-bar {
+    display: block;
+    animation: fadeIn 0.4s 0.1s both;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+
+  .po-level-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    font-family: monospace;
+  }
+  .po-level-text .v { color: #fde68a; font-weight: 900; }
+  .po-bar-track {
+    height: 8px;
+    background: rgba(148,163,184,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .po-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #f4c542);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(139,92,246,0.7);
+    transition: width 0.6s;
+  }
+
+  .po-chevron {
+    color: #f4c542;
+    font-size: 12px;
+    transition: transform 0.4s;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .profile-oval.expanded .po-chevron {
+    display: none;
+  }
+
+  .guest-warning {
+    background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(249,115,22,0.08));
+    border: 1.5px solid rgba(234,179,8,0.35);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+    font-size: 12px;
+    color: #fde68a;
+  }
+  .guest-warning .gw-logout {
+    background: rgba(244,197,66,0.9);
+    color: #1a1a1a;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin: 20px 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
     position: relative;
     z-index: 2;
   }
-  .circle-btn {
-    display: flex;
+  .section-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(148,163,184,0.3), transparent);
+  }
+  .beta-tag {
+    display: inline-flex;
     align-items: center;
+    gap: 3px;
+    background: rgba(234,179,8,0.15);
+    color: #facc15;
+    font-size: 9px;
+    padding: 3px 9px;
+    border-radius: 8px;
+    border: 1px solid rgba(234,179,8,0.35);
+    font-weight: 900;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-left: auto;
+    margin-right: 8px;
+  }
+
+  .sq-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    cursor: pointer;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 2;
+  }
+  .sq-tile {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-radius: 20px;
     text-decoration: none;
     color: #fff;
-    transition: transform 0.2s;
-  }
-  .circle-btn:hover { transform: translateX(-3px); }
-  .circle-btn:active { transform: scale(0.95); }
-  .cb-circle {
-    width: 48px; height: 48px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; border: 2px solid;
-    position: relative; overflow: hidden;
-    transition: all 0.3s;
-    flex-shrink: 0;
-  }
-  .cb-circle::before {
-    content: ""; position: absolute; inset: -100%;
-    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: rotate360 8s linear infinite;
-    opacity: 0.6;
-  }
-  .cb-circle > * { position: relative; z-index: 1; }
-  @keyframes rotate360 { to { transform: rotate(360deg); } }
-
-  .cb-top {
-    background: radial-gradient(circle at 30% 30%, rgba(244,197,66,0.4), rgba(234,179,8,0.15));
-    border-color: rgba(244,197,66,0.7);
-    box-shadow: 0 0 15px rgba(244,197,66,0.4), inset 0 0 10px rgba(244,197,66,0.2);
-  }
-  .circle-btn:hover .cb-top {
-    box-shadow: 0 0 28px rgba(244,197,66,0.9), inset 0 0 15px rgba(244,197,66,0.4);
-    border-color: #fde68a;
-  }
-  .cb-shop {
-    background: radial-gradient(circle at 30% 30%, rgba(6,182,212,0.4), rgba(34,197,94,0.15));
-    border-color: rgba(6,182,212,0.7);
-    box-shadow: 0 0 15px rgba(6,182,212,0.4), inset 0 0 10px rgba(6,182,212,0.2);
-  }
-  .circle-btn:hover .cb-shop {
-    box-shadow: 0 0 28px rgba(6,182,212,0.9), inset 0 0 15px rgba(6,182,212,0.4);
-    border-color: #67e8f9;
-  }
-  .cb-label { font-size: 13px; font-weight: 900; letter-spacing: 0.3px; }
-  .cb-top-label { color: #fde68a; }
-  .cb-shop-label { color: #67e8f9; }
-
-  /* ============ 3 SQUARE TILES ============ */
-  .section-label {
-    font-size: 11px; color: #94a3b8; font-weight: 900; letter-spacing: 2px;
-    margin: 20px 4px 12px; display: flex; align-items: center; gap: 8px;
-    text-transform: uppercase; position: relative; z-index: 2;
-  }
-  .section-label::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(148,163,184,0.3), transparent); }
-
-  .sq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; position: relative; z-index: 2; }
-  .sq-tile {
-    aspect-ratio: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 6px;
-    padding: 12px 8px; border-radius: 20px; text-decoration: none; color: #fff;
-    position: relative; overflow: hidden; border: 2px solid;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer; font-family: inherit; background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    background: transparent;
   }
   .sq-tile::before {
-    content: ""; position: absolute; inset: -100%;
+    content: "";
+    position: absolute;
+    inset: -100%;
     background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.15), transparent);
-    animation: rotate360 10s linear infinite; z-index: 0; opacity: 0.5;
+    animation: rotate360 10s linear infinite;
+    z-index: 0;
+    opacity: 0.5;
   }
   .sq-tile::after {
-    content: ""; position: absolute; top: 0; left: -100%;
-    width: 60%; height: 100%;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transform: skewX(-20deg); animation: shine 4s infinite;
-    z-index: 2; pointer-events: none;
+    transform: skewX(-20deg);
+    animation: shine 4s infinite;
+    z-index: 2;
+    pointer-events: none;
   }
-  @keyframes shine { 0% { left: -100%; } 50%,100% { left: 200%; } }
+  @keyframes shine {
+    0% { left: -100%; }
+    50%,100% { left: 200%; }
+  }
   .sq-tile > * { position: relative; z-index: 1; }
   .sq-tile:hover { transform: translateY(-5px) scale(1.04); }
   .sq-tile:active { transform: scale(0.97); }
 
   .sq-icon {
-    font-size: 38px; line-height: 1;
+    font-size: 38px;
+    line-height: 1;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
     animation: float 3s ease-in-out infinite;
   }
-  .sq-tile:nth-child(1) .sq-icon { animation-delay: 0s; }
-  .sq-tile:nth-child(2) .sq-icon { animation-delay: 0.4s; }
-  .sq-tile:nth-child(3) .sq-icon { animation-delay: 0.8s; }
-  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
   .sq-tile:hover .sq-icon { transform: scale(1.2) rotate(-8deg); animation: none; }
-
   .sq-title { font-size: 12px; font-weight: 900; letter-spacing: 0.2px; }
   .sq-sub { font-size: 9px; opacity: 0.75; }
 
-  /* Notif — purple */
   .sq-notif {
     background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.4), transparent 60%),
                 linear-gradient(135deg, #1a0f2e, #0f0f1e);
@@ -195,7 +462,6 @@
   .sq-notif:hover { border-color: rgba(167,139,250,0.95); box-shadow: 0 18px 45px rgba(139,92,246,0.45); }
   .sq-notif .sq-title { color: #c4b5fd; }
 
-  /* Games — pink */
   .sq-games {
     background: radial-gradient(circle at 100% 0%, rgba(236,72,153,0.4), transparent 60%),
                 linear-gradient(135deg, #1a0f2e, #120824);
@@ -205,7 +471,6 @@
   .sq-games:hover { border-color: rgba(236,72,153,0.95); box-shadow: 0 18px 45px rgba(236,72,153,0.45); }
   .sq-games .sq-title { color: #f9a8d4; }
 
-  /* Challenge — red/gold */
   .sq-challenge {
     background: radial-gradient(circle at 100% 0%, rgba(239,68,68,0.4), transparent 60%),
                 linear-gradient(135deg, #2a0a0a, #1a0606);
@@ -216,35 +481,53 @@
   .sq-challenge .sq-title { color: #fca5a5; }
 
   .sq-badge {
-    position: absolute; top: 8px; right: 8px;
-    background: #ef4444; color: #fff;
-    font-size: 10px; font-weight: 900;
-    padding: 2px 8px; border-radius: 999px;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 999px;
     box-shadow: 0 3px 10px rgba(239,68,68,0.6);
-    animation: pulseBadge 2s infinite; z-index: 3;
+    animation: pulseBadge 2s infinite;
+    z-index: 3;
   }
-  @keyframes pulseBadge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+  @keyframes pulseBadge {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+  }
 
-  /* ============ SUPPORT BUTTON ============ */
   .support-btn {
-    display: flex; align-items: center; gap: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
     padding: 18px 20px;
     background: radial-gradient(circle at 100% 0%, rgba(6,182,212,0.4), transparent 60%),
                 linear-gradient(135deg, #0a1e2a, #05141a);
     border: 2px solid rgba(6,182,212,0.6);
     border-radius: 20px;
-    text-decoration: none; color: #fff;
-    cursor: pointer; transition: all 0.3s;
+    text-decoration: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
     box-shadow: 0 10px 30px rgba(6,182,212,0.2);
-    position: relative; z-index: 2;
+    position: relative;
+    z-index: 2;
     overflow: hidden;
     margin-top: 8px;
   }
   .support-btn::after {
-    content: ""; position: absolute; top: 0; left: -100%;
-    width: 60%; height: 100%;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transform: skewX(-20deg); animation: shine 5s infinite;
+    transform: skewX(-20deg);
+    animation: shine 5s infinite;
     pointer-events: none;
   }
   .support-btn:hover {
@@ -257,48 +540,10 @@
   .support-btn .st { font-size: 16px; font-weight: 900; color: #a5f3fc; margin-bottom: 3px; }
   .support-btn .sd { font-size: 11px; color: #94a3b8; }
   .support-btn .sa { font-size: 22px; color: #67e8f9; }
-
-  /* Guest warning */
-  .guest-warning {
-    background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(249,115,22,0.08));
-    border: 1.5px solid rgba(234,179,8,0.35);
-    border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
-    display: flex; align-items: center; gap: 12px;
-    position: relative; z-index: 2;
-    font-size: 12px; color: #fde68a;
-  }
-  .guest-warning .gw-logout {
-    background: rgba(244,197,66,0.9); color: #1a1a1a;
-    padding: 6px 12px; border-radius: 8px;
-    font-size: 11px; font-weight: 900; text-decoration: none;
-  }
-
-
-  /* FORCE VERTICAL — top players & shop */
-  .circle-row {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
-    margin-bottom: 18px !important;
-  }
-  .circle-btn {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-  }
-  .cb-circle {
-    width: 48px !important;
-    height: 48px !important;
-    font-size: 22px !important;
-    border-width: 2px !important;
-  }
-  .cb-label { font-size: 13px !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-  <!-- Animated background -->
   <div class="bg-pattern"></div>
   <div class="fly-dot" style="left: 10%; animation-duration: 12s;"></div>
   <div class="fly-dot" style="left: 25%; animation-duration: 15s; animation-delay: 2s; background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6;"></div>
@@ -307,29 +552,60 @@
   <div class="fly-dot" style="left: 78%; animation-duration: 16s; animation-delay: 3s;"></div>
   <div class="fly-dot" style="left: 92%; animation-duration: 13s; animation-delay: 5s; background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6;"></div>
 
-  <!-- Top bar -->
-  <div class="top-bar">
-    <div class="version-badge"><span>🧪</span><span>نسخه آزمایشی</span></div>
-    <a href="/accounts/settings/" class="btn-settings-b">⚙️</a>
-  </div>
+  <div class="top-layout">
+    <!-- LEFT STACK: settings + daily reward (both on left side) -->
+    <div class="left-stack">
+      <a href="/accounts/settings/" class="btn-settings-b" title="تنظیمات">⚙️</a>
+      <a href="/game/daily-reward/" class="circle-btn" title="جایزه روزانه">
+        <div class="cb-circle cb-daily {% if daily_status.can_claim %}has-reward{% endif %}">🎁</div>
+        {% if daily_status.can_claim %}<span class="daily-dot"></span>{% endif %}
+      </a>
+    </div>
 
-  <!-- Profile (circle → oval) -->
-  <div class="profile-wrap">
-    <div class="profile-oval" id="profileOval" onclick="toggleProfile()">
-      {% if user.avatar_type == "image" and user.avatar_id %}
-        <div class="po-av" style="background-image: url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');"></div>
-      {% else %}
-        <div class="po-av">{{ avatar_emoji }}</div>
-      {% endif %}
-      <div class="po-details">
-        <div class="po-name">{{ user.alias }}</div>
-        <div class="po-meta">
-          <span class="lvl">Lv {{ level|default:1 }}</span>
-          <span>🪙 {{ user.coins|default:0 }}</span>
-          <span>💎 {{ user.gems|default:0 }}</span>
+    <!-- RIGHT STACK: profile + top players + shop -->
+    <div class="right-stack">
+      <div class="profile-oval" id="profileOval" onclick="toggleProfile(event)">
+        {% if user.avatar_type == "image" and user.avatar_id %}
+          <div class="po-av" style="background-image: url('/static/avatars/images/{{ user.avatar_id|stringformat:"03d" }}.jpg');"></div>
+        {% else %}
+          <div class="po-av">{{ avatar_emoji }}</div>
+        {% endif %}
+
+        <div class="po-details">
+          <div class="po-row-1">
+            <span class="po-name">{{ user.alias }}</span>
+            <span class="po-username">@{{ user.username }}</span>
+          </div>
+
+          <div class="po-pills">
+            <span class="po-pill po-pill-lvl">Lv {{ level|default:1 }}</span>
+            <span class="po-pill po-pill-coins">🪙 {{ user.coins|default:0 }}</span>
+            <span class="po-pill po-pill-gems">💎 {{ user.gems|default:0 }}</span>
+            <span class="po-pill po-pill-games">🎮 {{ stats.total_games|default:0 }}</span>
+            <span class="po-pill po-pill-score">⭐ {{ stats.total_score|default:0 }}</span>
+          </div>
+
+          <div class="po-level-bar">
+            <div class="po-level-text">
+              <span>تا سطح بعد</span>
+              <span class="v">{{ level_progress|default:0 }} / 100</span>
+            </div>
+            <div class="po-bar-track">
+              <div class="po-bar-fill" style="width: {{ level_progress|default:0 }}%;"></div>
+            </div>
+          </div>
         </div>
+
+        <div class="po-chevron">▼</div>
       </div>
-      <div class="po-chevron">▼</div>
+
+      <a href="/game/top-players/" class="circle-btn" title="بازیکنان برتر">
+        <div class="cb-circle cb-top">⭐</div>
+      </a>
+
+      <a href="/accounts/shop/" class="circle-btn" title="فروشگاه">
+        <div class="cb-circle cb-shop">🛒</div>
+      </a>
     </div>
   </div>
 
@@ -341,21 +617,10 @@
     </div>
   {% endif %}
 
-  <!-- 2 Circle buttons: Top players + Shop -->
-  <div class="circle-row">
-    <a href="/game/top-players/" class="circle-btn">
-      <div class="cb-circle cb-top">⭐</div>
-      <div class="cb-label cb-top-label">بازیکنان برتر</div>
-    </a>
-    <a href="/accounts/shop/" class="circle-btn">
-      <div class="cb-circle cb-shop">🛒</div>
-      <div class="cb-label cb-shop-label">فروشگاه</div>
-    </a>
+  <div class="section-label">
+    <span>📋 منو اصلی</span>
+    <span class="beta-tag">🧪 نسخه آزمایشی</span>
   </div>
-
-  <!-- Section: main menu -->
-  <div class="section-label">📋 منو اصلی</div>
-
   <div class="sq-grid">
     <a href="/social/notifications/" class="sq-tile sq-notif">
       {% if unread_notifications %}<span class="sq-badge">{{ unread_notifications }}</span>{% endif %}
@@ -363,13 +628,11 @@
       <div class="sq-title">اعلان‌ها</div>
       <div class="sq-sub">{% if unread_notifications %}{{ unread_notifications }} جدید{% else %}پیام‌ها{% endif %}</div>
     </a>
-
     <a href="/game/rooms/" class="sq-tile sq-games">
       <div class="sq-icon">🎮</div>
       <div class="sq-title">بازی‌ها</div>
       <div class="sq-sub">۷ حالت</div>
     </a>
-
     <a href="/game/challenge/" class="sq-tile sq-challenge">
       <div class="sq-icon">🏆</div>
       <div class="sq-title">چالش</div>
@@ -377,9 +640,7 @@
     </a>
   </div>
 
-  <!-- Support -->
   <div class="section-label">💬 ارتباط با ما</div>
-
   <a href="/support/" class="support-btn">
     <span class="si">💬</span>
     <div class="sb">
@@ -388,13 +649,14 @@
     </div>
     <span class="sa">←</span>
   </a>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  function toggleProfile() {
-    document.getElementById('profileOval').classList.toggle('expanded');
+  function toggleProfile(e) {
+    if (e && e.target.closest && e.target.closest('a, button')) return;
+    const oval = document.getElementById('profileOval');
+    oval.classList.toggle('expanded');
     if (window.vibrate) window.vibrate(8);
     if (window.soundClick) window.soundClick();
   }

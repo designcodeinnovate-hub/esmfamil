@@ -46,3 +46,18 @@ def get_avatar_display(user):
 
 # ۴۴ عکس لوکال
 IMAGE_AVATARS = [{"id": i, "url": f"/static/avatars/images/{i:03d}.jpg"} for i in range(1, 45)]
+
+def get_avatar_html(user):
+    """
+    Returns safe HTML for a user's avatar (image or emoji).
+    Use with {{ value|safe }} in templates, or pass as context.
+    """
+    from django.utils.safestring import mark_safe
+    atype, aval = get_avatar_display(user)
+    if atype == "image" and aval:
+        return mark_safe(
+            f'<img src="{aval}" style="width:100%;height:100%;'
+            f'object-fit:cover;border-radius:50%;">'
+        )
+    return mark_safe(f'<span>{aval}</span>')
+

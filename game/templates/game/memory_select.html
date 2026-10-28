@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}بازی حافظه{% endblock %}
+{% block extra_css %}
+<style>
+.head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.head h1{font-size:22px;font-weight:900;background:linear-gradient(135deg,#a78bfa,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero{background:linear-gradient(135deg,#1a0f2e,#0f0f1e);border:2px solid rgba(139,92,246,0.5);border-radius:20px;padding:24px 20px;margin-bottom:20px;text-align:center}
+.hero .icon{font-size:60px;margin-bottom:8px}
+.hero h2{font-size:20px;font-weight:900;color:#e9d5ff;margin-bottom:6px}
+.hero p{font-size:13px;color:#94a3b8}
+.levels{display:flex;flex-direction:column;gap:12px}
+.lvl{display:flex;align-items:center;gap:16px;padding:18px;background:var(--card);border:2px solid var(--border);border-radius:16px;text-decoration:none;color:#fff;transition:0.2s}
+.lvl:hover{transform:translateY(-2px);border-color:#8b5cf6}
+.lvl.easy{border-color:rgba(34,197,94,0.4)}
+.lvl.easy:hover{border-color:#22c55e;box-shadow:0 10px 25px rgba(34,197,94,0.3)}
+.lvl.medium{border-color:rgba(59,130,246,0.4)}
+.lvl.medium:hover{border-color:#3b82f6;box-shadow:0 10px 25px rgba(59,130,246,0.3)}
+.lvl.hard{border-color:rgba(239,68,68,0.4)}
+.lvl.hard:hover{border-color:#ef4444;box-shadow:0 10px 25px rgba(239,68,68,0.3)}
+.lvl .em{font-size:36px;width:60px;text-align:center;flex-shrink:0}
+.lvl .info{flex:1}
+.lvl .title{font-size:17px;font-weight:900;margin-bottom:3px}
+.lvl .sub{font-size:12px;color:#94a3b8}
+.lvl .arrow{font-size:22px;opacity:0.5}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head"><a href="/game/rooms/" class="back-btn"><span class="arrow-icon">→</span></a><h1>🧠 بازی حافظه</h1></div>
+<div class="hero"><div class="icon">🧠</div><h2>سطحت رو انتخاب کن</h2><p>کارت‌ها ۲ ثانیه نشون داده می‌شن، بعد باید جفت‌ها رو پیدا کنی</p></div>
+<div class="levels">
+  <a href="/game/memory/?diff=easy" class="lvl easy"><div class="em">😊</div><div class="info"><div class="title">آسان</div><div class="sub">۶ جفت · ۱۲ کارت</div></div><div class="arrow">←</div></a>
+  <a href="/game/memory/?diff=medium" class="lvl medium"><div class="em">😐</div><div class="info"><div class="title">متوسط</div><div class="sub">۱۰ جفت · ۲۰ کارت</div></div><div class="arrow">←</div></a>
+  <a href="/game/memory/?diff=hard" class="lvl hard"><div class="em">😈</div><div class="info"><div class="title">سخت</div><div class="sub">۱۵ جفت · ۳۰ کارت</div></div><div class="arrow">←</div></a>
+</div>
+{% endblock %}

@@ -1,0 +1,290 @@
+{% load jalali_tags %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if challenge %}ویرایش{% else %}ساخت{% endif %} چالش — پنل ادمین</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Tahoma, sans-serif; background: #0f111a; color: #e2e8f0; min-height: 100vh; padding-right: 85px; }
+
+    .admin-rail { position: fixed; top: 0; right: 0; bottom: 0; width: 70px; height: 100vh; background-color: #161925; border-left: 1px solid #232838; display: flex; flex-direction: column; align-items: center; padding: 20px 0; z-index: 1000; gap: 12px; }
+    .rail-logo { color: #8b5cf6; margin-bottom: 10px; }
+    .rail-item { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; text-decoration: none; transition: all 0.2s; }
+    .rail-item:hover { color: #a78bfa; background: rgba(139,92,246,0.1); }
+    .rail-item.active { color: #8b5cf6; background: rgba(139,92,246,0.15); }
+    .rail-logout { margin-top: auto; width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ef4444; }
+
+    .admin-content { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
+
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: #60a5fa; text-decoration: none; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
+    .back-link:hover { text-decoration: underline; }
+
+    h1 { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 24px; }
+
+    .card { background: #161925; border: 1px solid #232838; border-radius: 16px; padding: 24px; margin-bottom: 18px; }
+    .card h3 { color: #fdba74; font-size: 15px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #232838; }
+
+    label { display: block; color: #94a3b8; font-size: 12px; font-weight: bold; margin: 14px 0 6px; }
+    label:first-of-type { margin-top: 0; }
+    input[type=text], input[type=number], textarea, select {
+      width: 100%; padding: 12px 14px; background: #0f111a;
+      border: 1.5px solid #232838; border-radius: 10px; color: #fff;
+      font-family: inherit; font-size: 14px; box-sizing: border-box;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139,92,246,0.2); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* Emoji picker */
+    .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+    .emoji-opt { padding: 10px; text-align: center; font-size: 24px; background: #0f111a; border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: 0.15s; user-select: none; }
+    .emoji-opt:hover { border-color: rgba(139,92,246,0.5); }
+    .emoji-opt input { display: none; }
+    .emoji-opt:has(input:checked) { border-color: #8b5cf6; background: rgba(139,92,246,0.15); box-shadow: 0 0 15px rgba(139,92,246,0.3); }
+
+    /* Jalali date-time picker */
+    .dt-wrap { background: #0f111a; border: 1.5px solid #232838; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .dt-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #232838; }
+    .dt-header .badge { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 900; }
+    .dt-wrap.start .badge { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .dt-wrap.end .badge { background: rgba(239,68,68,0.2); color: #fca5a5; }
+    .dt-header .title { font-size: 14px; font-weight: bold; color: #fff; flex: 1; }
+    .dt-grid-date { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .dt-grid-time { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .dt-field { display: flex; flex-direction: column; gap: 4px; }
+    .dt-field .lbl { font-size: 10px; color: #64748b; text-align: center; font-weight: bold; }
+    .dt-field select { padding: 10px 6px; font-size: 14px; font-weight: bold; text-align: center; background: #161925; border: 1.5px solid #232838; border-radius: 8px; color: #fff; font-family: inherit; cursor: pointer; }
+    .dt-field select:focus { outline: none; border-color: #facc15; }
+    .dt-preview { margin-top: 10px; padding: 10px 14px; background: rgba(250,204,21,0.08); border: 1px dashed rgba(250,204,21,0.3); border-radius: 10px; font-size: 13px; color: #fde68a; text-align: center; font-family: monospace; font-weight: bold; }
+
+    /* Save button */
+    button.submit { width: 100%; padding: 18px; border: none; border-radius: 14px; font-family: inherit; font-weight: 900; font-size: 16px; cursor: pointer; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 10px 30px rgba(34,197,94,0.4); transition: 0.2s; margin-top: 20px; }
+    button.submit:hover { transform: translateY(-2px); }
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .msg-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+
+    .danger-card { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 16px; padding: 22px; margin-top: 24px; }
+    .danger-card h3 { color: #fca5a5; margin-bottom: 12px; }
+    .danger-card p { font-size: 12px; color: #94a3b8; margin-bottom: 14px; line-height: 1.6; }
+    .danger-btn { padding: 10px 18px; border: none; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 13px; cursor: pointer; margin-left: 8px; }
+    .btn-clear { background: rgba(234,179,8,0.15); color: #fde68a; border: 1px solid rgba(234,179,8,0.3); }
+    .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+
+    .hint { font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.5; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; text-align: right; font-size: 12px; border-bottom: 1px solid #232838; }
+    th { color: #94a3b8; font-size: 11px; font-weight: bold; background: #0f111a; }
+    tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<div class="admin-rail">
+  <div class="rail-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17l2-9 6 4 2-6 2 6 6-4 2 9H2z"/></svg></div>
+  <a href="/panel-admin/dashboard/" class="rail-item" title="کاربران"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></a>
+  <a href="/panel-admin/alliances/" class="rail-item" title="اتحادها"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M9 19v-2a3 3 0 0 1 6 0v2"/><circle cx="6" cy="10" r="2"/><path d="M3 18v-1a3 3 0 0 1 3-3"/><circle cx="18" cy="10" r="2"/><path d="M21 18v-1a3 3 0 0 0-3-3"/></svg></a>
+  <a href="/panel-admin/rooms/" class="rail-item" title="اتاق‌ها"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v17"/><path d="M2 21h20"/><rect x="14" y="9" width="4" height="6" rx="1"/></svg></a>
+  <a href="/panel-admin/rooms/active/" class="rail-item" title="در حال بازی"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4"/><path d="M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258A4 4 0 0 0 17.32 5z"/></svg></a>
+  <a href="/panel-admin/announcements/" class="rail-item" title="اعلان‌ها"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></a>
+  <a href="/panel-admin/challenges/" class="rail-item active" title="چالش"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M9.5 17.5L21 6V3h-3L6.5 14.5"/><path d="M11 19l-6-6"/><path d="M8 16l-4 4"/><path d="M5 21l-2-2"/></svg></a>
+  <a href="/panel-admin/support/" class="rail-item" title="پشتیبانی"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="3"/><path d="M7 18v3l3-3"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="11" r="1" fill="currentColor"/><circle cx="15" cy="11" r="1" fill="currentColor"/></svg></a>
+  <a href="/panel-admin/shop/" class="rail-item" title="فروشگاه"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></a>
+  <a href="/panel-admin/logout/" class="rail-logout" title="خروج"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+</div>
+
+<div class="admin-content">
+  <a href="/panel-admin/challenges/" class="back-link">← بازگشت به چالش‌ها</a>
+  <h1>{% if challenge %}✏️ ویرایش چالش{% else %}+ چالش جدید{% endif %}</h1>
+
+  {% if message %}<div class="msg msg-{{ message.type }}">{{ message.text }}</div>{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="card">
+      <h3>📝 اطلاعات کلی</h3>
+      <label>نام چالش</label>
+      <input type="text" name="name" required maxlength="80" value="{{ challenge.name|default:'' }}" placeholder="مثلاً: چالش هفتگی اسم فامیل">
+
+      <label>توضیح (اختیاری)</label>
+      <textarea name="description" maxlength="300" placeholder="توضیح کوتاه...">{{ challenge.description|default:'' }}</textarea>
+
+      <label>آیکون</label>
+      <div class="emoji-grid">
+        {% for em in "🏆🎯🔥⚡👑💎🌟🎁⚔️🛡️🚀🎮🏅🥇🥈🥉🎪🎨🎭🎬🎲🧩🔮💫"|make_list %}{% endfor %}
+        <label class="emoji-opt"><input type="radio" name="icon" value="🏆" {% if challenge.icon == '🏆' or not challenge %}checked{% endif %}>🏆</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🎯" {% if challenge.icon == '🎯' %}checked{% endif %}>🎯</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🔥" {% if challenge.icon == '🔥' %}checked{% endif %}>🔥</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="⚡" {% if challenge.icon == '⚡' %}checked{% endif %}>⚡</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="👑" {% if challenge.icon == '👑' %}checked{% endif %}>👑</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="💎" {% if challenge.icon == '💎' %}checked{% endif %}>💎</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🌟" {% if challenge.icon == '🌟' %}checked{% endif %}>🌟</label>
+        <label class="emoji-opt"><input type="radio" name="icon" value="🎁" {% if challenge.icon == '🎁' %}checked{% endif %}>🎁</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎮 نوع چالش و بازی</h3>
+      <div class="row-2">
+        <div>
+          <label>نوع چالش</label>
+          <select name="tournament_type">
+            <option value="daily" {% if challenge.tournament_type == 'daily' %}selected{% endif %}>روزانه</option>
+            <option value="hourly" {% if challenge.tournament_type == 'hourly' %}selected{% endif %}>ساعتی</option>
+            <option value="weekly" {% if challenge.tournament_type == 'weekly' %}selected{% endif %}>هفتگی</option>
+            <option value="special" {% if challenge.tournament_type == 'special' %}selected{% endif %}>ویژه (موقت)</option>
+          </select>
+        </div>
+        <div>
+          <label>نوع بازی</label>
+          <select name="game_type">
+            <option value="esm_famil" {% if challenge.game_type == 'esm_famil' %}selected{% endif %}>اسم فامیل</option>
+            <option value="puzzle" {% if challenge.game_type == 'puzzle' %}selected{% endif %}>معما</option>
+            <option value="memory" {% if challenge.game_type == 'memory' %}selected{% endif %}>حافظه</option>
+            <option value="guess" {% if challenge.game_type == 'guess' %}selected{% endif %}>۰ تا ۱۰۰</option>
+            <option value="chain" {% if challenge.game_type == 'chain' %}selected{% endif %}>زنجیره کلمات</option>
+            <option value="speed" {% if challenge.game_type == 'speed' %}selected{% endif %}>سرعتی</option>
+            <option value="custom" {% if challenge.game_type == 'custom' %}selected{% endif %}>سفارشی (بعداً مشخص می‌شود)</option>
+          </select>
+          <div class="hint">💡 اگه "سفارشی" رو انتخاب کنی، فقط به‌عنوان چالش ثبت می‌شه تا بعداً بازی خاصش رو تعریف کنیم.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📅 زمان برگزاری</h3>
+
+      <div class="dt-wrap start">
+        <div class="dt-header"><span class="badge">شروع</span><span class="title">زمان شروع چالش</span></div>
+        <div class="dt-grid-date">
+          <div class="dt-field"><div class="lbl">سال</div>
+            <select name="start_jy">
+              {% for y in year_options %}<option value="{{ y }}" {% if challenge and challenge.start_jy == y or not challenge and y == default_jy %}selected{% endif %}>{{ y }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="dt-field"><div class="lbl">ماه</div>
+            <select name="start_jm">
+              {% for m, mname in month_options %}<option value="{{ m }}" {% if challenge and challenge.start_jm == m or not challenge and m == default_jm %}selected{% endif %}>{{ mname }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="dt-field"><div class="lbl">روز</div>
+            <select name="start_jd">
+              {% for d in day_options %}<option value="{{ d }}" {% if challenge and challenge.start_jd == d or not challenge and d == default_jd %}selected{% endif %}>{{ d }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="dt-grid-time">
+          <div class="dt-field"><div class="lbl">ساعت</div>
+            <select name="start_jh">
+              {% for h in hour_options %}<option value="{{ h }}" {% if challenge and challenge.start_jh == h or not challenge and h == default_jh %}selected{% endif %}>{{ h|stringformat:"02d" }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="dt-field"><div class="lbl">دقیقه</div>
+            <select name="start_jmin">
+              {% for mi in minute_options %}<option value="{{ mi }}" {% if challenge and challenge.start_jmin == mi %}selected{% endif %}>{{ mi|stringformat:"02d" }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="dt-wrap end">
+        <div class="dt-header"><span class="badge">پایان</span><span class="title">زمان پایان چالش</span></div>
+        <div class="dt-grid-date">
+          <div class="dt-field"><div class="lbl">سال</div>
+            <select name="end_jy">
+              {% for y in year_options %}<option value="{{ y }}" {% if challenge and challenge.end_jy == y or not challenge and y == default_end_jy %}selected{% endif %}>{{ y }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="dt-field"><div class="lbl">ماه</div>
+            <select name="end_jm">
+              {% for m, mname in month_options %}<option value="{{ m }}" {% if challenge and challenge.end_jm == m or not challenge and m == default_end_jm %}selected{% endif %}>{{ mname }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="dt-field"><div class="lbl">روز</div>
+            <select name="end_jd">
+              {% for d in day_options %}<option value="{{ d }}" {% if challenge and challenge.end_jd == d or not challenge and d == default_end_jd %}selected{% endif %}>{{ d }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="dt-grid-time">
+          <div class="dt-field"><div class="lbl">ساعت</div>
+            <select name="end_jh">
+              {% for h in hour_options %}<option value="{{ h }}" {% if challenge and challenge.end_jh == h or not challenge and h == default_end_jh %}selected{% endif %}>{{ h|stringformat:"02d" }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="dt-field"><div class="lbl">دقیقه</div>
+            <select name="end_jmin">
+              {% for mi in minute_options %}<option value="{{ mi }}" {% if challenge and challenge.end_jmin == mi %}selected{% endif %}>{{ mi|stringformat:"02d" }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint">💡 چالش فقط در بازه «شروع تا پایان» در صفحه بازی‌ها نمایش داده می‌شه. قبلش «در صف انتظار» هست.</div>
+    </div>
+
+    <div class="card">
+      <h3>🎁 جوایز و هزینه ورود</h3>
+      <div class="row-3">
+        <div><label>جایزه ۱ (سکه)</label><input type="number" name="prize_coins" min="0" value="{{ challenge.prize_coins|default:0 }}"></div>
+        <div><label>جایزه ۲ (جم)</label><input type="number" name="prize_gems" min="0" value="{{ challenge.prize_gems|default:0 }}"></div>
+        <div><label>هزینه ورود (سکه)</label><input type="number" name="entry_fee_coins" min="0" value="{{ challenge.entry_fee_coins|default:0 }}"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>👥 ظرفیت</h3>
+      <div class="row-2">
+        <div><label>حداقل بازیکن</label><input type="number" name="min_players" min="2" value="{{ challenge.min_players|default:2 }}"></div>
+        <div><label>حداکثر بازیکن</label><input type="number" name="max_players" min="2" value="{{ challenge.max_players|default:100 }}"></div>
+      </div>
+    </div>
+
+    <button type="submit" class="submit">💾 ذخیره چالش</button>
+  </form>
+
+  {% if challenge %}
+    <div class="card" style="margin-top: 24px;">
+      <h3>👥 شرکت‌کننده‌ها ({{ entries|length }})</h3>
+      {% if entries %}
+        <table>
+          <thead><tr><th>#</th><th>نام نمایشی</th><th>Username</th><th>امتیاز</th><th>تاریخ عضویت</th></tr></thead>
+          <tbody>
+            {% for e in entries %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ e.alias }}</td>
+                <td style="font-family:monospace; color:#94a3b8;">@{{ e.username }}</td>
+                <td style="color:#facc15; font-family:monospace; font-weight:bold;">{{ e.score }}</td>
+                <td style="font-size:11px; color:#64748b;">{{ e.joined_at|jdate:"Y/m/d H:i" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p style="color:#64748b; text-align:center; padding: 20px;">هنوز کسی ثبت‌نام نکرده.</p>
+      {% endif %}
+    </div>
+
+    <div class="danger-card">
+      <h3>⚠️ اقدامات خطرناک</h3>
+      <p>خارج کردن همه از صف یا حذف کامل چالش غیرقابل بازگشت است.</p>
+      <form method="post" action="/panel-admin/challenge/{{ challenge.id }}/clear-entries/" style="display:inline;" onsubmit="return confirm('همه از صف خارج شوند؟');">
+        {% csrf_token %}
+        <button type="submit" class="danger-btn btn-clear">🧹 خالی کردن صف</button>
+      </form>
+      <form method="post" action="/panel-admin/challenge/{{ challenge.id }}/delete/" style="display:inline;" onsubmit="return confirm('چالش کامل حذف شود؟');">
+        {% csrf_token %}
+        <button type="submit" class="danger-btn btn-delete">🗑️ حذف چالش</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

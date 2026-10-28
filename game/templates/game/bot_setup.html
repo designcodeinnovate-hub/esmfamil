@@ -3,179 +3,181 @@
 
 {% block extra_css %}
 <style>
-  .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .page-head {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .back-btn {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(30,41,59,0.7);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; text-decoration: none; font-size: 18px;
+    flex-shrink: 0;
+  }
   .page-head h1 { font-size: 22px; font-weight: bold; }
   .page-head h1 span { color: var(--gold); }
-  
-  .section-title { font-size: 15px; color: var(--gold); margin: 20px 0 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-  
-  /* دکمه‌های انتخاب (پیل) */
-  .pill-row { display: flex; gap: 8px; }
-  .pill {
-    flex: 1; padding: 12px 8px; border-radius: 12px;
-    border: 2px solid var(--border); background: var(--card);
-    text-align: center; cursor: pointer; transition: all 0.2s;
-    font-size: 14px; color: var(--muted); font-weight: bold;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .pill:hover { border-color: rgba(244,197,66,0.5); }
-  
-  /* استایل وقتی انتخاب شده (کلاس active) */
-  .pill.active {
-    border-color: var(--gold); 
-    background: linear-gradient(135deg, rgba(244,197,66,0.2), rgba(249,115,22,0.1)); 
-    color: #fff; 
-    box-shadow: 0 0 15px rgba(244,197,66,0.3);
-  }
-  
-  /* دسته‌ها */
-  .cats-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
-  .cat-tag {
-    padding: 10px 6px; border-radius: 10px; text-align: center;
-    background: rgba(34,197,94,0.1); border: 1.5px solid rgba(34,197,94,0.3);
-    color: #4ade80; font-size: 13px; font-weight: bold; cursor: pointer;
-    transition: all 0.2s; user-select: none;
-  }
-  .cat-tag:hover { background: rgba(34,197,94,0.25); transform: translateY(-2px); }
-  
-  .excluded-section { margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--border); }
-  .excluded-title { font-size: 13px; color: #f87171; margin-bottom: 10px; font-weight: bold; }
-  .excluded-tag {
-    background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171;
-  }
-  .excluded-tag::after { content: " ✕"; font-size: 11px; margin-right: 3px; }
 
-  input[type=text] {
-    width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border);
-    background: var(--bg); color: var(--text); font-size: 16px; text-align: center;
-    font-family: inherit; margin-top: 10px;
+  .intro {
+    text-align: center; padding: 16px;
+    background: rgba(30,41,59,0.5);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 22px;
   }
-  input[type=text]:focus { outline: none; border-color: var(--gold); }
-  
-  button.submit {
-    width: 100%; margin-top: 30px; margin-bottom: 60px; padding: 18px; 
-    border: none; border-radius: 16px; font-size: 18px; font-weight: bold; 
-    font-family: inherit; cursor: pointer; color: #1a1a1a; 
-    background: linear-gradient(135deg, #f4c542, #eab308);
-    box-shadow: 0 10px 30px rgba(244,197,66,0.4); transition: 0.2s;
+  .intro .em { font-size: 44px; margin-bottom: 8px; }
+  .intro p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
+
+  .game-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(6,182,212,0.06));
+    border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: 18px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.22s;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(139,92,246,0.08);
+  }
+  .game-card:hover:not(.disabled) {
+    transform: translateY(-3px);
+    border-color: rgba(139,92,246,0.8);
+    box-shadow: 0 12px 30px rgba(139,92,246,0.25);
+  }
+  .game-card.available {
+    background: radial-gradient(circle at 100% 0%, rgba(34,197,94,0.18), transparent 60%),
+                linear-gradient(135deg, rgba(34,197,94,0.08), rgba(6,182,212,0.05));
+    border-color: rgba(34,197,94,0.5);
+  }
+  .game-card.available:hover {
+    border-color: rgba(34,197,94,0.9);
+    box-shadow: 0 12px 30px rgba(34,197,94,0.3);
+  }
+  .game-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .gc-icon {
+    font-size: 32px;
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.15));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .game-card.available .gc-icon {
+    background: linear-gradient(135deg, rgba(34,197,94,0.35), rgba(6,182,212,0.15));
+    border-color: rgba(34,197,94,0.4);
+  }
+
+  .gc-body { flex: 1; min-width: 0; }
+  .gc-title {
+    font-size: 16px; font-weight: bold; margin-bottom: 3px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .gc-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .gc-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 6px;
+    font-weight: 900; margin-right: 4px;
+  }
+  .gc-badge.ready {
+    background: rgba(34,197,94,0.25); color: #86efac;
+    border: 1px solid rgba(34,197,94,0.5);
+  }
+  .gc-badge.soon {
+    background: rgba(245,158,11,0.2); color: #fbbf24;
+    border: 1px solid rgba(245,158,11,0.4);
+  }
+
+  .gc-arrow {
+    color: var(--dim); font-size: 20px; flex-shrink: 0;
+  }
+  .game-card.available .gc-arrow { color: #86efac; }
 </style>
 {% endblock %}
 
 {% block content %}
   <div class="page-head">
-    <a href="/game/" class="back-btn"><span class="arrow-icon">→</span></a>
+    <a href="/game/" class="back-btn">→</a>
     <h1>🤖 <span>بازی با بات</span></h1>
   </div>
 
-  <form method="post" id="botForm">
-    {% csrf_token %}
-    
-    <div class="section-title">🎯 سطح سختی</div>
-    <!-- مخفی کردن رادیو باتن‌ها و استفاده از دکمه‌های سفارشی -->
-    <input type="radio" name="difficulty" value="easy" id="diff-easy" style="display:none">
-    <input type="radio" name="difficulty" value="medium" id="diff-medium" checked style="display:none">
-    <input type="radio" name="difficulty" value="hard" id="diff-hard" style="display:none">
-    
-    <div class="pill-row">
-      <div class="pill" onclick="selectRadio('diff-easy', this, 'diff')"><span>😊</span>آسان</div>
-      <div class="pill active" id="btn-diff-medium" onclick="selectRadio('diff-medium', this, 'diff')"><span>😐</span>متوسط</div>
-      <div class="pill" onclick="selectRadio('diff-hard', this, 'diff')"><span>😈</span>سخت</div>
-    </div>
+  <div class="intro">
+    <div class="em">🤖</div>
+    <p>با هوش مصنوعی رقابت کن!<br>یکی از بازی‌های زیر رو انتخاب کن</p>
+  </div>
 
-    <div class="section-title">🔤 حالت انتخاب حرف</div>
-    <input type="radio" name="letter_mode" value="random" id="mode-random" checked style="display:none">
-    <input type="radio" name="letter_mode" value="player" id="mode-player" style="display:none">
-    
-    <div class="pill-row">
-      <div class="pill active" id="btn-mode-random" onclick="selectRadio('mode-random', this, 'mode')"><span>🎲</span>تصادفی</div>
-      <div class="pill" onclick="selectRadio('mode-player', this, 'mode')"><span>✍️</span>دستی</div>
-    </div>
-    <input type="text" name="letter" maxlength="2" placeholder="حرف دلخواه (مثلاً: ب)">
+  <div class="game-grid">
 
-    <div class="section-title">📋 دسته‌ها (برای حذف کلیک کن)</div>
-    <div class="cats-container" id="activeCats">
-      {% for c in active_main %}
-        <div class="cat-tag" onclick="moveCat(this, 'excludedCats', false)" data-cat="{{ c }}">{{ c }}</div>
-      {% endfor %}
-      {% for c in active_extra %}
-        <div class="cat-tag" onclick="moveCat(this, 'excludedCats', false)" data-cat="{{ c }}">{{ c }}</div>
-      {% endfor %}
-    </div>
-
-    <div class="excluded-section" id="excludedSection" style="{% if not excluded_categories %}display:none{% endif %}">
-      <div class="excluded-title">🚫 دسته‌های غیرفعال</div>
-      <div class="cats-container" id="excludedCats">
-        {% for c in excluded_categories %}
-          <div class="cat-tag excluded-tag" onclick="moveCat(this, 'activeCats', true)" data-cat="{{ c }}">{{ c }}</div>
-        {% endfor %}
+    <a href="/game/quick/bot/" class="game-card available" onclick="event.preventDefault(); window.location.href='/game/quick/bot/play/new/'">
+      <div class="gc-icon">🎮</div>
+      <div class="gc-body">
+        <div class="gc-title">
+          اسم فامیل
+          <span class="gc-badge ready">✓ آماده</span>
+        </div>
+        <div class="gc-desc">رقابت کلاسیک با بات — سختی، حرف، دسته‌ها</div>
       </div>
+      <div class="gc-arrow">←</div>
+    </a>
+
+    <a href="/game/chain/" class="game-card available">
+      <div class="gc-icon">🔗</div>
+      <div class="gc-body">
+        <div class="gc-title">
+          زنجیره کلمات
+          <span class="gc-badge ready">✓ آماده</span>
+        </div>
+        <div class="gc-desc">با بات کلمه بساز — کلمه آخرت، شروع بعدی</div>
+      </div>
+      <div class="gc-arrow">←</div>
+    </a>
+
+    <div class="game-card disabled">
+      <div class="gc-icon">🧩</div>
+      <div class="gc-body">
+        <div class="gc-title">
+          معما (مرتب کردن حروف)
+          <span class="gc-badge soon">🔜 به‌زودی</span>
+        </div>
+        <div class="gc-desc">حروف رو مرتب کن و کلمه بساز — نسخه آنلاین فعاله</div>
+      </div>
+      <div class="gc-arrow">←</div>
     </div>
 
-    <div id="hiddenInputs"></div>
-    <button type="submit" class="submit">🚀 شروع بازی</button>
-  </form>
-{% endblock %}
+    <div class="game-card disabled">
+      <div class="gc-icon">🧠</div>
+      <div class="gc-body">
+        <div class="gc-title">
+          حافظه (جفت کارت)
+          <span class="gc-badge soon">🔜 به‌زودی</span>
+        </div>
+        <div class="gc-desc">جفت کارت‌ها رو پیدا کن — نسخه آنلاین فعاله</div>
+      </div>
+      <div class="gc-arrow">←</div>
+    </div>
 
-{% block extra_js %}
-<script>
-// تابع اختصاصی برای انتخاب فقط یک دکمه
-function selectRadio(radioId, btnElement, groupName) {
-  // تیک زدن رادیو باتن مخفی
-  document.getElementById(radioId).checked = true;
-  
-  // برداشتن کلاس active از بقیه دکمه‌های هم‌گروه
-  const parent = btnElement.parentElement;
-  parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-  
-  // اضافه کردن کلاس به دکمه کلیک شده
-  btnElement.classList.add('active');
-}
+    <div class="game-card disabled">
+      <div class="gc-icon">⚡</div>
+      <div class="gc-body">
+        <div class="gc-title">
+          سرعتی
+          <span class="gc-badge soon">🔜 به‌زودی</span>
+        </div>
+        <div class="gc-desc">سریع‌ترین جواب — نسخه آنلاین فعاله</div>
+      </div>
+      <div class="gc-arrow">←</div>
+    </div>
 
-function moveCat(el, targetContainerId, isExcluded) {
-  const cat = el.dataset.cat;
-  const targetContainer = document.getElementById(targetContainerId);
-  
-  const newEl = document.createElement('div');
-  newEl.dataset.cat = cat;
-  
-  if (isExcluded) {
-    newEl.className = 'cat-tag';
-    newEl.onclick = function() { moveCat(this, 'excludedCats', false); };
-  } else {
-    newEl.className = 'cat-tag excluded-tag';
-    newEl.onclick = function() { moveCat(this, 'activeCats', true); };
-  }
-  newEl.innerText = cat;
-  
-  targetContainer.appendChild(newEl);
-  el.remove();
-  
-  const excludedSection = document.getElementById('excludedSection');
-  if (document.getElementById('excludedCats').children.length > 0) {
-    excludedSection.style.display = 'block';
-  } else {
-    excludedSection.style.display = 'none';
-  }
-}
-
-document.getElementById('botForm').onsubmit = function() {
-  const hiddenContainer = document.getElementById('hiddenInputs');
-  hiddenContainer.innerHTML = '';
-  
-  const activeElements = document.querySelectorAll('#activeCats .cat-tag');
-  if (activeElements.length === 0) {
-    alert('حداقل یک دسته باید فعال باشد!');
-    return false;
-  }
-  
-  activeElements.forEach(cat => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'categories';
-    input.value = cat.dataset.cat;
-    hiddenContainer.appendChild(input);
-  });
-};
-</script>
+  </div>
 {% endblock %}

@@ -62,6 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_seen = models.DateTimeField(default=timezone.now)
     coins = models.IntegerField(default=0)
     gems = models.IntegerField(default=0)
+    xp = models.IntegerField(default=0)
 
     objects = UserManager()
 

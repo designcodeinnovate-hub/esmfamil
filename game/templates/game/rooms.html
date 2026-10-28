@@ -1,27 +1,15 @@
 {% extends "base.html" %}
 {% block title %}بازی‌ها{% endblock %}
-
 {% block extra_css %}
 <style>
-  .bg-pattern { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .bg-pattern::before, .bg-pattern::after {
-    content: ""; position: absolute; inset: -50%;
-    background-image:
-      radial-gradient(circle, rgba(244,197,66,0.35) 1px, transparent 1.5px),
-      radial-gradient(circle, rgba(139,92,246,0.3) 1px, transparent 1.5px);
-    background-size: 60px 60px, 90px 90px;
-    background-position: 0 0, 30px 30px;
-    animation: dotsFloat 30s linear infinite;
-    opacity: 0.4;
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 {
+    font-size: 24px; font-weight: 900;
+    background: linear-gradient(135deg, #f4c542, #fdba74);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
-  .bg-pattern::after { animation-duration: 45s; animation-direction: reverse; opacity: 0.5; }
-  @keyframes dotsFloat { from { transform: translate(0, 0); } to { transform: translate(60px, 90px); } }
-
-  .page-head { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
-  .page-head h1 { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #f4c542, #fdba74); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .page-head .count { font-size: 11px; padding: 3px 10px; background: rgba(244,197,66,0.15); color: #fde68a; border-radius: 8px; font-family: monospace; }
-
-  .intro-text { color: #94a3b8; font-size: 13px; margin-bottom: 20px; line-height: 1.6; position: relative; z-index: 2; }
+  .intro-text { color: var(--muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
 
   .big {
     display: flex; align-items: center; gap: 16px;
@@ -32,12 +20,9 @@
     border: 2px solid;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     isolation: isolate;
-    z-index: 2;
   }
   .big:hover { transform: translateY(-4px) scale(1.01); }
   .big:active { transform: scale(0.98); }
-  .big.soon { cursor: default; opacity: 0.7; }
-  .big.soon:hover { transform: none; }
 
   .big::before {
     content: ""; position: absolute; inset: -150%;
@@ -53,10 +38,6 @@
   .big.player::before { background: conic-gradient(from 0deg, transparent, rgba(96,165,250,0.3), transparent, rgba(139,92,246,0.25), transparent); }
   .big.player:hover { border-color: rgba(96,165,250,0.95); box-shadow: 0 20px 60px rgba(59,130,246,0.4); }
 
-  .big.group { background: linear-gradient(135deg, #1a0f2e, #120824); border-color: rgba(139,92,246,0.6); box-shadow: 0 15px 40px rgba(139,92,246,0.25); }
-  .big.group::before { background: conic-gradient(from 0deg, transparent, rgba(167,139,250,0.3), transparent, rgba(236,72,153,0.25), transparent); }
-  .big.group:hover { border-color: rgba(167,139,250,0.95); box-shadow: 0 20px 60px rgba(139,92,246,0.45); }
-
   .big.speed { background: linear-gradient(135deg, #0a1e2a, #05141a); border-color: rgba(6,182,212,0.6); box-shadow: 0 15px 40px rgba(6,182,212,0.25); }
   .big.speed::before { background: conic-gradient(from 0deg, transparent, rgba(34,211,238,0.3), transparent, rgba(6,182,212,0.25), transparent); animation-duration: 5s; }
   .big.speed:hover { border-color: rgba(34,211,238,0.95); box-shadow: 0 20px 60px rgba(6,182,212,0.45); }
@@ -65,13 +46,17 @@
   .big.puzzle::before { background: conic-gradient(from 0deg, transparent, rgba(74,222,128,0.3), transparent, rgba(16,185,129,0.25), transparent); animation-duration: 8s; }
   .big.puzzle:hover { border-color: rgba(74,222,128,0.95); box-shadow: 0 20px 60px rgba(34,197,94,0.45); }
 
-  .big.guess { background: linear-gradient(135deg, #0a1e2a, #05141a); border-color: rgba(6,182,212,0.6); box-shadow: 0 15px 40px rgba(6,182,212,0.25); }
-  .big.guess::before { background: conic-gradient(from 0deg, transparent, rgba(34,211,238,0.3), transparent, rgba(59,130,246,0.25), transparent); animation-duration: 6s; }
-  .big.guess:hover { border-color: rgba(34,211,238,0.95); box-shadow: 0 20px 60px rgba(6,182,212,0.45); }
-
   .big.memory { background: linear-gradient(135deg, #1a0f2e, #0f0f1e); border-color: rgba(167,139,250,0.6); box-shadow: 0 15px 40px rgba(139,92,246,0.25); }
   .big.memory::before { background: conic-gradient(from 0deg, transparent, rgba(167,139,250,0.3), transparent, rgba(139,92,246,0.25), transparent); animation-duration: 7s; }
   .big.memory:hover { border-color: rgba(196,181,253,0.95); box-shadow: 0 20px 60px rgba(139,92,246,0.45); }
+
+  .big.chain { background: radial-gradient(circle at 100% 0%, rgba(139,92,246,0.4), transparent 60%), linear-gradient(135deg, #1a0f2e, #0f0f1e); border-color: rgba(139,92,246,0.6); box-shadow: 0 15px 40px rgba(139,92,246,0.25); }
+  .big.chain::before { background: conic-gradient(from 0deg, transparent, rgba(139,92,246,0.35), transparent, rgba(236,72,153,0.25), transparent); animation-duration: 6s; }
+  .big.chain:hover { border-color: rgba(167,139,250,0.95); box-shadow: 0 20px 60px rgba(139,92,246,0.45); }
+
+  .big.challenge { background: linear-gradient(135deg, #2a0a0a, #1a0606); border-color: rgba(239,68,68,0.6); box-shadow: 0 15px 40px rgba(239,68,68,0.25); }
+  .big.challenge::before { background: conic-gradient(from 0deg, transparent, rgba(248,113,113,0.3), transparent, rgba(249,115,22,0.25), transparent); animation-duration: 4s; }
+  .big.challenge:hover { border-color: rgba(248,113,113,0.95); box-shadow: 0 20px 60px rgba(239,68,68,0.45); }
 
   .big > * { position: relative; z-index: 1; }
 
@@ -90,11 +75,11 @@
   .btitle { font-size: 19px; font-weight: 900; margin-bottom: 4px; letter-spacing: -0.2px; }
   .big.bot .btitle { color: #fde68a; }
   .big.player .btitle { color: #bfdbfe; }
-  .big.group .btitle { color: #e9d5ff; }
   .big.speed .btitle { color: #a5f3fc; }
   .big.puzzle .btitle { color: #bbf7d0; }
-  .big.guess .btitle { color: #a5f3fc; }
   .big.memory .btitle { color: #c4b5fd; }
+  .big.chain .btitle { color: #c4b5fd; }
+  .big.challenge .btitle { color: #fca5a5; }
   .bdesc { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5; }
 
   .btags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
@@ -105,115 +90,97 @@
 
   .badge-live { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 999px; z-index: 2; box-shadow: 0 4px 12px rgba(34,197,94,0.5); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
-  .badge-team { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #ec4899, #8b5cf6); color: #fff; font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 999px; z-index: 2; }
   .badge-new { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #f4c542, #eab308); color: #1a1a1a; font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 999px; z-index: 2; animation: pulse 2s infinite; }
 </style>
 {% endblock %}
 {% block content %}
-  <div class="bg-pattern"></div>
 
-  <div class="page-head">
-    <h1>🎮 بازی‌ها</h1>
-    <span class="count">۷ حالت</span>
-  </div>
-
-  <p class="intro-text">یه حالت رو انتخاب کن و شروع کن! هر بازی یه تجربه‌ی خاص داره.</p>
-
-  <a href="/game/quick/" class="big bot">
-    <div class="badge-live">⚡ آنی</div>
-    <div class="bic">⚡</div>
-    <div class="bbody">
-      <div class="btitle">بازی با بات</div>
-      <div class="bdesc">رقیب هوشمند، سه سطح سختی</div>
-      <div class="btags">
-        <span class="btag">🎯 ۳ سطح</span>
-        <span class="btag">🚀 بدون انتظار</span>
-      </div>
-    </div>
-    <div class="barrow">←</div>
-  </a>
+  <div class="page-head"><h1>🎮 بازی‌ها</h1></div>
+  <p class="intro-text">یه حالت رو انتخاب کن — همه آنلاین!</p>
 
   <a href="/game/match/" class="big player">
     <div class="badge-live">🌐 آنلاین</div>
     <div class="bic">⚔️</div>
     <div class="bbody">
-      <div class="btitle">بازی با پلیر</div>
-      <div class="bdesc">رقابت آنی با یک حریف واقعی</div>
+      <div class="btitle">اسم فامیل</div>
+      <div class="bdesc">رقابت آنی با یک حریف واقعی — ۹۰ ثانیه</div>
       <div class="btags">
-        <span class="btag">🎯 1v1</span>
-        <span class="btag">🌍 سراسر ایران</span>
+        <span class="btag">🎯 ۱v۱</span>
+        <span class="btag">🎁 +۱۰۰ سکه برای برنده</span>
       </div>
     </div>
     <div class="barrow">←</div>
   </a>
 
-  <a href="/game/team/start/" class="big group">
-    <div class="badge-team">👥 ۴ نفره</div>
-    <div class="bic">🛡️</div>
+  <a href="/game/match/puzzle/" class="big puzzle">
+    <div class="badge-live">🌐 آنلاین</div>
+    <div class="bic">🎯</div>
     <div class="bbody">
-      <div class="btitle">بازی گروهی</div>
-      <div class="bdesc">۴ نفره · دو تیم ۲ نفره · ۳ راند</div>
+      <div class="btitle">بازی معما</div>
+      <div class="bdesc">همون ۵ کلمه برای هر دو — زودتر حل کن!</div>
       <div class="btags">
-        <span class="btag">👥 2v2</span>
-        <span class="btag">🏆 جایزه برنده</span>
+        <span class="btag">🧩 ۵ کلمه</span>
+        <span class="btag">⏱ ۹۰ ثانیه</span>
       </div>
     </div>
     <div class="barrow">←</div>
   </a>
 
-  <a href="/game/quick/bot/?mode=speed" class="big speed">
+  <a href="/game/match/memory/" class="big memory">
+    <div class="badge-live">🌐 آنلاین</div>
+    <div class="bic">🧠</div>
+    <div class="bbody">
+      <div class="btitle">بازی حافظه</div>
+      <div class="bdesc">همون چیدمان کارت — زودتر پیدا کن!</div>
+      <div class="btags">
+        <span class="btag">🧠 ۸ جفت</span>
+        <span class="btag">⏱ ۱۲۰ ثانیه</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
+
+  <a href="/game/match/chain/" class="big chain">
+    <div class="badge-live">🌐 آنلاین</div>
+    <div class="bic">🔗</div>
+    <div class="bbody">
+      <div class="btitle">زنجیره کلمات</div>
+      <div class="bdesc">نوبتی — هر کی دیر کرد می‌بازه</div>
+      <div class="btags">
+        <span class="btag">⏱ ۱۵ ثانیه/نوبت</span>
+        <span class="btag">🧠 استراتژی</span>
+      </div>
+    </div>
+    <div class="barrow">←</div>
+  </a>
+
+  <a href="/game/match/speed/" class="big speed">
+    <div class="badge-live">🌐 آنلاین</div>
     <div class="bic">⏱️</div>
     <div class="bbody">
       <div class="btitle">بازی سرعتی</div>
       <div class="bdesc">فقط ۲۰ ثانیه فرصت داری!</div>
       <div class="btags">
         <span class="btag">⚡ سریع</span>
-        <span class="btag">🎲 حرف رندوم</span>
+        <span class="btag">🌐 آنلاین</span>
       </div>
     </div>
     <div class="barrow">←</div>
   </a>
 
-  <a href="/game/puzzle/" class="big puzzle">
-    <div class="badge-new">🆕 جدید</div>
-    <div class="bic">🎯</div>
+  <a href="/game/quick/" class="big bot">
+    <div class="bic">🤖</div>
     <div class="bbody">
-      <div class="btitle">بازی معما</div>
-      <div class="bdesc">حروف رو مرتب کن، کلمه رو بساز</div>
+      <div class="btitle">بازی با بات (آزاد)</div>
+      <div class="bdesc">تمرین کن، رقیب هوشمند، بدون انتظار</div>
       <div class="btags">
-        <span class="btag">🧩 ۵ کلمه</span>
-        <span class="btag">⏱ زمان محدود</span>
+        <span class="btag">🎯 ۳ سطح سختی</span>
+        <span class="btag">🎲 دسته و حرف دلخواه</span>
       </div>
     </div>
     <div class="barrow">←</div>
   </a>
 
-  <a href="/game/guess/" class="big guess">
-    <div class="badge-new">🆕 جدید</div>
-    <div class="bic">🎲</div>
-    <div class="bbody">
-      <div class="btitle">بازی ۰ تا ۱۰۰</div>
-      <div class="bdesc">عدد پنهان رو حدس بزن</div>
-      <div class="btags">
-        <span class="btag">🔢 اعداد</span>
-        <span class="btag">🎯 ۷ تلاش</span>
-      </div>
-    </div>
-    <div class="barrow">←</div>
-  </a>
-
-  <a href="/game/memory/" class="big memory">
-    <div class="badge-new">🆕 جدید</div>
-    <div class="bic">🧠</div>
-    <div class="bbody">
-      <div class="btitle">بازی حافظه</div>
-      <div class="bdesc">جفت کارت‌های یکسان رو پیدا کن</div>
-      <div class="btags">
-        <span class="btag">🧠 ۸ جفت</span>
-        <span class="btag">🎯 سرعت + حافظه</span>
-      </div>
-    </div>
-    <div class="barrow">←</div>
-  </a>
+  
 
 {% endblock %}

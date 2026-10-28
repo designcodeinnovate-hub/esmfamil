@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}جایزه روزانه{% endblock %}
+{% block extra_css %}
+<style>
+.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.head h1{font-size:22px;font-weight:900;background:linear-gradient(135deg,#f4c542,#eab308);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero{text-align:center;padding:28px 20px;background:radial-gradient(circle at 50% 0%,rgba(244,197,66,0.3),transparent 60%),linear-gradient(135deg,#2a1e0a,#0f0f1e);border:2px solid rgba(244,197,66,0.5);border-radius:24px;margin-bottom:18px}
+.hero .icon{font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 25px rgba(244,197,66,0.7))}
+.hero h2{font-size:20px;font-weight:900;color:#fde68a;margin-bottom:6px}
+.hero p{font-size:13px;color:#94a3b8;line-height:1.7}
+.streak-badge{display:inline-block;margin-top:12px;padding:8px 20px;border-radius:999px;background:linear-gradient(135deg,rgba(244,197,66,0.3),rgba(234,179,8,0.15));border:1.5px solid rgba(244,197,66,0.6);color:#fde68a;font-weight:900;font-size:14px}
+.streak-badge b{color:#fff;font-family:monospace;font-size:18px;margin:0 4px}
+
+.days-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+@media (max-width:480px){.days-grid{grid-template-columns:repeat(4,1fr);gap:6px}}
+.day-card{padding:12px 6px;border-radius:14px;text-align:center;background:rgba(30,41,59,0.6);border:2px solid rgba(148,163,184,0.15);position:relative;transition:all 0.2s}
+.day-card.done{background:linear-gradient(135deg,rgba(34,197,94,0.2),rgba(6,182,212,0.1));border-color:rgba(34,197,94,0.6)}
+.day-card.today{background:linear-gradient(135deg,rgba(244,197,66,0.25),rgba(234,179,8,0.1));border-color:rgba(244,197,66,0.8);box-shadow:0 0 20px rgba(244,197,66,0.4);animation:glowPulse 2s infinite}
+.day-card.future{opacity:0.5}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(244,197,66,0.4)}50%{box-shadow:0 0 30px rgba(244,197,66,0.7)}}
+.day-card .day-num{font-size:10px;color:#94a3b8;margin-bottom:4px;font-weight:bold}
+.day-card .day-icon{font-size:26px;margin-bottom:4px}
+.day-card .day-amount{font-size:13px;font-weight:900;color:#fde68a;font-family:monospace}
+.day-card.done .day-icon{filter:drop-shadow(0 0 8px rgba(34,197,94,0.8))}
+.day-card .check{position:absolute;top:4px;right:4px;font-size:14px;color:#4ade80}
+
+.claim-btn{width:100%;padding:18px;border:none;border-radius:18px;background:linear-gradient(135deg,#f4c542,#eab308);color:#1a1a1a;font-size:17px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 15px 40px rgba(244,197,66,0.5);transition:all 0.2s;margin-bottom:14px}
+.claim-btn:hover{transform:translateY(-2px);box-shadow:0 20px 50px rgba(244,197,66,0.7)}
+.claim-btn:disabled{background:rgba(148,163,184,0.2);color:#64748b;cursor:not-allowed;box-shadow:none;transform:none}
+.timer-info{background:rgba(59,130,246,0.15);border:1.5px solid rgba(59,130,246,0.4);border-radius:14px;padding:14px;text-align:center;color:#93c5fd;font-size:13px;margin-bottom:14px}
+.timer-info b{font-family:monospace;font-size:20px;color:#fff;display:block;margin-top:6px}
+.flash{padding:12px 16px;border-radius:12px;font-size:13px;margin-bottom:14px;text-align:center}
+.flash-success{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+.flash-warning{background:rgba(234,179,8,0.15);color:#fde68a;border:1px solid rgba(234,179,8,0.3)}
+.flash-error{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.35)}
+.note{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:12px;padding:12px 16px;color:#c4b5fd;font-size:12px;line-height:1.7;text-align:center;margin-top:12px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head"><a href="/game/" class="back-btn"><span class="arrow-icon">→</span></a><h1>🎁 جایزه روزانه</h1></div>
+
+{% if messages %}
+  {% for m in messages %}<div class="flash flash-{{ m.tags }}">{{ m }}</div>{% endfor %}
+{% endif %}
+
+<div class="hero">
+  <div class="icon">🎁</div>
+  <h2>جایزه ۷ روزه</h2>
+  <p>هر روز بیا، جایزه‌ی بیشتری بگیر!</p>
+  {% if status.current_streak > 0 %}
+    <div class="streak-badge">🔥 استریک: <b>{{ status.current_streak }}</b> از ۷ روز</div>
+  {% else %}
+    <div class="streak-badge">✨ شروع کن!</div>
+  {% endif %}
+</div>
+
+<div class="days-grid">
+  {% for reward in rewards %}
+    {% with day_num=forloop.counter %}
+      <div class="day-card {% if day_num < status.next_day %}done{% elif day_num == status.next_day and status.can_claim %}today{% elif day_num == status.next_day and status.today_claimed %}done{% else %}future{% endif %}">
+        {% if day_num < status.next_day or day_num == status.next_day and status.today_claimed %}
+          <span class="check">✅</span>
+        {% endif %}
+        <div class="day-num">روز {{ day_num }}</div>
+        <div class="day-icon">
+          {% if day_num == 7 %}🏆{% elif day_num == 6 %}💎{% elif day_num == 5 %}🌟{% elif day_num == 4 %}🎉{% elif day_num == 3 %}🥇{% elif day_num == 2 %}🥈{% else %}🎁{% endif %}
+        </div>
+        <div class="day-amount">{{ reward }}</div>
+      </div>
+    {% endwith %}
+  {% endfor %}
+</div>
+
+{% if status.can_claim %}
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="claim-btn">🎁 دریافت جایزه روز {{ status.next_day }} ({{ next_amount }} سکه)</button>
+  </form>
+{% else %}
+  <button type="button" class="claim-btn" disabled>✅ امروز جایزه رو گرفتید</button>
+  <div class="timer-info">
+    ⏰ تا جایزه‌ی بعدی:
+    <b id="timer" data-remaining="{{ status.seconds_until_midnight }}">--:--:--</b>
+  </div>
+{% endif %}
+
+<div class="note">
+  💡 اگه <b>دو روز</b> جایزه رو نگیرید، استریک صفر می‌شه و از روز ۱ دوباره شروع می‌کنید.<br>
+  🕐 هر روز ساعت <b>۱۲ شب</b> ریست می‌شه.
+</div>
+
+{% if not status.can_claim %}
+<script>
+let remaining = parseInt(document.getElementById('timer').dataset.remaining);
+function tick() {
+  if (remaining <= 0) { location.reload(); return; }
+  const h = Math.floor(remaining / 3600);
+  const m = Math.floor((remaining % 3600) / 60);
+  const s = remaining % 60;
+  document.getElementById('timer').textContent =
+    String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  remaining--;
+  setTimeout(tick, 1000);
+}
+tick();
+</script>
+{% endif %}
+{% endblock %}

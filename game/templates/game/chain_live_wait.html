@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}در جستجوی حریف{% endblock %}
+{% block extra_css %}
+<style>
+.wait{text-align:center;padding:50px 20px;background:radial-gradient(circle at 50% 0%,rgba(6,182,212,0.3),transparent 60%),linear-gradient(135deg,#0a1e2a,#0f0f1e);border:2px solid rgba(6,182,212,0.5);border-radius:24px;margin-top:20px}
+.spinner{width:120px;height:120px;margin:0 auto 24px;border-radius:50%;border:4px solid rgba(6,182,212,0.2);border-top-color:#22d3ee;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wait h2{font-size:22px;font-weight:900;color:#a5f3fc;margin-bottom:8px}
+.wait p{font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:24px}
+.count-box{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:rgba(59,130,246,0.2);border:1.5px solid rgba(96,165,250,0.5);color:#bfdbfe;font-size:14px;font-weight:bold;margin-bottom:24px}
+.count-box b{color:#fff;font-family:monospace;font-size:16px}
+.cancel-btn{display:inline-block;padding:12px 30px;border-radius:14px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1.5px solid rgba(239,68,68,0.4);text-decoration:none;font-weight:bold;font-size:14px}
+.cancel-btn:hover{background:rgba(239,68,68,0.3);color:#fff}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wait">
+  <div class="spinner"></div>
+  <h2>در جستجوی حریف...</h2>
+  <p>وقتی یه بازیکن پیدا بشه، خودکار وارد بازی می‌شی</p>
+  <div class="count-box"><span>در صف:</span><b id="countBox">...</b><span>نفر</span></div>
+  <br><a href="/game/chain-live/cancel/" class="cancel-btn">✕ لغو</a>
+</div>
+<script>
+let checks = 0;
+setInterval(() => {
+  checks++;
+  if (checks > 90) { alert('کسی پیدا نشد.'); location.href = '/game/rooms/'; return; }
+  fetch('/game/chain-live/status/').then(r => r.json()).then(d => {
+    if (d.status === 'matched') { location.href = d.url; }
+    else if (d.status === 'cancelled') { location.href = '/game/rooms/'; }
+    else if (d.count !== undefined) { document.getElementById('countBox').textContent = d.count; }
+  }).catch(()=>{});
+}, 2000);
+</script>
+{% endblock %}

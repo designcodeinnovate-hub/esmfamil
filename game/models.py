@@ -3,9 +3,8 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
-
-PERSIAN_LETTERS = list("آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی")
 
 DEFAULT_CATEGORIES = [
     "اسم", "فامیل", "میوه", "رنگ", "شهر", "کشور", "ماشین", "حیوان", "اشیاء", "غذا",
@@ -143,6 +142,16 @@ class Tournament(models.Model):
     name = models.CharField(max_length=80)
     description = models.TextField(blank=True, max_length=300)
     tournament_type = models.CharField(max_length=10, choices=TYPE, default="daily")
+    GAME_TYPE_CHOICES = [
+        ("esm_famil", "اسم فامیل"),
+        ("puzzle", "معما"),
+        ("memory", "حافظه"),
+        ("guess", "۰ تا ۱۰۰"),
+        ("chain", "زنجیره"),
+        ("speed", "سرعتی"),
+        ("custom", "سفارشی"),
+    ]
+    game_type = models.CharField(max_length=15, choices=GAME_TYPE_CHOICES, default="esm_famil")
     status = models.CharField(max_length=12, choices=STATUS, default="scheduled")
     icon = models.CharField(max_length=4, default="🏆")
     start_at = models.DateTimeField()
@@ -208,3 +217,185 @@ class TournamentEntry(models.Model):
         unique_together = ("tournament", "user")
         ordering = ("-score", "joined_at")
 
+class DailyRewardClaim(models.Model):
+    """7-day streak daily reward with midnight reset."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="daily_rewards",
+    )
+    amount = models.PositiveIntegerField(default=50)
+    day_number = models.PositiveSmallIntegerField(default=1)  # 1..7
+    claim_date = models.DateField(default=timezone.localdate)  # Gregorian date
+    claimed_at = models.DateTimeField(auto_now_add=True)
+
+    # 7-day streak rewards (coins)
+    REWARDS = [50, 75, 100, 125, 150, 175, 250]
+
+    class Meta:
+        ordering = ("-claimed_at",)
+        unique_together = ("user", "claim_date")
+
+    def __str__(self):
+        return f"{self.user_id}:day{self.day_number}:+{self.amount}"
+
+    @classmethod
+    def get_status(cls, user):
+        """
+        Returns dict:
+          - can_claim: bool (hasn't claimed today AND streak is valid)
+          - today_claimed: bool
+          - current_streak: 0..7 (from last claim)
+          - next_day: 1..7 (which day to claim)
+          - seconds_until_midnight: seconds until 00:00
+          - rewards: list of 7 rewards
+        """
+        from django.utils import timezone
+        from datetime import timedelta, datetime as dt
+
+        now = timezone.now()
+        today = now.date()
+
+        # Midnight next
+        tomorrow_midnight = dt.combine(today + timedelta(days=1), dt.min.time())
+        seconds_until_midnight = int((tomorrow_midnight - now.replace(tzinfo=None)).total_seconds())
+        if seconds_until_midnight < 0:
+            seconds_until_midnight = 0
+
+        # Check today's claim
+        today_claim = cls.objects.filter(user=user, claim_date=today).first()
+        today_claimed = today_claim is not None
+
+        # Get latest claim (any day)
+        last = cls.objects.filter(user=user).order_by("-claim_date").first()
+
+        if not last:
+            # New user
+            return {
+                "can_claim": True,
+                "today_claimed": False,
+                "current_streak": 0,
+                "next_day": 1,
+                "seconds_until_midnight": seconds_until_midnight,
+                "rewards": cls.REWARDS,
+            }
+
+        days_since_last = (today - last.claim_date).days
+
+        if days_since_last == 0:
+            # Claimed today already
+            current_streak = last.day_number
+            next_day = last.day_number + 1
+            if next_day > 7:
+                next_day = 1  # start over after day 7
+            return {
+                "can_claim": False,
+                "today_claimed": True,
+                "current_streak": current_streak,
+                "next_day": next_day,
+                "seconds_until_midnight": seconds_until_midnight,
+                "rewards": cls.REWARDS,
+            }
+
+        elif days_since_last == 1:
+            # Claimed yesterday — streak continues
+            current_streak = last.day_number
+            next_day = current_streak + 1
+            if next_day > 7:
+                next_day = 1
+            return {
+                "can_claim": True,
+                "today_claimed": False,
+                "current_streak": current_streak,
+                "next_day": next_day,
+                "seconds_until_midnight": seconds_until_midnight,
+                "rewards": cls.REWARDS,
+            }
+
+        else:
+            # More than 1 day gap — streak broken
+            return {
+                "can_claim": True,
+                "today_claimed": False,
+                "current_streak": 0,
+                "next_day": 1,
+                "seconds_until_midnight": seconds_until_midnight,
+                "rewards": cls.REWARDS,
+            }
+
+    @classmethod
+    def claim(cls, user):
+        """Claim today's reward if possible. Returns (success, message, amount)."""
+        status = cls.get_status(user)
+        if not status["can_claim"]:
+            return False, "امروز قبلاً جایزه‌تون رو گرفتید. فردا دوباره سر بزنید!", 0
+
+        day_num = status["next_day"]
+        amount = cls.REWARDS[day_num - 1]
+
+        try:
+            cls.objects.create(user=user, amount=amount, day_number=day_num)
+        except Exception:
+            # Already claimed (race condition)
+            return False, "شما قبلاً جایزه امروز رو گرفتید.", 0
+
+        user.coins = (user.coins or 0) + amount
+        user.save(update_fields=["coins"])
+        return True, f"🎉 روز {day_num}: {amount} سکه به حسابتون اضافه شد!", amount
+
+
+# ============================================================
+# ONLINE MULTIPLAYER — پایه مشترک برای همه مودها
+# ============================================================
+
+class OnlineGame(models.Model):
+    """بازی آنلاین ۱v۱ — محتوای مشترک هر دو بازیکن رو نگه می‌داره."""
+    MODES = [
+        ("1v1", "اسم فامیل"),         # match فعلی (اسم فامیل)
+        ("puzzle", "معما"),
+        ("memory", "حافظه"),
+        ("guess", "۰ تا ۱۰۰"),
+        ("chain", "زنجیره کلمات"),
+    ]
+
+    STATUS = [
+        ("waiting", "در انتظار شروع"),
+        ("playing", "در حال بازی"),
+        ("finished", "پایان یافته"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mode = models.CharField(max_length=12, choices=MODES)
+    status = models.CharField(max_length=12, choices=STATUS, default="waiting")
+
+    # محتوای مشترک بازی (برای هر مود ساختارش فرق می‌کنه)
+    payload = models.JSONField(default=dict, blank=True)
+
+    # نتیجه
+    winner_user_id = models.IntegerField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.mode}:{self.id} ({self.status})"
+
+
+class OnlinePlayer(models.Model):
+    """بازیکن تو یه بازی آنلاین — با امتیاز و زمان پایان."""
+    game = models.ForeignKey(OnlineGame, on_delete=models.CASCADE, related_name="players")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    score = models.IntegerField(default=0)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    is_ready = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("game", "user")
+
+    def __str__(self):
+        return f"{self.user.alias} in {self.game_id}"
+
+
+# === ONLINE MULTIPLAYER (Phase 1) ===
